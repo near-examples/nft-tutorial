@@ -1,0 +1,10 @@
+{
+    "name": "nft-tutorial",
+    "version": "1.0.0",
+    "description": "Zero to Hero NFT Tutorial",
+    "author": "Ben Kurrek",
+    "license": "ISC",
+    "scripts": {
+        "build": "cd nft-contract && ./build.sh && cd ../.."
+    }
+}
