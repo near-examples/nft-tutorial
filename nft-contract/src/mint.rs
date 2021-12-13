@@ -7,21 +7,15 @@ impl Contract {
         &mut self,
         token_id: TokenId,
         metadata: TokenMetadata,
-        receiver_id: Option<AccountId>,
+        receiver_id: AccountId,
     ) {
         //measure the initial storage being used on the contract
         let initial_storage_usage = env::storage_usage();
 
-        //set the token owner to the predecessor by default
-        let mut owner_id = env::predecessor_account_id();
-        //if we specify a receiver, we overwrite the owner to be that receiver ID
-        if let Some(receiver_id) = receiver_id {
-            owner_id = receiver_id;
-        }
-
         //specify the token struct that contains the owner ID 
         let token = Token {
-            owner_id,
+            //set the owner ID equal to the receiver ID passed into the function
+            owner_id: receiver_id,
         };
 
         //insert the token ID and token struct and make sure that the token doesn't exist
