@@ -210,7 +210,7 @@ impl Contract {
             authorized_id = Some(sender_id.to_string());
         }
 
-        // Construct the mint log as per the events standard.
+        // Construct the transfer log as per the events standard.
         let nft_transfer_log: EventLog = EventLog {
             // Standard name ("nep171").
             standard: NFT_STANDARD_NAME.to_string(),
