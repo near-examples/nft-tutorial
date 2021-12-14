@@ -35,7 +35,7 @@ pub enum StorageKey {
     TokenPerOwnerInner { account_id_hash: CryptoHash },
     TokensById,
     TokenMetadataById,
-    NftMetadata,
+    NFTContractMetadata,
     TokensPerType,
     TokensPerTypeInner { token_type_hash: CryptoHash },
     TokenTypesLocked,
@@ -61,7 +61,7 @@ impl Contract {
         the owner_id. 
     */
     #[init]
-    pub fn new(owner_id: AccountId, metadata: NFTMetadata) {
+    pub fn new(owner_id: AccountId, metadata: NFTContractMetadata) {
         /*
             FILL THIS IN
         */

@@ -9,7 +9,7 @@ pub struct Payout {
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone)]
 #[serde(crate = "near_sdk::serde")]
-pub struct NFTMetadata {
+pub struct NFTContractMetadata {
     /*
         FILL THIS IN
     */
