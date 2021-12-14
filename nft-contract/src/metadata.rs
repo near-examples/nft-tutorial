@@ -6,6 +6,7 @@ pub type TokenId = String;
 pub struct Payout {
     pub payout: HashMap<AccountId, U128>,
 } 
+
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone)]
 #[serde(crate = "near_sdk::serde")]
 pub struct NFTMetadata {
