@@ -1,7 +1,11 @@
 use crate::*;
 pub type TokenId = String;
-pub type Payout = HashMap<AccountId, U128>;
-
+//defines the payout type we'll be returning as a part of the royalty standards.
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct Payout {
+    pub payout: HashMap<AccountId, U128>,
+} 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone)]
 #[serde(crate = "near_sdk::serde")]
 pub struct NFTMetadata {
