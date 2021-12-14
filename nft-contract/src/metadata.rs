@@ -1,10 +1,15 @@
 use crate::*;
 pub type TokenId = String;
-pub type Payout = HashMap<AccountId, U128>;
+//defines the payout type we'll be returning as a part of the royalty standards.
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct Payout {
+    pub payout: HashMap<AccountId, U128>,
+} 
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone)]
 #[serde(crate = "near_sdk::serde")]
-pub struct NFTMetadata {
+pub struct NFTContractMetadata {
     pub spec: String,              // required, essentially a version like "nft-1.0.0"
     pub name: String,              // required, ex. "Mosaics"
     pub symbol: String,            // required, ex. "MOSIAC"
@@ -61,12 +66,12 @@ pub struct JsonToken {
 
 pub trait NonFungibleTokenMetadata {
     //view call for returning the contract metadata
-    fn nft_metadata(&self) -> NFTMetadata;
+    fn nft_metadata(&self) -> NFTContractMetadata;
 }
 
 #[near_bindgen]
 impl NonFungibleTokenMetadata for Contract {
-    fn nft_metadata(&self) -> NFTMetadata {
+    fn nft_metadata(&self) -> NFTContractMetadata {
         self.metadata.get().unwrap()
     }
 }

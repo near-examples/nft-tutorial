@@ -157,9 +157,9 @@ impl Contract {
                 //converts the result to an optional value
                 .ok()
                 //returns None if the none. Otherwise executes the following logic
-                .and_then(|payout| {
+                .and_then(|payout_object| {
                     //we'll check if length of the payout object is > 10 or it's empty. In either case, we return None
-                    if payout.len() > 10 || payout.is_empty() {
+                    if payout_object.payout.len() > 10 || payout_object.payout.is_empty() {
                         env::log_str("Cannot have more than 10 royalties");
                         None
                     
@@ -169,7 +169,7 @@ impl Contract {
                         let mut remainder = price.0;
                         
                         //loop through the payout and subtract the values from the remainder. 
-                        for &value in payout.values() {
+                        for &value in payout_object.payout.values() {
                             //checked sub checks for overflow or any errors and returns None if there are problems
                             remainder = remainder.checked_sub(value.0)?;
                         }
@@ -178,7 +178,7 @@ impl Contract {
                         //we something like 3333 + 3333 + 3333. 
                         if remainder == 0 || remainder == 1 {
                             //set the payout_option to be the payout because nothing went wrong
-                            Some(payout)
+                            Some(payout_object.payout)
                         } else {
                             //if the remainder was anything but 1 or 0, we return None
                             None

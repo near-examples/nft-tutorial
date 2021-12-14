@@ -45,7 +45,7 @@ pub struct Contract {
     pub token_metadata_by_id: UnorderedMap<TokenId, TokenMetadata>,
 
     //keeps track of the metadata for the contract
-    pub metadata: LazyOption<NFTMetadata>,
+    pub metadata: LazyOption<NFTContractMetadata>,
 }
 
 /// Helper structure for keys of the persistent collections.
@@ -55,7 +55,7 @@ pub enum StorageKey {
     TokenPerOwnerInner { account_id_hash: CryptoHash },
     TokensById,
     TokenMetadataById,
-    NftMetadata,
+    NFTContractMetadata,
     TokensPerType,
     TokensPerTypeInner { token_type_hash: CryptoHash },
     TokenTypesLocked,
@@ -73,7 +73,7 @@ impl Contract {
         //calls the other function "new: with some default metadata and the owner_id passed in 
         Self::new(
             owner_id,
-            NFTMetadata {
+            NFTContractMetadata {
                 spec: "nft-1.0.0".to_string(),
                 name: "NFT Tutorial Contract".to_string(),
                 symbol: "GOTEAM".to_string(),
@@ -91,7 +91,7 @@ impl Contract {
         the owner_id. 
     */
     #[init]
-    pub fn new(owner_id: AccountId, metadata: NFTMetadata) -> Self {
+    pub fn new(owner_id: AccountId, metadata: NFTContractMetadata) -> Self {
         //create a variable of type Self with all the fields initialized. 
         let this = Self {
             //Storage keys are simply the prefixes used for the collections. This helps avoid data collision
@@ -103,7 +103,7 @@ impl Contract {
             //set the owner_id field equal to the passed in owner_id. 
             owner_id,
             metadata: LazyOption::new(
-                StorageKey::NftMetadata.try_to_vec().unwrap(),
+                StorageKey::NFTContractMetadata.try_to_vec().unwrap(),
                 Some(&metadata),
             ),
         };
