@@ -31,7 +31,9 @@ impl NonFungibleTokenCore for Contract {
         //get the u128 version of the passed in balance (which was U128 before)
         let balance_u128 = u128::from(balance);
 		//keep track of the payout object to send back
-        let mut payout: Payout = HashMap::new();
+        let mut payout_object = Payout {
+            payout: HashMap::new()
+        };
         //get the royalty object from token
 		let royalty = token.royalty;
 
@@ -45,16 +47,16 @@ impl NonFungibleTokenCore for Contract {
             //only insert into the payout if the key isn't the token owner (we add their payout at the end)
 			if key != owner_id {
                 //
-				payout.insert(key, royalty_to_payout(*v, balance_u128));
+				payout_object.payout.insert(key, royalty_to_payout(*v, balance_u128));
 				total_perpetual += *v;
 			}
 		}
 
 		// payout to previous owner who gets 100% - total perpetual royalties
-		payout.insert(owner_id, royalty_to_payout(10000 - total_perpetual, balance_u128));
+		payout_object.payout.insert(owner_id, royalty_to_payout(10000 - total_perpetual, balance_u128));
 
         //return the payout object
-		payout
+		payout_object
 	}
 
     //transfers the token to the receiver ID and returns the payout object that should be payed given the passed in balance. 
@@ -94,7 +96,9 @@ impl NonFungibleTokenCore for Contract {
         //get the u128 version of the passed in balance (which was U128 before)
         let balance_u128 = u128::from(balance);
 		//keep track of the payout object to send back
-        let mut payout: Payout = HashMap::new();
+        let mut payout_object = Payout {
+            payout: HashMap::new()
+        };
         //get the royalty object from token
 		let royalty = previous_token.royalty;
 
@@ -108,15 +112,15 @@ impl NonFungibleTokenCore for Contract {
             //only insert into the payout if the key isn't the token owner (we add their payout at the end)
 			if key != owner_id {
                 //
-				payout.insert(key, royalty_to_payout(*v, balance_u128));
+				payout_object.payout.insert(key, royalty_to_payout(*v, balance_u128));
 				total_perpetual += *v;
 			}
 		}
 
 		// payout to previous owner who gets 100% - total perpetual royalties
-		payout.insert(owner_id, royalty_to_payout(10000 - total_perpetual, balance_u128));
+		payout_object.payout.insert(owner_id, royalty_to_payout(10000 - total_perpetual, balance_u128));
 
         //return the payout object
-		payout
+		payout_object
     }
 }

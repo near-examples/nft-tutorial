@@ -37,7 +37,12 @@ pub type SalePriceInNear = U128;
 pub type TokenId = String;
 pub type FungibleTokenId = AccountId;
 pub type ContractAndTokenId = String;
-pub type Payout = HashMap<AccountId, U128>;
+//defines the payout type we'll be parsing from the NFT contract as a part of the royalty standard.
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct Payout {
+    pub payout: HashMap<AccountId, U128>,
+} 
 
 
 //main contract struct to store all the information
