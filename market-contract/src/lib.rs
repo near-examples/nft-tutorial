@@ -33,7 +33,7 @@ const STORAGE_PER_SALE: u128 = 1000 * STORAGE_PRICE_PER_BYTE;
 static DELIMETER: &str = ".";
 
 //Creating custom types to use within the contract. This makes things more readable. 
-pub type SalePriceInNear = U128;
+pub type SalePriceInYoctoNear = U128;
 pub type TokenId = String;
 pub type FungibleTokenId = AccountId;
 pub type ContractAndTokenId = String;

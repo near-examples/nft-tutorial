@@ -13,8 +13,8 @@ pub struct Sale {
     pub nft_contract_id: String,
     //actual token ID for sale
     pub token_id: String,
-    //sale price in NEAR that the token is listed for
-    pub sale_conditions: SalePriceInNear,
+    //sale price in yoctoNEAR that the token is listed for
+    pub sale_conditions: SalePriceInYoctoNear,
 }
 
 #[near_bindgen]
