@@ -6,7 +6,7 @@ use crate::*;
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct SaleArgs {
-    pub sale_conditions: SalePriceInNear,
+    pub sale_conditions: SalePriceInYoctoNear,
 }
 
 /*
