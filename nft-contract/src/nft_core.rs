@@ -22,7 +22,7 @@ pub trait NonFungibleTokenCore {
         token_id: TokenId,
         memo: Option<String>,
         msg: String,
-    ) -> Promise;
+    ) -> PromiseOrValue<bool>;
 
     //get information about the NFT token passed in
     fn nft_token(&self, token_id: TokenId) -> Option<JsonToken>;
@@ -103,7 +103,7 @@ impl NonFungibleTokenCore for Contract {
         token_id: TokenId,
         memo: Option<String>,
         msg: String,
-    ) -> Promise {
+    ) -> PromiseOrValue<bool> {
         //assert that the user attached exactly 1 yocto for security reasons. 
         assert_one_yocto();
         //get the sender ID 
@@ -135,7 +135,7 @@ impl NonFungibleTokenCore for Contract {
             env::current_account_id(), //contract account to make the call to
             NO_DEPOSIT, //attached deposit
             GAS_FOR_RESOLVE_TRANSFER, //GAS attached to the call
-        ))
+        )).into()
     }
 
     //get the information for a specific token ID
