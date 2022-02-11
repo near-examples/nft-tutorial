@@ -10,14 +10,12 @@ impl Contract {
 
     //Query for nft tokens on the contract regardless of the owner using pagination
     pub fn nft_tokens(&self, from_index: Option<U128>, limit: Option<u64>) -> Vec<JsonToken> {
-        //get a vector of the keys in the token_metadata_by_id collection.  
-        let keys = self.token_metadata_by_id.keys_as_vector();
 
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
         let start = u128::from(from_index.unwrap_or(U128(0)));
 
         //iterate through the keys vector
-        keys.iter()
+        self.token_metadata_by_id.keys()
             //skip to the index we specified in the start variable
             .skip(start as usize) 
             //take the first "limit" elements in the vector. If we didn't specify a limit, use 0
@@ -61,14 +59,12 @@ impl Contract {
             //if there is no set of tokens, we'll simply return an empty vector. 
             return vec![];
         };
-        //we'll convert the UnorderedSet into a vector of strings
-        let keys = tokens.as_vector();
 
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
         let start = u128::from(from_index.unwrap_or(U128(0)));
 
         //iterate through the keys vector
-        keys.iter()
+        tokens.iter()
             //skip to the index we specified in the start variable
             .skip(start as usize) 
             //take the first "limit" elements in the vector. If we didn't specify a limit, use 0
