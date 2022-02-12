@@ -10,16 +10,15 @@ impl Contract {
 
     //Query for nft tokens on the contract regardless of the owner using pagination
     pub fn nft_tokens(&self, from_index: Option<U128>, limit: Option<u64>) -> Vec<JsonToken> {
-
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
         let start = u128::from(from_index.unwrap_or(U128(0)));
 
-        //iterate through the keys vector
+        //iterate through each token using an iterator
         self.token_metadata_by_id.keys()
             //skip to the index we specified in the start variable
             .skip(start as usize) 
-            //take the first "limit" elements in the vector. If we didn't specify a limit, use 0
-            .take(limit.unwrap_or(0) as usize) 
+            //take the first "limit" elements in the vector. If we didn't specify a limit, use 50
+            .take(limit.unwrap_or(50) as usize) 
             //we'll map the token IDs which are strings into Json Tokens
             .map(|token_id| self.nft_token(token_id.clone()).unwrap())
             //since we turned the keys into an iterator, we need to turn it back into a vector to return
@@ -67,8 +66,8 @@ impl Contract {
         tokens.iter()
             //skip to the index we specified in the start variable
             .skip(start as usize) 
-            //take the first "limit" elements in the vector. If we didn't specify a limit, use 0
-            .take(limit.unwrap_or(0) as usize) 
+            //take the first "limit" elements in the vector. If we didn't specify a limit, use 50
+            .take(limit.unwrap_or(50) as usize) 
             //we'll map the token IDs which are strings into Json Tokens
             .map(|token_id| self.nft_token(token_id.clone()).unwrap())
             //since we turned the keys into an iterator, we need to turn it back into a vector to return
