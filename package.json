@@ -5,6 +5,6 @@
     "author": "Ben Kurrek",
     "license": "ISC",
     "scripts": {
-        "build": "cd nft-contract && ./build.sh && cd ../.."
+        "build": "cd nft-contract && bash build.sh && cd ../.."
     }
 }
