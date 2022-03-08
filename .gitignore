@@ -5,7 +5,6 @@
 /neardev
 /.pnp
 .pnp.js
-/out
 
 #cache
 .cache
@@ -13,7 +12,6 @@
 
 #contracts
 target
-out
 notes
 
 # testing
