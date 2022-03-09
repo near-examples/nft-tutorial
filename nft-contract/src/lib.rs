@@ -112,3 +112,6 @@ impl Contract {
         this
     }
 }
+
+#[cfg(test)]
+mod tests;
