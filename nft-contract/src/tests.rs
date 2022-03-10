@@ -1,34 +1,21 @@
-/*
- * this file sets up unit tests
- * to run these, the command will be:
- * cargo test --package rust-counter-tutorial -- --nocapture
- * Note: 'rust-counter-tutorial' comes from cargo.toml's 'name' key
- */
-
-// use the attribute below for unit tests
+/* this file sets up unit tests */
 #[cfg(test)]
 use crate::Contract;
 use crate::TokenMetadata;
 use near_sdk::json_types::U128;
-use near_sdk::{env, AccountId};
-use near_sdk::serde::export::TryFrom;
-use near_sdk::test_utils::VMContextBuilder;
+use near_sdk::test_utils::{accounts, VMContextBuilder};
 use near_sdk::testing_env;
-// use near_sdk::MockedBlockchain;
+use near_sdk::{env, AccountId};
 
-// simple helper function to take a string literal and return a ValidAccountId
-fn to_valid_account(account: &str) -> AccountId {
-    AccountId::try_from(account.to_string()).expect("Invalid account")
-}
+use std::collections::HashMap;
 
-// part of writing unit tests is setting up a mock context
-// provide a `predecessor` here, it'll modify the default context
+const MINT_STORAGE_COST: u128 = 100000000000000000000000;
+
 fn get_context(predecessor: AccountId) -> VMContextBuilder {
     let mut builder = VMContextBuilder::new();
     builder.predecessor_account_id(predecessor);
     builder
 }
-
 
 fn sample_token_metadata() -> TokenMetadata {
     TokenMetadata {
@@ -48,65 +35,48 @@ fn sample_token_metadata() -> TokenMetadata {
 }
 
 #[test]
-fn test_new() {
-    let mut context = get_context(env::predecessor_account_id());
+#[should_panic(expected = "The contract is not initialized")]
+fn test_default() {
+    let context = get_context(accounts(1));
     testing_env!(context.build());
-    let contract = Contract::new_default_meta(env::predecessor_account_id().into());
+    let _contract = Contract::default();
+}
+
+#[test]
+fn test_new_account_contract() {
+    let mut context = get_context(accounts(1));
+    testing_env!(context.build());
+    let contract = Contract::new_default_meta(accounts(1).into());
     testing_env!(context.is_view(true).build());
     let contract_nft_tokens = contract.nft_tokens(Some(U128(0)), None);
     assert_eq!(contract_nft_tokens.len(), 0);
 }
 
-// mark individual unit tests with #[test] for them to be registered and fired
 #[test]
-fn increment() {
-    // set up the mock context into the testing environment
-    let account = to_valid_account("foo.near");
-    let context = get_context(account);
+fn test_mint_nft() {
+    let mut context = get_context(accounts(0));
     testing_env!(context.build());
-    // instantiate a contract variable with the counter at zero
-    let mut contract = Contract::new_default_meta(
-        env::predecessor_account_id()
-    );
+    let mut contract = Contract::new_default_meta(accounts(0).into());
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(MINT_STORAGE_COST)
+        .predecessor_account_id(accounts(0))
+        .build());
     let token_metadata: TokenMetadata = sample_token_metadata();
-    // contract.nft_mint(
-    //     "my_token_id_11", 
-    //     token_metadata, 
-    //     receiver_id, 
-    //     perpetual_royalties
-    // );
-    // let mut contract = Contract {
-    //      owner_id: 000,
-    //      tokens_per_owner: 000,
-    //      tokens_by_id: 000, 
-    //      token_metadata_by_id: 000,
-    //      metadata: 000,
-    // }; 
-    // contract.increment();
-    // println!("Value after increment: {}", contract.get_num());
-    // confirm that we received 1 when calling get_num
-    // assert_eq!(1, contract.get_num());
-}
+    let token_id = "0".to_string();
+    contract.nft_mint(token_id.clone(), token_metadata, accounts(0), None);
+    let contract_nft_tokens = contract.nft_tokens(Some(U128(0)), None);
+    assert_eq!(contract_nft_tokens.len(), 1);
 
-#[test]
-fn decrement() {
-    // let context = VMContextBuilder::new();
-    // testing_env!(context.build());
-    // let mut contract = Counter { val: 0 };
-    // contract.decrement();
-    // println!("Value after decrement: {}", contract.get_num());
-    // // confirm that we received -1 when calling get_num
-    // assert_eq!(-1, contract.get_num());
-}
-
-#[test]
-fn increment_and_reset() {
-    // let context = VMContextBuilder::new();
-    // testing_env!(context.build());
-    // let mut contract = Counter { val: 0 };
-    // contract.increment();
-    // contract.reset();
-    // println!("Value after reset: {}", contract.get_num());
-    // // confirm that we received -1 when calling get_num
-    // assert_eq!(0, contract.get_num());
+    assert_eq!(contract_nft_tokens[0].token_id, token_id);
+    assert_eq!(contract_nft_tokens[0].owner_id, accounts(0));
+    assert_eq!(
+        contract_nft_tokens[0].metadata.title,
+        sample_token_metadata().title
+    );
+    assert_eq!(
+        contract_nft_tokens[0].metadata.description,
+        sample_token_metadata().description
+    );
+    assert_eq!(contract_nft_tokens[0].approved_account_ids, HashMap::new());
 }
