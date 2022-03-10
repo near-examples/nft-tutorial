@@ -1,4 +1,5 @@
 /* this file sets up unit tests */
+use crate::approval::NonFungibleTokenCore;
 #[cfg(test)]
 use crate::Contract;
 use crate::TokenMetadata;
@@ -10,6 +11,7 @@ use near_sdk::{env, AccountId};
 use std::collections::HashMap;
 
 const MINT_STORAGE_COST: u128 = 100_000_000_000_000_000_000_000;
+const MIN_REQUIRED_APPROVAL_YOCTO: u128 = 170000000000000000000;
 
 fn get_context(predecessor: AccountId) -> VMContextBuilder {
     let mut builder = VMContextBuilder::new();
@@ -135,4 +137,34 @@ fn test_internal_transfer() {
     );
     assert_eq!(token.metadata.media, sample_token_metadata().media);
     assert_eq!(token.approved_account_ids, HashMap::new());
+}
+
+#[test]
+fn test_nft_approve() {
+    let mut context = get_context(accounts(0));
+    testing_env!(context.build());
+    let mut contract = Contract::new_default_meta(accounts(0).into());
+
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(MINT_STORAGE_COST)
+        .predecessor_account_id(accounts(0))
+        .build());
+    let token_id = "0".to_string();
+    contract.nft_mint(token_id.clone(), sample_token_metadata(), accounts(0), None);
+
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(MIN_REQUIRED_APPROVAL_YOCTO)
+        .predecessor_account_id(accounts(0))
+        .build());
+    contract.nft_approve(token_id.clone(), accounts(1), None);
+
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .account_balance(env::account_balance())
+        .is_view(true)
+        .attached_deposit(0)
+        .build());
+    assert!(contract.nft_is_approved(token_id.clone(), accounts(1), None));
 }
