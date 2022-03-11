@@ -183,3 +183,6 @@ impl Contract {
         U128(self.storage_deposits.get(&account_id).unwrap_or(0))
     }
 }
+
+#[cfg(test)]
+mod tests;
