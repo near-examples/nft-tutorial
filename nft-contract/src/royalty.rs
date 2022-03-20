@@ -10,7 +10,7 @@ pub trait NonFungibleTokenCore {
         receiver_id: AccountId,
         token_id: TokenId,
         approval_id: u64,
-        memo: String,
+        memo: Option<String>,
         balance: U128,
         max_len_payout: u32,
     ) -> Payout;
@@ -66,7 +66,7 @@ impl NonFungibleTokenCore for Contract {
         receiver_id: AccountId,
         token_id: TokenId,
         approval_id: u64,
-        memo: String,
+        memo: Option<String>,
         balance: U128,
         max_len_payout: u32,
     ) -> Payout { 
@@ -80,7 +80,7 @@ impl NonFungibleTokenCore for Contract {
             &receiver_id,
             &token_id,
             Some(approval_id),
-            Some(memo),
+            memo,
         );
 
         //refund the previous token owner for the storage used up by the previous approved account IDs
