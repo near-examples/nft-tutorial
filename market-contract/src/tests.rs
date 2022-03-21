@@ -1,9 +1,11 @@
 /* this file sets up unit tests */
+use crate::sale::Sale;
 #[cfg(test)]
 use crate::Contract;
 use near_sdk::{
+    collections::UnorderedSet,
     env,
-    json_types::U128,
+    json_types::{U128, U64},
     test_utils::{accounts, VMContextBuilder},
     testing_env, AccountId,
 };
@@ -87,11 +89,61 @@ fn test_storage_withdraw() {
     // withdraw amount
     testing_env!(context
         .storage_usage(env::storage_usage())
-        .attached_deposit(U128(1).0)  // below func requires a min of 1 yocto attached
+        .attached_deposit(U128(1).0) // below func requires a min of 1 yocto attached
         .predecessor_account_id(accounts(0))
         .build());
     contract.storage_withdraw();
 
     let remaining_amount = contract.storage_balance_of(accounts(0));
     assert_eq!(remaining_amount, U128(0))
+}
+
+#[test]
+fn test_remove_sale() {
+    let mut context = get_context(accounts(0));
+    testing_env!(context.build());
+    let mut contract = Contract::new(accounts(0));
+
+    // deposit amount
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(MIN_REQUIRED_STORAGE_YOCTO)
+        .predecessor_account_id(accounts(0))
+        .build());
+    contract.storage_deposit(Some(accounts(0)));
+
+    // add sale
+    let token_id = String::from("0n3C0ntr4ctT0Rul3Th3m4ll");
+    let sale = Sale {
+        owner_id: accounts(0).clone(), //owner of the sale / token
+        approval_id: U64(1).0,         //approval ID for that token that was given to the market
+        nft_contract_id: env::predecessor_account_id().to_string(), //NFT contract the token was minted on
+        token_id: token_id.clone(),                                 //the actual token ID
+        sale_conditions: U128(100), //the sale conditions -- price in YOCTO NEAR
+    };
+    let nft_contract_id = env::predecessor_account_id();
+    let contract_and_token_id = format!("{}{}{}", nft_contract_id, ".", token_id);
+    contract.sales.insert(&contract_and_token_id, &sale);
+    let owner_token_set = UnorderedSet::new(contract_and_token_id.as_bytes());
+    contract
+        .by_owner_id
+        .insert(&sale.owner_id, &owner_token_set);
+    let nft_token_set = UnorderedSet::new(token_id.as_bytes());
+    contract
+        .by_nft_contract_id
+        .insert(&sale.owner_id, &nft_token_set);
+    assert_eq!(contract.sales.len(), 1, "Failed to insert sale to contract");
+
+    // remove sale
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(U128(1).0) // below func requires a min of 1 yocto attached
+        .predecessor_account_id(accounts(0))
+        .build());
+    contract.remove_sale(nft_contract_id, token_id);
+    assert_eq!(
+        contract.sales.len(),
+        0,
+        "Failed to remove sale from contract"
+    );
 }
