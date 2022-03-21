@@ -3,8 +3,9 @@
 use crate::Contract;
 use near_sdk::{
     env,
+    json_types::U128,
     test_utils::{accounts, VMContextBuilder},
-    testing_env, AccountId, json_types::U128,
+    testing_env, AccountId,
 };
 
 const MIN_REQUIRED_APPROVAL_YOCTO: u128 = 170000000000000000000;
@@ -67,4 +68,30 @@ fn test_storage_balance_of() {
     contract.storage_deposit(Some(accounts(0)));
     let balance = contract.storage_balance_of(accounts(0));
     assert_eq!(balance, U128(MIN_REQUIRED_STORAGE_YOCTO));
+}
+
+#[test]
+fn test_storage_withdraw() {
+    let mut context = get_context(accounts(0));
+    testing_env!(context.build());
+    let mut contract = Contract::new(accounts(0));
+
+    // deposit amount
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(MIN_REQUIRED_STORAGE_YOCTO)
+        .predecessor_account_id(accounts(0))
+        .build());
+    contract.storage_deposit(Some(accounts(0)));
+
+    // withdraw amount
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(U128(1).0)  // below func requires a min of 1 yocto attached
+        .predecessor_account_id(accounts(0))
+        .build());
+    contract.storage_withdraw();
+
+    let remaining_amount = contract.storage_balance_of(accounts(0));
+    assert_eq!(remaining_amount, U128(0))
 }
