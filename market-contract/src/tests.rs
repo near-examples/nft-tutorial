@@ -147,3 +147,54 @@ fn test_remove_sale() {
         "Failed to remove sale from contract"
     );
 }
+
+#[test]
+fn test_update_price() {
+    let mut context = get_context(accounts(0));
+    testing_env!(context.build());
+    let mut contract = Contract::new(accounts(0));
+
+    // deposit amount
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(MIN_REQUIRED_STORAGE_YOCTO)
+        .predecessor_account_id(accounts(0))
+        .build());
+    contract.storage_deposit(Some(accounts(0)));
+
+    // add sale
+    let token_id = String::from("0n3C0ntr4ctT0Rul3Th3m4ll");
+    let nft_bid_yocto = U128(100);
+    let sale = Sale {
+        owner_id: accounts(0).clone(), //owner of the sale / token
+        approval_id: U64(1).0,         //approval ID for that token that was given to the market
+        nft_contract_id: env::predecessor_account_id().to_string(), //NFT contract the token was minted on
+        token_id: token_id.clone(),                                 //the actual token ID
+        sale_conditions: nft_bid_yocto, //the sale conditions -- price in YOCTO NEAR
+    };
+    let nft_contract_id = env::predecessor_account_id();
+    let contract_and_token_id = format!("{}{}{}", nft_contract_id, ".", token_id);
+    contract.sales.insert(&contract_and_token_id, &sale);
+    let owner_token_set = UnorderedSet::new(contract_and_token_id.as_bytes());
+    contract
+        .by_owner_id
+        .insert(&sale.owner_id, &owner_token_set);
+    let nft_token_set = UnorderedSet::new(token_id.as_bytes());
+    contract
+        .by_nft_contract_id
+        .insert(&sale.owner_id, &nft_token_set);
+    assert_eq!(contract.sales.len(), 1, "Failed to insert sale to contract");
+
+    // update price 
+    let new_price = U128(150);
+    testing_env!(context
+        .storage_usage(env::storage_usage())
+        .attached_deposit(U128(1).0)
+        .predecessor_account_id(accounts(0))  // bob to buy NFT from alice
+        .build());
+    contract.update_price(nft_contract_id, token_id, new_price);
+
+    // test update price success
+    let sale = contract.sales.get(&contract_and_token_id).expect("No sale");
+    assert_eq!(sale.sale_conditions, new_price);
+}
