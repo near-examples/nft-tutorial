@@ -21,6 +21,7 @@ notes
 
 # production
 /dist
+/out
 
 # misc
 .DS_Store

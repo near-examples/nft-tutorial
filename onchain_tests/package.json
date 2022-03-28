@@ -2,12 +2,13 @@
   "private": true,
   "scripts": {
     "build": "yarn workspaces run build",
-    "test:sandbox": "yarn build && ava --verbose",
-    "test:testnet": "yarn build && ava --config ./ava.testnet.config.cjs",
+    "test:sandbox": "bash arch.sh && yarn build && ava --verbose",
+    "test:testnet": "bash arch.sh && yarn build && ava --config ./ava.testnet.config.cjs",
     "test": "yarn test:sandbox && yarn test:testnet"
   },
   "devDependencies": {
-    "near-workspaces-ava": "1.0.0"
+    "near-workspaces-ava": "1.0.0",
+    "ts-node": "^10.7.0"
   },
   "workspaces": []
 }
