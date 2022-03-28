@@ -29,18 +29,21 @@ const workspace = Workspace.init(async ({ root }) => {
   return { alice, main_contract, market_contract };
 });
 
-workspace.test("main contract: nft metadata view call", async (test, { main_contract, root }) => {
-  const expected = {
-    base_uri: null,
-    icon: null,
-    name: "NFT Tutorial Contract",
-    reference: null,
-    reference_hash: null,
-    spec: "nft-1.0.0",
-    symbol: "GOTEAM",
-  };
-  test.deepEqual(
-    await main_contract.view("nft_metadata", { account_id: root }),
-    expected
-  );
-});
+workspace.test(
+  "main contract: nft metadata view call",
+  async (test, { main_contract, root }) => {
+    const expected = {
+      base_uri: null,
+      icon: null,
+      name: "NFT Tutorial Contract",
+      reference: null,
+      reference_hash: null,
+      spec: "nft-1.0.0",
+      symbol: "GOTEAM",
+    };
+    test.deepEqual(
+      await main_contract.view("nft_metadata", { account_id: root }),
+      expected
+    );
+  }
+);
