@@ -62,7 +62,7 @@ workspace.test(
     test.log("Request payload: ", request_payload);
     const options = {
       gas: new BN("75000000000000"), // min gas: https://stackoverflow.com/questions/70088651/near-executionerrorexceeded-the-prepaid-gas
-      attachedDeposit: new BN("7880000000000000000001"), // Must attach 7880000000000000000000 yoctoNEAR to cover storage
+      attachedDeposit: new BN("8420000000000000000001"), // Must attach 8420000000000000000000 yoctoNEAR to cover storage
     };
     test.log("Options: ", options);
     await root.call(main_contract, "nft_mint", request_payload, options);
@@ -86,7 +86,7 @@ workspace.test(
           title: "GO TEAM",
           updated_at: null,
         },
-        owner_id: "alice.test.near",
+        owner_id: alice.accountId,
         royalty: {},
         token_id: "TEST123",
       },
