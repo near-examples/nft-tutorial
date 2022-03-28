@@ -52,7 +52,7 @@ workspace.test(
     const request_payload = {
       token_id: "TEST123",
       metadata: {
-        title: "GO TEAM",
+        title: "LEEROYYYMMMJENKINSSS",
         description: "Alright time's up, let's do this.",
         media:
           "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.Fhp4lHufCdTzTeGCAblOdgHaF7%26pid%3DApi&f=1",
@@ -62,7 +62,7 @@ workspace.test(
     test.log("Request payload: ", request_payload);
     const options = {
       gas: new BN("75000000000000"), // min gas: https://stackoverflow.com/questions/70088651/near-executionerrorexceeded-the-prepaid-gas
-      attachedDeposit: new BN("8420000000000000000001"), // Must attach 8420000000000000000000 yoctoNEAR to cover storage
+      attachedDeposit: new BN("8550000000000000000001"), // Must attach 8550000000000000000000 yoctoNEAR to cover storage
     };
     test.log("Options: ", options);
     await root.call(main_contract, "nft_mint", request_payload, options);
@@ -83,7 +83,7 @@ workspace.test(
           reference: null,
           reference_hash: null,
           starts_at: null,
-          title: "GO TEAM",
+          title: "LEEROYYYMMMJENKINSSS",
           updated_at: null,
         },
         owner_id: alice.accountId,
