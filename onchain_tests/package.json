@@ -1,14 +1,12 @@
 {
-  "private": true,
+  "license": "ISC",
   "scripts": {
-    "build": "yarn workspaces run build",
-    "test:sandbox": "bash arch.sh && yarn build && ava --verbose",
-    "test:testnet": "bash arch.sh && yarn build && ava --config ./ava.testnet.config.cjs",
+    "test:sandbox": "bash arch.sh && near-workspaces-ava --config ./ava.config.cjs --verbose",
+    "test:testnet": "bash arch.sh && near-workspaces-ava --config ./ava.testnet.config.cjs --verbose",
     "test": "yarn test:sandbox && yarn test:testnet"
   },
   "devDependencies": {
     "near-workspaces-ava": "1.0.0",
     "ts-node": "^10.7.0"
-  },
-  "workspaces": []
+  }
 }

@@ -94,3 +94,51 @@ workspace.test(
     test.deepEqual(tokens, expected, "Expected to find one minted NFT");
   }
 );
+
+workspace.test(
+  "main contract: nft approve call",
+  async (test, { main_contract, alice, bob, root }) => {
+    // mint NFT
+    const mint_payload = {
+      token_id: "TEST123",
+      metadata: {
+        title: "LEEROYYYMMMJENKINSSS",
+        description: "Alright time's up, let's do this.",
+        media:
+          "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.Fhp4lHufCdTzTeGCAblOdgHaF7%26pid%3DApi&f=1",
+      },
+      receiver_id: alice,
+    };
+    test.log("Request payload: ", mint_payload);
+    const mint_options = {
+      gas: new BN("75000000000000"), // min gas: https://stackoverflow.com/questions/70088651/near-executionerrorexceeded-the-prepaid-gas
+      attachedDeposit: new BN("8550000000000000000001"), // Must attach 8550000000000000000000 yoctoNEAR to cover storage
+    };
+    test.log("Options: ", mint_options);
+    await root.call(main_contract, "nft_mint", mint_payload, mint_options);
+
+    // approve NFT
+    const approve_payload = {
+      token_id: "TEST123",
+      account_id: bob,
+    };
+    const approve_options = {
+      gas: new BN("75000000000000"), // min gas: https://stackoverflow.com/questions/70088651/near-executionerrorexceeded-the-prepaid-gas
+      attachedDeposit: new BN("8550000000000000000001"), // Must attach 8550000000000000000000 yoctoNEAR to cover storage
+    };
+    await alice.call(
+      main_contract,
+      "nft_approve",
+      approve_payload,
+      approve_options
+    );
+    
+    // test if approved
+    const view_payload = {
+      token_id: "TEST123",
+      approved_account_id: bob
+    };
+    const approved = await main_contract.view("nft_is_approved", view_payload); 
+    test.true(approved, "Failed to approve NFT");
+  }
+);
