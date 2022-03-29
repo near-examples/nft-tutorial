@@ -1,8 +1,9 @@
 {
   "license": "ISC",
   "scripts": {
-    "test:sandbox": "bash arch.sh && near-workspaces-ava --config ./ava.config.cjs --verbose",
-    "test:testnet": "bash arch.sh && near-workspaces-ava --config ./ava.testnet.config.cjs --verbose",
+    "arch": "bash arch.sh",
+    "test:sandbox": "arch && near-workspaces-ava --config ./ava.config.cjs --verbose --timeout=10m",
+    "test:testnet": "arch && near-workspaces-ava --config ./ava.testnet.config.cjs --verbose --timeout=10m",
     "test": "yarn test:sandbox && yarn test:testnet"
   },
   "devDependencies": {
