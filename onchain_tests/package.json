@@ -1,13 +1,11 @@
 {
-    "license": "ISC",
-    "scripts": {
-      "build": "yarn workspaces run build",
-      "test:sandbox": "yarn build && ava --verbose",
-      "test:testnet": "yarn build && ava --config ./ava.testnet.config.cjs --verbose",
-      "test": "yarn test:sandbox && yarn test:testnet"
-    },
-    "devDependencies": {
-      "near-workspaces-ava": "^1.0.0"
-    },
-    "workspaces": []
+  "license": "ISC",
+  "scripts": {
+    "test:sandbox": "near-workspaces-ava --config ./ava.config.cjs --verbose",
+    "test:testnet": "near-workspaces-ava --config ./ava.testnet.config.cjs --verbose",
+    "test": "yarn test:sandbox && yarn test:testnet"
+  },
+  "devDependencies": {
+    "near-workspaces-ava": "^1.0.0"
   }
+}
