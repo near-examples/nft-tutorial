@@ -132,13 +132,13 @@ workspace.test(
       approve_payload,
       approve_options
     );
-    
+
     // test if approved
     const view_payload = {
       token_id: "TEST123",
-      approved_account_id: bob
+      approved_account_id: bob,
     };
-    const approved = await main_contract.view("nft_is_approved", view_payload); 
+    const approved = await main_contract.view("nft_is_approved", view_payload);
     test.true(approved, "Failed to approve NFT");
   }
 );
