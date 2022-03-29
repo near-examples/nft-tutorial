@@ -10,7 +10,7 @@ pub trait NonFungibleTokenCore {
         receiver_id: AccountId,
         token_id: TokenId,
         approval_id: u64,
-        memo: String,
+        memo: Option<String>,
         balance: U128,
         max_len_payout: u32,
     );
@@ -33,7 +33,7 @@ impl NonFungibleTokenCore for Contract {
         receiver_id: AccountId,
         token_id: TokenId,
         approval_id: u64,
-        memo: String,
+        memo: Option<String>,
         balance: U128,
         max_len_payout: u32,
     ) {
