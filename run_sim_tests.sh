@@ -1,5 +1,6 @@
 #!/bin/bash
 
 cd onchain_tests
-yarn install
+bash arch.sh && yarn install
 yarn run test
+cd ..
