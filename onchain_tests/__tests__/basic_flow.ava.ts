@@ -6,7 +6,7 @@ const workspace = Workspace.init(async ({ root }) => {
   const bob = await root.createAccount("bob");
   const charlie = await root.createAccount("charlie");
 
-  const main_contract = await root.createAndDeploy(
+  const nft_contract = await root.createAndDeploy(
     "nft-contract",
     "../out/main.wasm",
     {
@@ -24,12 +24,12 @@ const workspace = Workspace.init(async ({ root }) => {
     }
   );
 
-  return { alice, bob, charlie, main_contract, market_contract };
+  return { alice, bob, charlie, nft_contract, market_contract };
 });
 
 workspace.test(
-  "main contract: nft metadata view",
-  async (test, { main_contract, root }) => {
+  "nft contract: nft metadata view",
+  async (test, { nft_contract, root }) => {
     const expected = {
       base_uri: null,
       icon: null,
@@ -40,15 +40,15 @@ workspace.test(
       symbol: "GOTEAM",
     };
     test.deepEqual(
-      await main_contract.view("nft_metadata", { account_id: root }),
+      await nft_contract.view("nft_metadata", { account_id: root }),
       expected
     );
   }
 );
 
 workspace.test(
-  "main contract: nft mint call",
-  async (test, { main_contract, alice, root }) => {
+  "nft contract: nft mint call",
+  async (test, { nft_contract, alice }) => {
     const request_payload = {
       token_id: "TEST123",
       metadata: {
@@ -65,9 +65,9 @@ workspace.test(
       attachedDeposit: new BN("8550000000000000000001"), // Must attach 8550000000000000000000 yoctoNEAR to cover storage
     };
     test.log("Options: ", options);
-    await root.call(main_contract, "nft_mint", request_payload, options);
+    await alice.call(nft_contract, "nft_mint", request_payload, options);
 
-    const tokens = await main_contract.view("nft_tokens");
+    const tokens = await nft_contract.view("nft_tokens");
     const expected = [
       {
         approved_account_ids: {},
@@ -96,40 +96,25 @@ workspace.test(
 );
 
 workspace.test(
-  "main contract: nft approve call",
-  async (test, { main_contract, market_contract, alice, root }) => {
-    await mintNFT(alice, root, main_contract);
-
-    // approve NFT
-    const approve_payload = {
-      token_id: "TEST123",
-      account_id: market_contract,
-    };
-    const approve_options = {
-      gas: new BN("75000000000000"), // min gas: https://stackoverflow.com/questions/70088651/near-executionerrorexceeded-the-prepaid-gas
-      attachedDeposit: new BN("8550000000000000000001"), // Must attach 8550000000000000000000 yoctoNEAR to cover storage
-    };
-    await alice.call(
-      main_contract,
-      "nft_approve",
-      approve_payload,
-      approve_options
-    );
+  "nft contract: nft approve call",
+  async (test, { nft_contract, market_contract, alice }) => {
+    await mintNFT(alice, nft_contract);
+    await approveNFT(market_contract, alice, nft_contract);
 
     // test if approved
     const view_payload = {
       token_id: "TEST123",
       approved_account_id: market_contract,
     };
-    const approved = await main_contract.view("nft_is_approved", view_payload);
+    const approved = await nft_contract.view("nft_is_approved", view_payload);
     test.true(approved, "Failed to approve NFT");
   }
 );
 
 workspace.test(
-  "main contract: nft approve call long msg string",
-  async (test, { main_contract, market_contract, alice, root }) => {
-    await mintNFT(alice, root, main_contract);
+  "nft contract: nft approve call long msg string",
+  async (test, { nft_contract, market_contract, alice }) => {
+    await mintNFT(alice, nft_contract);
 
     // approve NFT
     const approve_payload = {
@@ -139,10 +124,10 @@ workspace.test(
     };
     const approve_options = {
       gas: new BN("75000000000000"), // min gas: https://stackoverflow.com/questions/70088651/near-executionerrorexceeded-the-prepaid-gas
-      attachedDeposit: new BN("10000000000000000000001"), // Insufficient storage paid: 0, for 1 sales at 10000000000000000000000 rate of per sale
+      attachedDeposit: new BN("8550000000000000000001"), // Must attach 8550000000000000000000 yoctoNEAR to cover storage
     };
     const result = await alice.call_raw(
-      main_contract,
+      nft_contract,
       "nft_approve",
       approve_payload,
       approve_options
@@ -157,15 +142,35 @@ workspace.test(
       token_id: "TEST123",
       approved_account_id: market_contract,
     };
-    const approved = await main_contract.view("nft_is_approved", view_payload);
+    const approved = await nft_contract.view("nft_is_approved", view_payload);
     test.false(approved, "NFT approval should have failed");
   }
 );
 
+async function approveNFT(
+  account_to_approve: NearAccount,
+  owner: NearAccount,
+  nft_contract: NearAccount
+) {
+  const approve_payload = {
+    token_id: "TEST123",
+    account_id: account_to_approve,
+  };
+  const approve_options = {
+    gas: new BN("75000000000000"),
+    attachedDeposit: new BN("8550000000000000000001"), // Must attach 8550000000000000000000 yoctoNEAR to cover storage
+  };
+  await owner.call(
+    nft_contract,
+    "nft_approve",
+    approve_payload,
+    approve_options
+  );
+}
+
 async function mintNFT(
-  alice: NearAccount,
-  root: NearAccount,
-  main_contract: NearAccount
+  user: NearAccount,
+  nft_contract: NearAccount
 ) {
   const mint_payload = {
     token_id: "TEST123",
@@ -175,11 +180,11 @@ async function mintNFT(
       media:
         "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.Fhp4lHufCdTzTeGCAblOdgHaF7%26pid%3DApi&f=1",
     },
-    receiver_id: alice,
+    receiver_id: user,
   };
   const mint_options = {
-    gas: new BN("75000000000000"),
-    attachedDeposit: new BN("10000000000000000000001"), // Insufficient storage paid: 0, for 1 sales at 10000000000000000000000 rate of per sale
+    gas: new BN("75000000000000"), // min gas: https://stackoverflow.com/questions/70088651/near-executionerrorexceeded-the-prepaid-gas
+    attachedDeposit: new BN("8550000000000000000001"), // Must attach 8550000000000000000000 yoctoNEAR to cover storage
   };
-  await root.call(main_contract, "nft_mint", mint_payload, mint_options);
+  await user.call(nft_contract, "nft_mint", mint_payload, mint_options);
 }
