@@ -1,5 +1,5 @@
 import { Workspace } from "near-workspaces-ava";
-import { BN } from "near-workspaces";
+import { BN, NearAccount } from "near-workspaces";
 
 const workspace = Workspace.init(async ({ root }) => {
   const alice = await root.createAccount("alice");
@@ -98,22 +98,7 @@ workspace.test(
 workspace.test(
   "main contract: nft approve call",
   async (test, { main_contract, market_contract, alice, root }) => {
-    // mint NFT
-    const mint_payload = {
-      token_id: "TEST123",
-      metadata: {
-        title: "LEEROYYYMMMJENKINSSS",
-        description: "Alright time's up, let's do this.",
-        media:
-          "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.Fhp4lHufCdTzTeGCAblOdgHaF7%26pid%3DApi&f=1",
-      },
-      receiver_id: alice,
-    };
-    const mint_options = {
-      gas: new BN("75000000000000"), // min gas: https://stackoverflow.com/questions/70088651/near-executionerrorexceeded-the-prepaid-gas
-      attachedDeposit: new BN("8550000000000000000001"), // Must attach 8550000000000000000000 yoctoNEAR to cover storage
-    };
-    await root.call(main_contract, "nft_mint", mint_payload, mint_options);
+    await mintNFT(alice, root, main_contract);
 
     // approve NFT
     const approve_payload = {
@@ -144,22 +129,7 @@ workspace.test(
 workspace.test(
   "main contract: nft approve call long msg string",
   async (test, { main_contract, market_contract, alice, root }) => {
-    // mint NFT
-    const mint_payload = {
-      token_id: "TEST123",
-      metadata: {
-        title: "LEEROYYYMMMJENKINSSS",
-        description: "Alright time's up, let's do this.",
-        media:
-          "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.Fhp4lHufCdTzTeGCAblOdgHaF7%26pid%3DApi&f=1",
-      },
-      receiver_id: alice,
-    };
-    const mint_options = {
-      gas: new BN("75000000000000"), // min gas: https://stackoverflow.com/questions/70088651/near-executionerrorexceeded-the-prepaid-gas
-      attachedDeposit: new BN("10000000000000000000001"), // Insufficient storage paid: 0, for 1 sales at 10000000000000000000000 rate of per sale
-    };
-    await root.call(main_contract, "nft_mint", mint_payload, mint_options);
+    await mintNFT(alice, root, main_contract);
 
     // approve NFT
     const approve_payload = {
@@ -177,7 +147,10 @@ workspace.test(
       approve_payload,
       approve_options
     );
-    test.regex(result.promiseErrorMessages.join("\n"), /Exceeded the prepaid gas+/);
+    test.regex(
+      result.promiseErrorMessages.join("\n"),
+      /Exceeded the prepaid gas+/
+    );
 
     // test if approved
     const view_payload = {
@@ -188,3 +161,25 @@ workspace.test(
     test.false(approved, "NFT approval should have failed");
   }
 );
+
+async function mintNFT(
+  alice: NearAccount,
+  root: NearAccount,
+  main_contract: NearAccount
+) {
+  const mint_payload = {
+    token_id: "TEST123",
+    metadata: {
+      title: "LEEROYYYMMMJENKINSSS",
+      description: "Alright time's up, let's do this.",
+      media:
+        "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.Fhp4lHufCdTzTeGCAblOdgHaF7%26pid%3DApi&f=1",
+    },
+    receiver_id: alice,
+  };
+  const mint_options = {
+    gas: new BN("75000000000000"),
+    attachedDeposit: new BN("10000000000000000000001"), // Insufficient storage paid: 0, for 1 sales at 10000000000000000000000 rate of per sale
+  };
+  await root.call(main_contract, "nft_mint", mint_payload, mint_options);
+}
