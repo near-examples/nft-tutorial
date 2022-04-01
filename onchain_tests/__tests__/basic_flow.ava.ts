@@ -1,6 +1,9 @@
 import { Workspace } from "near-workspaces-ava";
 import { BN, NearAccount } from "near-workspaces";
 
+const DEFAULT_GAS: string = "30000000000000";
+const DEFAULT_DEPOSIT: string = "8550000000000000000000";
+
 const workspace = Workspace.init(async ({ root }) => {
   const alice = await root.createAccount("alice");
   const bob = await root.createAccount("bob");
@@ -59,13 +62,12 @@ workspace.test(
       },
       receiver_id: alice,
     };
-    test.log("Request payload: ", request_payload);
-    const options = {
-      gas: new BN("75000000000000"), // min gas: https://stackoverflow.com/questions/70088651/near-executionerrorexceeded-the-prepaid-gas
-      attachedDeposit: new BN("8550000000000000000001"), // Must attach 8550000000000000000000 yoctoNEAR to cover storage
-    };
-    test.log("Options: ", options);
-    await alice.call(nft_contract, "nft_mint", request_payload, options);
+    await alice.call(
+      nft_contract,
+      "nft_mint",
+      request_payload,
+      defaultCallOptions()
+    );
 
     const tokens = await nft_contract.view("nft_tokens");
     const expected = [
@@ -122,15 +124,11 @@ workspace.test(
       account_id: market_contract,
       msg: "sample message".repeat(10 * 1024),
     };
-    const approve_options = {
-      gas: new BN("75000000000000"), // min gas: https://stackoverflow.com/questions/70088651/near-executionerrorexceeded-the-prepaid-gas
-      attachedDeposit: new BN("8550000000000000000001"), // Must attach 8550000000000000000000 yoctoNEAR to cover storage
-    };
     const result = await alice.call_raw(
       nft_contract,
       "nft_approve",
       approve_payload,
-      approve_options
+      defaultCallOptions()
     );
     test.regex(
       result.promiseErrorMessages.join("\n"),
@@ -147,31 +145,99 @@ workspace.test(
   }
 );
 
+workspace.test(
+  "cross contract: sell NFT on listed on marketplace",
+  async (test, { nft_contract, market_contract, alice, bob }) => {
+    await mintNFT(alice, nft_contract);
+    // pay for storage
+    await alice.call(
+      market_contract,
+      "storage_deposit",
+      {},
+      defaultCallOptions(DEFAULT_GAS, "10000000000000000000000") // Requires minimum deposit of 10000000000000000000000
+    );
+
+    const sale_price = '"300000000000000000000000"'; // sale price string in yoctoNEAR is 0.3 NEAR
+    await approveNFT(
+      market_contract,
+      alice,
+      nft_contract,
+      '{"sale_conditions": ' + sale_price + " }" // msg triggers XCC
+    );
+
+    // bob makes offer on listed nft
+    const alice_balance_before_offer = (await alice.balance()).total.toBigInt();
+    const offer_payload = {
+      nft_contract_id: nft_contract,
+      token_id: "TEST123",
+    };
+    await bob.call(
+      market_contract,
+      "offer",
+      offer_payload,
+      defaultCallOptions(
+        DEFAULT_GAS + "0", // 10X default amount for XCC
+        sale_price.replaceAll('"', "") // Attached deposit must be greater than or equal to the current price
+      )
+    );
+    const alive_balance_after_offer = (await alice.balance()).total.toBigInt();
+    const alice_balance_difference = (
+      alive_balance_after_offer - alice_balance_before_offer
+    ).toString();
+
+    // assert expectations
+    // alice gets paid
+    test.is(
+      alice_balance_difference.substring(0, 2),
+      sale_price.replaceAll('"', "").substring(0, 2),
+      "Expected alice balance to roughly increase by sale price"
+    );
+    // NFT has new owner
+    const view_payload = {
+      token_id: "TEST123",
+    };
+    const token_info = await nft_contract.view("nft_token", view_payload);
+    test.deepEqual(
+      token_info["owner_id"],
+      bob.accountId,
+      "NFT should have been sold"
+    );
+    // nothing left for sale on market
+    const sale_supply = await market_contract.view("get_supply_sales");
+    test.is(sale_supply, "0", "Expected no sales to be left on market");
+  }
+);
+
+function defaultCallOptions(
+  gas: string = DEFAULT_GAS,
+  deposit: string = DEFAULT_DEPOSIT
+) {
+  return {
+    gas: new BN(gas),
+    attachedDeposit: new BN(deposit),
+  };
+}
+
 async function approveNFT(
   account_to_approve: NearAccount,
   owner: NearAccount,
-  nft_contract: NearAccount
+  nft_contract: NearAccount,
+  message: string = null
 ) {
   const approve_payload = {
     token_id: "TEST123",
     account_id: account_to_approve,
-  };
-  const approve_options = {
-    gas: new BN("75000000000000"),
-    attachedDeposit: new BN("8550000000000000000001"), // Must attach 8550000000000000000000 yoctoNEAR to cover storage
+    msg: message,
   };
   await owner.call(
     nft_contract,
     "nft_approve",
     approve_payload,
-    approve_options
+    defaultCallOptions()
   );
 }
 
-async function mintNFT(
-  user: NearAccount,
-  nft_contract: NearAccount
-) {
+async function mintNFT(user: NearAccount, nft_contract: NearAccount) {
   const mint_payload = {
     token_id: "TEST123",
     metadata: {
@@ -182,9 +248,5 @@ async function mintNFT(
     },
     receiver_id: user,
   };
-  const mint_options = {
-    gas: new BN("75000000000000"), // min gas: https://stackoverflow.com/questions/70088651/near-executionerrorexceeded-the-prepaid-gas
-    attachedDeposit: new BN("8550000000000000000001"), // Must attach 8550000000000000000000 yoctoNEAR to cover storage
-  };
-  await user.call(nft_contract, "nft_mint", mint_payload, mint_options);
+  await user.call(nft_contract, "nft_mint", mint_payload, defaultCallOptions());
 }
