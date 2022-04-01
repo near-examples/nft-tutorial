@@ -197,14 +197,65 @@ workspace.test(
       token_id: "TEST123",
     };
     const token_info = await nft_contract.view("nft_token", view_payload);
-    test.deepEqual(
-      token_info["owner_id"],
-      bob.accountId,
-      "NFT should have been sold"
-    );
+    test.is(token_info["owner_id"], bob.accountId, "NFT should have been sold");
     // nothing left for sale on market
     const sale_supply = await market_contract.view("get_supply_sales");
     test.is(sale_supply, "0", "Expected no sales to be left on market");
+  }
+);
+
+workspace.test(
+  "cross contract: transfer NFT when listed on marketplace",
+  async (test, { nft_contract, market_contract, alice, bob }) => {
+    await mintNFT(alice, nft_contract);
+    // pay for storage
+    await alice.call(
+      market_contract,
+      "storage_deposit",
+      {},
+      defaultCallOptions(DEFAULT_GAS, "10000000000000000000000") // Requires minimum deposit of 10000000000000000000000
+    );
+
+    const sale_price = '"300000000000000000000000"'; // sale price string in yoctoNEAR is 0.3 NEAR
+    await approveNFT(
+      market_contract,
+      alice,
+      nft_contract,
+      '{"sale_conditions": ' + sale_price + " }" // msg triggers XCC
+    );
+
+    // attempt to transfer NFT
+    test.log("attempting to transfer NFT");
+    const transfer_payload = {
+      receiver_id: bob,
+      token_id: "TEST123",
+      approval_id: 0, // first and only approval done in line 224
+    };
+    const result = await market_contract.call_raw(
+      nft_contract,
+      "nft_transfer",
+      transfer_payload,
+      defaultCallOptions(DEFAULT_GAS, "1") // Requires attached deposit of exactly 1 yoctoNEAR
+    );
+    test.log("result: ", result);
+    test.log("errors: ", result.promiseErrorMessages);
+
+    // assert expectations
+    // NFT has same owner
+    const view_payload = {
+      token_id: "TEST123",
+    };
+    const token_info = await nft_contract.view("nft_token", view_payload);
+    test.is(
+      token_info["owner_id"],
+      alice.accountId,
+      "NFT should have not changed owners"
+    );
+    // error should be found
+    test.assert(
+      result.promiseErrorMessages.length > 0,
+      "expected to find error messages"
+    );
   }
 );
 
