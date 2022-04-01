@@ -225,7 +225,6 @@ workspace.test(
     );
 
     // attempt to transfer NFT
-    test.log("attempting to transfer NFT");
     const transfer_payload = {
       receiver_id: bob,
       token_id: "TEST123",
@@ -237,8 +236,6 @@ workspace.test(
       transfer_payload,
       defaultCallOptions(DEFAULT_GAS, "1") // Requires attached deposit of exactly 1 yoctoNEAR
     );
-    test.log("result: ", result);
-    test.log("errors: ", result.promiseErrorMessages);
 
     // assert expectations
     // NFT has same owner
