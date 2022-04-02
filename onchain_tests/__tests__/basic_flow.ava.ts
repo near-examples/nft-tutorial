@@ -206,7 +206,7 @@ workspace.test(
 
 workspace.test(
   "cross contract: transfer NFT when listed on marketplace",
-  async (test, { nft_contract, market_contract, alice, bob }) => {
+  async (test, { nft_contract, market_contract, alice, bob, charlie }) => {
     await mintNFT(alice, nft_contract);
     // pay for storage
     await alice.call(
@@ -224,17 +224,32 @@ workspace.test(
       '{"sale_conditions": ' + sale_price + " }" // msg triggers XCC
     );
 
-    // attempt to transfer NFT
+    // transfer NFT
     const transfer_payload = {
       receiver_id: bob,
       token_id: "TEST123",
       approval_id: 0, // first and only approval done in line 224
     };
-    const result = await market_contract.call_raw(
+    await market_contract.call(
       nft_contract,
       "nft_transfer",
       transfer_payload,
       defaultCallOptions(DEFAULT_GAS, "1") // Requires attached deposit of exactly 1 yoctoNEAR
+    );
+
+    // purchase NFT
+    const offer_payload = {
+      nft_contract_id: nft_contract,
+      token_id: "TEST123",
+    };
+    const result = await charlie.call_raw(
+      market_contract,
+      "offer",
+      offer_payload,
+      defaultCallOptions(
+        DEFAULT_GAS + "0", // 10X default amount for XCC
+        sale_price.replaceAll('"', "") // Attached deposit must be greater than or equal to the current price
+      )
     );
 
     // assert expectations
@@ -245,13 +260,13 @@ workspace.test(
     const token_info = await nft_contract.view("nft_token", view_payload);
     test.is(
       token_info["owner_id"],
-      alice.accountId,
-      "NFT should have not changed owners"
+      bob.accountId, // NFT was transferred to bob
+      "NFT should have bob as owner"
     );
-    // error should be found
-    test.assert(
-      result.promiseErrorMessages.length > 0,
-      "expected to find error messages"
+    // Unauthorized error should be found
+    test.regex(
+      result.promiseErrorMessages.join("\n"),
+      /Unauthorized+/
     );
   }
 );
