@@ -149,13 +149,7 @@ workspace.test(
   "cross contract: sell NFT on listed on marketplace",
   async (test, { nft_contract, market_contract, alice, bob }) => {
     await mintNFT(alice, nft_contract);
-    // pay for storage
-    await alice.call(
-      market_contract,
-      "storage_deposit",
-      {},
-      defaultCallOptions(DEFAULT_GAS, "10000000000000000000000") // Requires minimum deposit of 10000000000000000000000
-    );
+    await payForStorage(alice, market_contract);
 
     const sale_price = '"300000000000000000000000"'; // sale price string in yoctoNEAR is 0.3 NEAR
     await approveNFT(
@@ -208,13 +202,7 @@ workspace.test(
   "cross contract: transfer NFT when listed on marketplace",
   async (test, { nft_contract, market_contract, alice, bob, charlie }) => {
     await mintNFT(alice, nft_contract);
-    // pay for storage
-    await alice.call(
-      market_contract,
-      "storage_deposit",
-      {},
-      defaultCallOptions(DEFAULT_GAS, "10000000000000000000000") // Requires minimum deposit of 10000000000000000000000
-    );
+    await payForStorage(alice, market_contract);
 
     const sale_price = '"300000000000000000000000"'; // sale price string in yoctoNEAR is 0.3 NEAR
     await approveNFT(
@@ -224,18 +212,7 @@ workspace.test(
       '{"sale_conditions": ' + sale_price + " }" // msg triggers XCC
     );
 
-    // transfer NFT
-    const transfer_payload = {
-      receiver_id: bob,
-      token_id: "TEST123",
-      approval_id: 0, // first and only approval done in line 224
-    };
-    await market_contract.call(
-      nft_contract,
-      "nft_transfer",
-      transfer_payload,
-      defaultCallOptions(DEFAULT_GAS, "1") // Requires attached deposit of exactly 1 yoctoNEAR
-    );
+    await transferNFT(bob, market_contract, nft_contract);
 
     // purchase NFT
     const offer_payload = {
@@ -264,10 +241,52 @@ workspace.test(
       "NFT should have bob as owner"
     );
     // Unauthorized error should be found
-    test.regex(
-      result.promiseErrorMessages.join("\n"),
-      /Unauthorized+/
+    test.regex(result.promiseErrorMessages.join("\n"), /Unauthorized+/);
+  }
+);
+
+workspace.test(
+  "cross contract: approval revoke",
+  async (test, { nft_contract, market_contract, alice, bob }) => {
+    await mintNFT(alice, nft_contract);
+    await payForStorage(alice, market_contract);
+
+    const sale_price = '"300000000000000000000000"'; // sale price string in yoctoNEAR is 0.3 NEAR
+    await approveNFT(
+      market_contract,
+      alice,
+      nft_contract,
+      '{"sale_conditions": ' + sale_price + " }" // msg triggers XCC
     );
+
+    // revoke approval
+    const revoke_payload = {
+      token_id: "TEST123",
+      account_id: market_contract, // revoke market contract authorization
+    };
+    await alice.call(
+      nft_contract,
+      "nft_revoke",
+      revoke_payload,
+      defaultCallOptions(DEFAULT_GAS, "1") // Requires attached deposit of exactly 1 yoctoNEAR
+    );
+
+    // purchase NFT
+    const transfer_payload = {
+      receiver_id: bob,
+      token_id: "TEST123",
+      approval_id: 0,
+    };
+    const result = await market_contract.call_raw(
+      nft_contract,
+      "nft_transfer",
+      transfer_payload,
+      defaultCallOptions(DEFAULT_GAS, "1")
+    );
+
+    // assert expectations
+    // Unauthorized error should be found
+    test.regex(result.promiseErrorMessages.join("\n"), /Unauthorized+/);
   }
 );
 
@@ -312,4 +331,31 @@ async function mintNFT(user: NearAccount, nft_contract: NearAccount) {
     receiver_id: user,
   };
   await user.call(nft_contract, "nft_mint", mint_payload, defaultCallOptions());
+}
+
+async function payForStorage(alice: NearAccount, market_contract: NearAccount) {
+  await alice.call(
+    market_contract,
+    "storage_deposit",
+    {},
+    defaultCallOptions(DEFAULT_GAS, "10000000000000000000000") // Requires minimum deposit of 10000000000000000000000
+  );
+}
+
+async function transferNFT(
+  transfer_to_account: NearAccount,
+  executing_account: NearAccount,
+  nft_contract: NearAccount
+) {
+  const transfer_payload = {
+    receiver_id: transfer_to_account,
+    token_id: "TEST123",
+    approval_id: 0, // first and only approval done in line 224
+  };
+  await executing_account.call(
+    nft_contract,
+    "nft_transfer",
+    transfer_payload,
+    defaultCallOptions(DEFAULT_GAS, "1")
+  );
 }
