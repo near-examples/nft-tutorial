@@ -2,7 +2,7 @@ import { Workspace } from "near-workspaces-ava";
 import { BN, NearAccount } from "near-workspaces";
 
 const DEFAULT_GAS: string = "30000000000000";
-const DEFAULT_DEPOSIT: string = "8550000000000000000000";
+const DEFAULT_DEPOSIT: string = "9050000000000000000000";
 
 const workspace = Workspace.init(async ({ root }) => {
   const alice = await root.createAccount("alice");
