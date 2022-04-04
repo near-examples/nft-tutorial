@@ -30,25 +30,24 @@ const workspace = Workspace.init(async ({ root }) => {
   return { alice, bob, charlie, nft_contract, market_contract };
 });
 
-// commented out to avoid too many parallel requests with the same access key
-// workspace.test(
-//   "nft contract: nft metadata view",
-//   async (test, { nft_contract, root }) => {
-//     const expected = {
-//       base_uri: null,
-//       icon: null,
-//       name: "NFT Tutorial Contract",
-//       reference: null,
-//       reference_hash: null,
-//       spec: "nft-1.0.0",
-//       symbol: "GOTEAM",
-//     };
-//     test.deepEqual(
-//       await nft_contract.view("nft_metadata", { account_id: root }),
-//       expected
-//     );
-//   }
-// );
+workspace.test(
+  "nft contract: nft metadata view",
+  async (test, { nft_contract, root }) => {
+    const expected = {
+      base_uri: null,
+      icon: null,
+      name: "NFT Tutorial Contract",
+      reference: null,
+      reference_hash: null,
+      spec: "nft-1.0.0",
+      symbol: "GOTEAM",
+    };
+    test.deepEqual(
+      await nft_contract.view("nft_metadata", { account_id: root }),
+      expected
+    );
+  }
+);
 
 workspace.test(
   "nft contract: nft mint call",
