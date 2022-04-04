@@ -5,7 +5,7 @@
   "author": "Ben Kurrek",
   "license": "ISC",
   "scripts": {
-    "test": "bash run_sim_tests.sh",
+    "test": "bash run_unit_tests.sh && bash run_sim_tests.sh",
     "build": "cd nft-contract && bash build.sh && cd .. && ls && cd market-contract && bash build.sh && cd .."
   }
 }
