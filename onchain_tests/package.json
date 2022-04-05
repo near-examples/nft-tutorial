@@ -1,5 +1,6 @@
 {
   "license": "ISC",
+  "#TODO": "resolve key-account and rate limiting errors for testnet testing",
   "scripts": {
     "test:sandbox": "near-workspaces-ava --config ./ava.config.cjs --verbose --timeout=10m",
     "test:testnet": "near-workspaces-ava --config ./ava.testnet.config.cjs --verbose --timeout=10m",
