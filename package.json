@@ -6,9 +6,9 @@
   "license": "ISC",
   "scripts": {
     "arch": "bash ./onchain_tests/arch.sh",
-    "test:sim": "cd onchain_tests && yarn install && yarn test:sandbox && cd ..",
+    "test:sim:sandbox": "cd onchain_tests && yarn install && yarn test:sandbox && cd ..",
     "test:sim:testnet": "cd onchain_tests && yarn install && yarn test:testnet && cd ..",
-    "test:nft": "cd nft-contract && cargo test  && cd ..",
+    "test:nft": "cd nft-contract && cargo test --color always && cd ..",
     "test:market": "cd market-contract && cargo test --color always && cd ..",
     "build:nft": "cd nft-contract && bash build.sh && cd ..",
     "build:market": "cd market-contract && bash build.sh && cd ..",
