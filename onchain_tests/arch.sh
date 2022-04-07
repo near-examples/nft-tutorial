@@ -1,5 +1,5 @@
 #!/bin/bash
 
 if [[ $(arch) == 'arm64' ]]; then
-  arch -x86_64 zsh
+  exec arch -x86_64 zsh -l
 fi

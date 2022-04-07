@@ -39,6 +39,12 @@ yarn build
 
 Now that you've cloned and built the contract we can try a few things.
 
+## On-Chain Simulation Tests
+
+Tests are in `onchain_tests` and use [near-workspaces-ava](https://github.com/near/workspaces-js/tree/main/packages/ava): delightful, deterministic local testing for NEAR smart contracts.
+
+If running on an M1 Mac, you will need to run `yarn arch` to switch to an x86 terminal before running tests or installing node packages.
+
 ## Mint An NFT
 
 Once you've created your near wallet go ahead and login to your wallet with your cli and follow the on-screen prompts
