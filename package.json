@@ -10,6 +10,7 @@
     "test:sim:testnet": "cd onchain_tests && yarn install && yarn test:testnet && cd ..",
     "test:nft": "cd nft-contract && cargo test --color always && cd ..",
     "test:market": "cd market-contract && cargo test --color always && cd ..",
+    "test": "test:nft && test:market && test:sim:sandbox",
     "build:nft": "cd nft-contract && bash build.sh && cd ..",
     "build:market": "cd market-contract && bash build.sh && cd ..",
     "build": "build:nft && build:market"
