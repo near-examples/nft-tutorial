@@ -1,8 +1,9 @@
 {
   "license": "ISC",
   "scripts": {
+    "serialize": "cp ./.fix-testnet/index.js ./node_modules/near-workspaces-ava/dist/",
     "test:sandbox": "near-workspaces-ava --config ./ava.config.cjs --verbose --timeout=30m",
-    "test:testnet": "near-workspaces-ava --config ./ava.testnet.config.cjs --verbose --timeout=30m",
+    "test:testnet": "yarn serialize && near-workspaces-ava --config ./ava.testnet.config.cjs --verbose --timeout=30m",
     "test": "yarn test:sandbox && yarn test:testnet"
   },
   "devDependencies": {

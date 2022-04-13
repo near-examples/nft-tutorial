@@ -1,1 +1,0 @@
-cp ./.fix-testnet/index.js ./node_modules/near-workspaces-ava/dist/
