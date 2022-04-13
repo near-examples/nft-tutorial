@@ -7,7 +7,7 @@
   "scripts": {
     "arch": "bash ./onchain_tests/arch.sh",
     "test:sim:sandbox": "cd onchain_tests && yarn install && yarn test:sandbox && cd ..",
-    "test:sim:testnet": "cd onchain_tests && yarn install && yarn test:testnet && cd ..",
+    "test:sim:testnet": "cd onchain_tests && yarn install && bash run_serialized.sh && yarn test:testnet && cd ..",
     "test:unit:nft": "cd nft-contract && cargo test --color always && cd ..",
     "test:unit:market": "cd market-contract && cargo test --color always && cd ..",
     "test:sim": "yarn test:sim:sandbox && yarn test:sim:testnet",
