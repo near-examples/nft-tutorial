@@ -1,9 +1,15 @@
 import { Workspace } from "near-workspaces-ava";
 
 export const workspace = Workspace.init(async ({ root }) => {
-  const alice = await root.createAccount("alice");
-  const bob = await root.createAccount("bob");
-  const charlie = await root.createAccount("charlie");
+  const alice = await root.createAccount("alice", {
+    initialBalance: "300000000000000000000000000",
+  });
+  const bob = await root.createAccount("bob", {
+    initialBalance: "300000000000000000000000000",
+  });
+  const charlie = await root.createAccount("charlie", {
+    initialBalance: "300000000000000000000000000",
+  });
 
   const nft_contract = await root.createAndDeploy(
     "nft-contract",
