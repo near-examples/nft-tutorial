@@ -180,7 +180,6 @@ workspace.test(
       await alice.balance()
     ).total.toBigInt();
     const bob_balance_before_offer = (await bob.balance()).total.toBigInt();
-    test.log("bob_balance_before_offer", bob_balance_before_offer);
     await purchaseListedNFT(
       nft_contract,
       charlie,
