@@ -3,22 +3,12 @@ import { BN, NearAccount } from "near-workspaces";
 export const DEFAULT_GAS: string = "30000000000000";
 export const DEFAULT_DEPOSIT: string = "9050000000000000000000";
 
-export async function purchaseListedNFT(
-  nft_contract: NearAccount,
-  bidder_account: NearAccount,
-  market_contract: NearAccount,
-  bid_price: string
-) {
+export async function purchaseListedNFT(nft_contract: NearAccount, bidder_account: NearAccount, market_contract: NearAccount, bid_price: string) {
   const offer_payload = {
     nft_contract_id: nft_contract,
     token_id: "TEST123",
   };
-  await bidder_account.call(
-    market_contract,
-    "offer",
-    offer_payload,
-    defaultCallOptions(DEFAULT_GAS + "0", bid_price)
-  );
+  await bidder_account.call_raw(market_contract, "offer", offer_payload, defaultCallOptions(DEFAULT_GAS + "0", bid_price));
 }
 
 export async function placeNFTForSale(
@@ -35,39 +25,22 @@ export async function placeNFTForSale(
   );
 }
 
-export function defaultCallOptions(
-  gas: string = DEFAULT_GAS,
-  deposit: string = DEFAULT_DEPOSIT
-) {
+export function defaultCallOptions(gas: string = DEFAULT_GAS, deposit: string = DEFAULT_DEPOSIT) {
   return {
     gas: new BN(gas),
     attachedDeposit: new BN(deposit),
   };
 }
-export async function approveNFT(
-  account_to_approve: NearAccount,
-  owner: NearAccount,
-  nft_contract: NearAccount,
-  message: string = null
-) {
+export async function approveNFT(account_to_approve: NearAccount, owner: NearAccount, nft_contract: NearAccount, message: string = null) {
   const approve_payload = {
     token_id: "TEST123",
     account_id: account_to_approve,
     msg: message,
   };
-  await owner.call(
-    nft_contract,
-    "nft_approve",
-    approve_payload,
-    defaultCallOptions()
-  );
+  await owner.call(nft_contract, "nft_approve", approve_payload, defaultCallOptions());
 }
 
-export async function mintNFT(
-  user: NearAccount,
-  nft_contract: NearAccount,
-  royalties: object = null
-) {
+export async function mintNFT(user: NearAccount, nft_contract: NearAccount, royalties: object = null) {
   const mint_payload = {
     token_id: "TEST123",
     metadata: {
@@ -82,10 +55,7 @@ export async function mintNFT(
   await user.call(nft_contract, "nft_mint", mint_payload, defaultCallOptions());
 }
 
-export async function payForStorage(
-  alice: NearAccount,
-  market_contract: NearAccount
-) {
+export async function payForStorage(alice: NearAccount, market_contract: NearAccount) {
   await alice.call(
     market_contract,
     "storage_deposit",
@@ -94,20 +64,11 @@ export async function payForStorage(
   );
 }
 
-export async function transferNFT(
-  transfer_to_account: NearAccount,
-  executing_account: NearAccount,
-  nft_contract: NearAccount
-) {
+export async function transferNFT(transfer_to_account: NearAccount, executing_account: NearAccount, nft_contract: NearAccount) {
   const transfer_payload = {
     receiver_id: transfer_to_account,
     token_id: "TEST123",
     approval_id: 0, // first and only approval done in line 224
   };
-  await executing_account.call(
-    nft_contract,
-    "nft_transfer",
-    transfer_payload,
-    defaultCallOptions(DEFAULT_GAS, "1")
-  );
+  await executing_account.call(nft_contract, "nft_transfer", transfer_payload, defaultCallOptions(DEFAULT_GAS, "1"));
 }
