@@ -129,3 +129,86 @@ workspace.test(
     test.regex(result.promiseErrorMessages.join("\n"), /Unauthorized+/);
   }
 );
+
+workspace.test(
+  "cross contract: reselling and royalties",
+  async (test, { nft_contract, market_contract, alice, bob, charlie }) => {
+    const royalties_string = `{"${alice.accountId}":2000}`;
+    const royalties = JSON.parse(royalties_string);
+    await mintNFT(alice, nft_contract, royalties);
+    await payForStorage(alice, market_contract);
+    const ask_price = "300000000000000000000000";
+    await placeNFTForSale(market_contract, alice, nft_contract, ask_price);
+
+    // offer for higher price
+    const alice_balance_before_offer = (await alice.balance()).total.toBigInt();
+    const bid_price = ask_price + "0";
+    await purchaseListedNFT(nft_contract, bob, market_contract, bid_price);
+    const alice_balance_after_offer = (await alice.balance()).total.toBigInt();
+    const alice_balance_difference = (
+      alice_balance_after_offer - alice_balance_before_offer
+    ).toString();
+
+    // assert alice gets paid
+    test.is(
+      alice_balance_difference.substring(0, 3),
+      bid_price.substring(0, 3),
+      "Expected alice balance to roughly increase by sale price"
+    );
+
+    // bob relists NFT for higher price
+    await payForStorage(bob, market_contract);
+    const resell_ask_price = bid_price + "0";
+    await placeNFTForSale(market_contract, bob, nft_contract, resell_ask_price);
+  
+    // bob updates price to lower ask
+    const lowered_resell_ask_price = "600000000000000000000000";
+    const update_price_payload = {
+      nft_contract_id: nft_contract,
+      token_id: "TEST123",
+      price: lowered_resell_ask_price,
+    };
+    await bob.call(
+      market_contract,
+      "update_price",
+      update_price_payload,
+      defaultCallOptions(DEFAULT_GAS, "1")
+    );
+
+    // charlie buys NFT from bob
+    const alice_balance_before_offer_2 = (
+      await alice.balance()
+    ).total.toBigInt();
+    const bob_balance_before_offer = (await bob.balance()).total.toBigInt();
+    test.log("bob_balance_before_offer", bob_balance_before_offer);
+    await purchaseListedNFT(
+      nft_contract,
+      charlie,
+      market_contract,
+      resell_ask_price
+    );
+    const alice_balance_after_offer_2 = (
+      await alice.balance()
+    ).total.toBigInt();
+    const alice_balance_difference_2 = (
+      alice_balance_after_offer_2 - alice_balance_before_offer_2
+    ).toString();
+    const bob_balance_after_offer = (await bob.balance()).total.toBigInt();
+    const bob_balance_difference = (
+      bob_balance_after_offer - bob_balance_before_offer
+    ).toString();
+
+    // assert alice gets paid royalties
+    test.is(
+      alice_balance_difference_2.substring(0, 4),
+      "6000", // 20% of resell_ask_price
+      "Expected alice balance to roughly increase by 20% of sale price"
+    );
+    // assert bob gets paid
+    test.is(
+      bob_balance_difference.substring(0, 5),
+      "24000", // 80% of resell_ask_price
+      "Expected bob balance to roughly increase by 80% of sale price"
+    );
+  }
+);
