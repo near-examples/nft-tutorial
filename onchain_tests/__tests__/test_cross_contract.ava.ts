@@ -15,7 +15,7 @@ workspace.test("cross contract: sell NFT listed on marketplace", async (test, { 
     toChangeNearBalance(alice, "0.3 N"),
     toChangeNearBalance(bob, "-0.3 N")
   );
-  test.deepEqual(result1.actual, result1.expected, "Should change user balances when doing NFT 1");
+  test.deepEqual(result1.actual, result1.expected, "Should change user balances by sale_price of 0.3 N");
 
   // NFT has new owner
   const view_payload = {
@@ -107,12 +107,12 @@ workspace.test("cross contract: reselling and royalties", async (test, { nft_con
 
   const bid_price = ask_price + "0";
 
-  const result1 = await expect(
+  const purchase_result = await expect(
     async () => await purchaseListedNFT(nft_contract, bob, market_contract, bid_price),
     toChangeNearBalance(alice, "3 N"),
     toChangeNearBalance(bob, "-3 N")
   );
-  test.deepEqual(result1.actual, result1.expected, "Should change user balances when doing NFT 1");
+  test.deepEqual(purchase_result.actual, purchase_result.expected, "Should change user balances when doing NFT 1");
 
   // bob relists NFT for higher price
   await payForStorage(bob, market_contract);
@@ -128,11 +128,11 @@ workspace.test("cross contract: reselling and royalties", async (test, { nft_con
   };
   await bob.call(market_contract, "update_price", update_price_payload, defaultCallOptions(DEFAULT_GAS, "1"));
 
-  const result2 = await expect(
+  const purchase_result_2 = await expect(
     async () => await purchaseListedNFT(nft_contract, charlie, market_contract, resell_ask_price),
     toChangeNearBalance(alice, "6 N"),
     toChangeNearBalance(bob, "24 N"),
     toChangeNearBalance(charlie, "-30 N")
   );
-  test.deepEqual(result2.actual, result2.expected, "Should change user balances when doing NFT");
+  test.deepEqual(purchase_result_2.actual, purchase_result_2.expected, "Should change balances by a total of 30 N");
 });
