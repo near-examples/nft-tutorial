@@ -14,7 +14,7 @@ pub trait NonFungibleTokenCore {
         token_id: TokenId,
         approved_account_id: AccountId,
         approval_id: Option<u64>,
-    );
+    ) -> bool;
 
     //revoke a specific account from transferring the token on your behalf
     fn nft_revoke(&mut self, token_id: TokenId, account_id: AccountId);
@@ -52,10 +52,11 @@ impl NonFungibleTokenCore for Contract {
         token_id: TokenId,
         approved_account_id: AccountId,
         approval_id: Option<u64>,
-    ) {
+    ) -> bool {
         /*
             FILL THIS IN
         */
+        todo!(); //remove once code is filled in.
     }
 
     //revoke a specific account from transferring the token on your behalf 

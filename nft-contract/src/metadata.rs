@@ -41,14 +41,15 @@ pub struct JsonToken {
 
 pub trait NonFungibleTokenMetadata {
     //view call for returning the contract metadata
-    fn nft_metadata(&self);
+    fn nft_metadata(&self) -> NFTContractMetadata;
 }
 
 #[near_bindgen]
 impl NonFungibleTokenMetadata for Contract {
-    fn nft_metadata(&self) {
+    fn nft_metadata(&self) -> NFTContractMetadata {
         /*
             FILL THIS IN
         */
+        todo!(); //remove once code is filled in.
     }
 }

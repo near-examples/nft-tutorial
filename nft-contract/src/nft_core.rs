@@ -22,10 +22,10 @@ pub trait NonFungibleTokenCore {
         token_id: TokenId,
         memo: Option<String>,
         msg: String,
-    );
+    ) -> PromiseOrValue<bool>;
 
     //get information about the NFT token passed in
-    fn nft_token(&self, token_id: TokenId);
+    fn nft_token(&self, token_id: TokenId) -> Option<JsonToken>;
 }
 
 #[ext_contract(ext_non_fungible_token_receiver)]
@@ -38,7 +38,7 @@ trait NonFungibleTokenReceiver {
         previous_owner_id: AccountId,
         token_id: TokenId,
         msg: String,
-    );
+    ) -> Promise;
 }
 
 #[ext_contract(ext_self)]
@@ -53,7 +53,7 @@ trait NonFungibleTokenResolver {
         owner_id: AccountId,
         receiver_id: AccountId,
         token_id: TokenId,
-    );
+    ) -> bool;
 }
 
 /*
@@ -67,7 +67,7 @@ trait NonFungibleTokenResolver {
         owner_id: AccountId,
         receiver_id: AccountId,
         token_id: TokenId,
-    );
+    ) -> bool;
 }
 
 #[near_bindgen]
@@ -94,17 +94,19 @@ impl NonFungibleTokenCore for Contract {
         token_id: TokenId,
         memo: Option<String>,
         msg: String,
-    ) {
+    ) -> PromiseOrValue<bool> {
         /*
             FILL THIS IN
         */
+        todo!(); //remove once code is filled in.
     }
 
     //get the information for a specific token ID
-    fn nft_token(&self, token_id: TokenId) {
+    fn nft_token(&self, token_id: TokenId) -> Option<JsonToken> {
         /*
             FILL THIS IN
         */
+        todo!(); //remove once code is filled in.
     }
 }
 
@@ -118,9 +120,10 @@ impl NonFungibleTokenResolver for Contract {
         owner_id: AccountId,
         receiver_id: AccountId,
         token_id: TokenId,
-    ) {
+    ) -> bool {
         /*
             FILL THIS IN
         */
+        todo!(); //remove once code is filled in.
     }
 }

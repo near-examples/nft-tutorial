@@ -49,10 +49,11 @@ impl Contract {
         user doesn't have to manually type metadata.
     */
     #[init]
-    pub fn new_default_meta(owner_id: AccountId) {
+    pub fn new_default_meta(owner_id: AccountId) -> Self {
         /*
             FILL THIS IN
         */
+        todo!(); //remove once code is filled in.
     }
 
     /*
@@ -61,9 +62,10 @@ impl Contract {
         the owner_id. 
     */
     #[init]
-    pub fn new(owner_id: AccountId, metadata: NFTContractMetadata) {
+    pub fn new(owner_id: AccountId, metadata: NFTContractMetadata) -> Self {
         /*
             FILL THIS IN
         */
+        todo!(); //remove once code is filled in.
     }
 }
