@@ -11,6 +11,8 @@ pub trait NonFungibleTokenCore {
         &mut self,
         receiver_id: AccountId,
         token_id: TokenId,
+        //we introduce an approval ID so that people with that approval ID can transfer the token
+        approval_id: Option<u64>,
         memo: Option<String>,
     );
 
@@ -20,12 +22,11 @@ pub trait NonFungibleTokenCore {
         &mut self,
         receiver_id: AccountId,
         token_id: TokenId,
+        //we introduce an approval ID so that people with that approval ID can transfer the token
+        approval_id: Option<u64>,
         memo: Option<String>,
         msg: String,
     ) -> PromiseOrValue<bool>;
-
-    //get information about the NFT token passed in
-    fn nft_token(&self, token_id: TokenId) -> Option<JsonToken>;
 }
 
 #[ext_contract(ext_non_fungible_token_receiver)]
@@ -53,6 +54,8 @@ trait NonFungibleTokenResolver {
         owner_id: AccountId,
         receiver_id: AccountId,
         token_id: TokenId,
+        //we introduce the approval map so we can keep track of what the approvals were before the transfer
+        approved_account_ids: HashMap<AccountId, u64>,
     ) -> bool;
 }
 
@@ -67,6 +70,8 @@ trait NonFungibleTokenResolver {
         owner_id: AccountId,
         receiver_id: AccountId,
         token_id: TokenId,
+        //we introduce the approval map so we can keep track of what the approvals were before the transfer
+        approved_account_ids: HashMap<AccountId, u64>,
     ) -> bool;
 }
 
