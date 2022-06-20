@@ -113,30 +113,33 @@ impl Contract {
 
         //initiate a cross contract call to the nft contract. This will transfer the token to the buyer and return
         //a payout object used for the market to distribute funds to the appropriate accounts.
-        ext_contract::nft_transfer_payout(
-            buyer_id.clone(), //purchaser (person to transfer the NFT to)
-            token_id, //token ID to transfer
-            sale.approval_id, //market contract's approval ID in order to transfer the token on behalf of the owner
+        ext_contract::ext(nft_contract_id)
+            // Attach 1 yoctoNEAR with static GAS equal to the GAS for nft transfer. Also attach an unused GAS weight of 1 by default.
+            .with_attached_deposit(1)
+            .with_static_gas(GAS_FOR_NFT_TRANSFER)
+            .nft_transfer_payout(
+                buyer_id.clone(), //purchaser (person to transfer the NFT to)
+                token_id, //token ID to transfer
+                sale.approval_id, //market contract's approval ID in order to transfer the token on behalf of the owner
             "payout from market".to_string(), //memo (to include some context)
             /*
                 the price that the token was purchased for. This will be used in conjunction with the royalty percentages
                 for the token in order to determine how much money should go to which account. 
             */
             price,
-			10, //the maximum amount of accounts the market can payout at once (this is limited by GAS)
-            nft_contract_id, //contract to initiate the cross contract call to
-            1, //yoctoNEAR to attach to the call
-            GAS_FOR_NFT_TRANSFER, //GAS to attach to the call
-        )
+            10, //the maximum amount of accounts the market can payout at once (this is limited by GAS)
+            )
         //after the transfer payout has been initiated, we resolve the promise by calling our own resolve_purchase function. 
         //resolve purchase will take the payout object returned from the nft_transfer_payout and actually pay the accounts
-        .then(ext_self::resolve_purchase(
-            buyer_id, //the buyer and price are passed in incase something goes wrong and we need to refund the buyer
-            price,
-            env::current_account_id(), //we are invoking this function on the current contract
-            NO_DEPOSIT, //don't attach any deposit
-            GAS_FOR_ROYALTIES, //GAS attached to the call to payout royalties
-        ))
+        .then(
+            // No attached deposit with static GAS equal to the GAS for resolving the purchase. Also attach an unused GAS weight of 1 by default.
+            Self::ext(env::current_account_id())
+            .with_static_gas(GAS_FOR_RESOLVE_PURCHASE)
+            .resolve_purchase(
+                buyer_id, //the buyer and price are passed in incase something goes wrong and we need to refund the buyer
+                price,
+            )
+        )
     }
 
     /*
