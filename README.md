@@ -136,6 +136,8 @@ In this call you are depositing 1 yoctoNEAR for security and so that the user wi
 ## Errata
 
 Large Changes:
+* **2022-06-21**: updated the rust SDK to version 4.0.0. PR found [here](https://github.com/near-examples/nft-tutorial/pull/32)
+
 * **2022-02-12**: updated the enumeration methods `nft_tokens` and `nft_tokens_for_owner` to no longer use any `to_vector` operations to save GAS. In addition, the default limit was changed from 0 to 50. PR found [here](https://github.com/near-examples/nft-tutorial/pull/17). 
 
 Small Changes:
