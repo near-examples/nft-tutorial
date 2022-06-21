@@ -44,6 +44,7 @@ trait NonFungibleTokenReceiver {
     ) -> Promise;
 }
 
+#[ext_contract(ext_self)]
 /*
     resolves the promise of the cross contract call to the receiver contract
     this is stored on THIS contract and is meant to analyze what happened in the cross contract call when nft_on_transfer was called
