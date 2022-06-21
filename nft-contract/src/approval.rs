@@ -1,8 +1,5 @@
 use crate::*;
-use near_sdk::{ext_contract, Gas};
-
-const GAS_FOR_NFT_APPROVE: Gas = Gas(10_000_000_000_000);
-const NO_DEPOSIT: Balance = 0;
+use near_sdk::{ext_contract};
 
 pub trait NonFungibleTokenCore {
     //approve an account ID to transfer a token on your behalf
@@ -87,16 +84,14 @@ impl NonFungibleTokenCore for Contract {
         //if some message was passed into the function, we initiate a cross contract call on the
         //account we're giving access to. 
         if let Some(msg) = msg {
-            ext_non_fungible_approval_receiver::nft_on_approve(
-                token_id,
-                token.owner_id,
-                approval_id,
-                msg,
-                account_id, //contract account we're calling
-                NO_DEPOSIT, //NEAR deposit we attach to the call
-                env::prepaid_gas() - GAS_FOR_NFT_APPROVE, //GAS we're attaching
-            )
-            .as_return(); // Returning this promise
+            // Defaulting GAS weight to 1, no attached deposit, and no static GAS to attach.
+            ext_non_fungible_approval_receiver::ext(account_id)
+                .nft_on_approve(
+                    token_id, 
+                    token.owner_id, 
+                    approval_id, 
+                    msg
+                ).as_return();
         }
     }
 

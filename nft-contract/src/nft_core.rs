@@ -2,9 +2,7 @@ use crate::*;
 use near_sdk::{ext_contract, Gas, PromiseResult};
 
 const GAS_FOR_RESOLVE_TRANSFER: Gas = Gas(10_000_000_000_000);
-const GAS_FOR_NFT_TRANSFER_CALL: Gas = Gas(25_000_000_000_000 + GAS_FOR_RESOLVE_TRANSFER.0);
-const MIN_GAS_FOR_NFT_TRANSFER_CALL: Gas = Gas(100_000_000_000_000);
-const NO_DEPOSIT: Balance = 0;
+const GAS_FOR_NFT_ON_TRANSFER: Gas = Gas(25_000_000_000_000);
 
 pub trait NonFungibleTokenCore {
     //transfers an NFT to a receiver ID
@@ -44,27 +42,6 @@ trait NonFungibleTokenReceiver {
         token_id: TokenId,
         msg: String,
     ) -> Promise;
-}
-
-#[ext_contract(ext_self)]
-trait NonFungibleTokenResolver {
-    /*
-        resolves the promise of the cross contract call to the receiver contract
-        this is stored on THIS contract and is meant to analyze what happened in the cross contract call when nft_on_transfer was called
-        as part of the nft_transfer_call method
-    */
-    fn nft_resolve_transfer(
-        &mut self,
-        //we introduce an authorized ID for logging the transfer event
-        authorized_id: Option<String>,
-        owner_id: AccountId,
-        receiver_id: AccountId,
-        token_id: TokenId,
-        //we introduce the approval map so we can keep track of what the approvals were before the transfer
-        approved_account_ids: HashMap<AccountId, u64>,
-        //we introduce a memo for logging the transfer event
-        memo: Option<String>,
-    ) -> bool;
 }
 
 /*
@@ -121,7 +98,7 @@ impl NonFungibleTokenCore for Contract {
         );
     }
 
-    //implementation of the transfer call method. This will transfer the NFT and call a method on the reciver_id contract
+    //implementation of the transfer call method. This will transfer the NFT and call a method on the receiver_id contract
     #[payable]
     fn nft_transfer_call(
         &mut self,
@@ -134,21 +111,6 @@ impl NonFungibleTokenCore for Contract {
     ) -> PromiseOrValue<bool> {
         //assert that the user attached exactly 1 yocto for security reasons. 
         assert_one_yocto();
-
-        //get the GAS attached to the call
-        let attached_gas = env::prepaid_gas();
-
-        /*
-            make sure that the attached gas is greater than the minimum GAS for NFT transfer call.
-            This is to ensure that the cross contract call to nft_on_transfer won't cause a prepaid GAS error.
-            If this happens, the event will be logged in internal_transfer but the actual transfer logic will be
-            reverted due to the panic. This will result in the databases thinking the NFT belongs to the wrong person.
-        */
-        assert!(
-            attached_gas >= MIN_GAS_FOR_NFT_TRANSFER_CALL,
-            "You cannot attach less than {:?} Gas to nft_transfer_call",
-            MIN_GAS_FOR_NFT_TRANSFER_CALL
-        );
 
         //get the sender ID 
         let sender_id = env::predecessor_account_id();
@@ -170,27 +132,29 @@ impl NonFungibleTokenCore for Contract {
         }
 
         // Initiating receiver's call and the callback
-        ext_non_fungible_token_receiver::nft_on_transfer(
-            sender_id,
-            previous_token.owner_id.clone(),
-            token_id.clone(),
-            msg,
-            receiver_id.clone(), //contract account to make the call to
-            NO_DEPOSIT, //attached deposit
-            env::prepaid_gas() - GAS_FOR_NFT_TRANSFER_CALL, //attached GAS
-        )
-        //we then resolve the promise and call nft_resolve_transfer on our own contract
-        .then(ext_self::nft_resolve_transfer(
-            authorized_id, // we introduce an authorized ID so that we can log the transfer
-            previous_token.owner_id,
-            receiver_id,
-            token_id,
-            previous_token.approved_account_ids,
-            memo, // we introduce a memo for logging in the events standard
-            env::current_account_id(), //contract account to make the call to
-            NO_DEPOSIT, //attached deposit
-            GAS_FOR_RESOLVE_TRANSFER, //GAS attached to the call
-        )).into()
+        // Defaulting GAS weight to 1, no attached deposit, and static GAS equal to the GAS for nft on transfer.
+        ext_non_fungible_token_receiver::ext(receiver_id.clone())
+            .with_static_gas(GAS_FOR_NFT_ON_TRANSFER)
+            .nft_on_transfer(
+                sender_id, 
+                previous_token.owner_id.clone(), 
+                token_id.clone(), 
+                msg
+            )
+        // We then resolve the promise and call nft_resolve_transfer on our own contract
+        .then(
+            // Defaulting GAS weight to 1, no attached deposit, and static GAS equal to the GAS for resolve transfer
+            Self::ext(env::current_account_id())
+                .with_static_gas(GAS_FOR_RESOLVE_TRANSFER)
+                .nft_resolve_transfer(
+                    authorized_id, // we introduce an authorized ID so that we can log the transfer
+                    previous_token.owner_id,
+                    receiver_id,
+                    token_id,
+                    previous_token.approved_account_ids,
+                    memo, // we introduce a memo for logging in the events standard
+                )
+        ).into()
     }
 
     //get the information for a specific token ID
