@@ -1,9 +1,8 @@
 use crate::*;
-use near_sdk::{ext_contract, log, Gas, PromiseResult};
+use near_sdk::{ext_contract, Gas, PromiseResult};
 
 const GAS_FOR_RESOLVE_TRANSFER: Gas = Gas(10_000_000_000_000);
-const GAS_FOR_NFT_TRANSFER_CALL: Gas = Gas(25_000_000_000_000 + GAS_FOR_RESOLVE_TRANSFER.0);
-const NO_DEPOSIT: Balance = 0;
+const GAS_FOR_NFT_ON_TRANSFER: Gas = Gas(25_000_000_000_000);
 
 pub trait NonFungibleTokenCore {
     //transfers an NFT to a receiver ID
@@ -56,20 +55,6 @@ trait NonFungibleTokenResolver {
     ) -> bool;
 }
 
-/*
-    resolves the promise of the cross contract call to the receiver contract
-    this is stored on THIS contract and is meant to analyze what happened in the cross contract call when nft_on_transfer was called
-    as part of the nft_transfer_call method
-*/ 
-trait NonFungibleTokenResolver {
-    fn nft_resolve_transfer(
-        &mut self,
-        owner_id: AccountId,
-        receiver_id: AccountId,
-        token_id: TokenId,
-    ) -> bool;
-}
-
 #[near_bindgen]
 impl NonFungibleTokenCore for Contract {
 
@@ -86,7 +71,7 @@ impl NonFungibleTokenCore for Contract {
         */
     }
 
-    //implementation of the transfer call method. This will transfer the NFT and call a method on the reciver_id contract
+    //implementation of the transfer call method. This will transfer the NFT and call a method on the receiver_id contract
     #[payable]
     fn nft_transfer_call(
         &mut self,
