@@ -133,7 +133,7 @@ impl Contract {
             env::log_str(&format!("Memo: {}", memo).to_string());
         }
 
-        //return the preivous token object that was transferred.
+        //return the previous token object that was transferred.
         token
     }
 } 
