@@ -1,5 +1,5 @@
 use crate::*;
-use near_sdk::{ext_contract, Gas, PromiseResult};
+use near_sdk::{ext_contract, Gas, log, PromiseResult};
 
 const GAS_FOR_RESOLVE_TRANSFER: Gas = Gas(10_000_000_000_000);
 const GAS_FOR_NFT_ON_TRANSFER: Gas = Gas(25_000_000_000_000);
