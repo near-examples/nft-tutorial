@@ -1,8 +1,5 @@
 use crate::*;
-use near_sdk::{ext_contract, Gas};
-
-const GAS_FOR_NFT_APPROVE: Gas = Gas(10_000_000_000_000);
-const NO_DEPOSIT: Balance = 0;
+use near_sdk::{ext_contract};
 
 pub trait NonFungibleTokenCore {
     //approve an account ID to transfer a token on your behalf
