@@ -1,0 +1,29 @@
+name: Tests
+on:
+  repository_dispatch:
+    types: [tests-report]
+  push:
+jobs:
+  tests:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.platform }}
+    env:
+      RUST_BACKTRACE: 1
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v2
+      - name: Install Node
+        uses: actions/setup-node@v2
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          target: wasm32-unknown-unknown
+      - name: Run unit tests
+        run: npm run test:unit
+      # TODO
+      # - name: Run Rust integration tests
+      #   run: npm run test:integration:rs
+      - name: Run TS integration tests
+        run: npm run test:integration:ts
