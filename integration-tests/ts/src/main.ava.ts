@@ -13,15 +13,14 @@ test.beforeEach(async t => {
     const nft_contract = await root.createAndDeploy(
         root.getSubAccount("nft-contract").accountId,
         "../../out/main.wasm",
-        { initialBalance: NEAR.parse('3 N').toJSON() },
+        { initialBalance: NEAR.parse('100 N').toJSON() },
     );
     await nft_contract.call(nft_contract, 'new_default_meta', { owner_id: root });
-
 
     const market_contract = await root.createAndDeploy(
         root.getSubAccount("nft-market").accountId,
         "../../out/market.wasm",
-        { initialBalance: NEAR.parse('3 N').toJSON() },
+        { initialBalance: NEAR.parse('100 N').toJSON() },
     );
     await market_contract.call(market_contract, 'new', { owner_id: root });
 
