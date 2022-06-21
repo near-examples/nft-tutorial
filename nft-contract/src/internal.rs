@@ -234,7 +234,7 @@ impl Contract {
         // Log the serialized json.
         env::log_str(&nft_transfer_log.to_string());
         
-        //return the preivous token object that was transferred.
+        //return the previous token object that was transferred.
         token
     }
 } 

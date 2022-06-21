@@ -20,11 +20,8 @@ mod sale;
 mod sale_views;
 
 //GAS constants to attach to calls
-const GAS_FOR_ROYALTIES: Gas = Gas(115_000_000_000_000);
+const GAS_FOR_RESOLVE_PURCHASE: Gas = Gas(115_000_000_000_000);
 const GAS_FOR_NFT_TRANSFER: Gas = Gas(15_000_000_000_000);
-
-//constant used to attach 0 NEAR to a call
-const NO_DEPOSIT: Balance = 0;
 
 //the minimum storage to have a sale on the contract.
 const STORAGE_PER_SALE: u128 = 1000 * STORAGE_PRICE_PER_BYTE;
