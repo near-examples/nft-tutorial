@@ -5,9 +5,8 @@
 /neardev
 /.pnp
 .pnp.js
-yarn.lock
-Cargo.lock
-package-lock.json
+**/*.lock
+**/package-lock.json
 
 #cache
 .cache
