@@ -20,6 +20,8 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           target: wasm32-unknown-unknown
+      - name: Build smart contract
+        run: npm run build
       - name: Run unit tests
         run: npm run test:unit
       # TODO
