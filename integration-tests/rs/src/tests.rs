@@ -66,7 +66,7 @@ async fn main() -> anyhow::Result<()> {
     test_nft_mint_call(&owner, &alice, &nft_contract, &worker).await?;
     test_nft_approve_call(&bob, &nft_contract, &market_contract, &worker).await?;
     test_nft_approve_call_long_msg_string(&alice, &nft_contract, &market_contract, &worker).await?;
-    // test_sell_nft_listed_on_marketplace(&alice, &ft_contract, &worker).await?;
+    test_sell_nft_listed_on_marketplace(&alice, &nft_contract, &market_contract, &bob, &worker).await?;
     // test_transfer_nft_when_listed_on_marketplace(&owner, &charlie, &ft_contract, &defi_contract, &worker).await?;
     // test_approval_revoke(&owner, &ft_contract, &defi_contract, &worker).await?;
     // test_reselling_and_royalties(&owner, &dave, ft_contract, &worker).await?;
@@ -232,27 +232,29 @@ async fn test_nft_approve_call_long_msg_string(
 }
 
 async fn test_sell_nft_listed_on_marketplace(
-    user_with_funds: &Account,
-    contract: &Contract,
+    seller: &Account,
+    nft_contract: &Contract,
+    market_contract: &Contract,
+    buyer: &Account,
     worker: &Worker<Sandbox>,
 ) -> anyhow::Result<()> {
-    let result: CallExecutionDetails = user_with_funds
-        .call(&worker, contract.id(), "storage_unregister")
-        .args_json(serde_json::json!({"force": true }))?
-        .deposit(1)
-        .transact()
-        .await?;
+    let token_id = "4";
+    let sale_price = 300000000000000000000000 as u128;  // 0.3 NEAR in yoctoNEAR
+    helpers::mint_nft(seller, nft_contract, worker, token_id).await?;
+    helpers::pay_for_storage(seller, market_contract, worker, 10000000000000000000000 as u128).await?;
+    helpers::place_nft_for_sale(seller, market_contract, nft_contract, worker, token_id, sale_price).await?;
 
-    assert_eq!(true, result.is_success());
-    assert_eq!(
-        result.logs()[0],
-        format!(
-            "Closed @{} with {}",
-            user_with_funds.id(),
-            parse_near!("1,000 N") // alice balance from above transfer_amount
-        )
-    );
-    println!("      Passed ✅ test_close_account_force_non_empty_balance");
+    let before_seller_balance: u128 = helpers::get_user_balance(seller, worker).await?;
+    let before_buyer_balance: u128 = helpers::get_user_balance(buyer, worker).await?;
+    helpers::purchase_listed_nft(buyer, market_contract, nft_contract, worker, token_id, sale_price).await?;
+    let after_seller_balance: u128 = helpers::get_user_balance(seller, worker).await?;
+    let after_buyer_balance: u128 = helpers::get_user_balance(buyer, worker).await?;
+
+    let test_precision_sig_figs = 3;  // being exact requires keeping track of gas usage, this precision is 0.01 NEAR 
+    assert_eq!(helpers::round_to_sf(after_seller_balance, test_precision_sig_figs), helpers::round_to_sf(before_seller_balance + sale_price, test_precision_sig_figs), "seller did not receive the sale price");
+    assert_eq!(helpers::round_to_sf(after_buyer_balance, test_precision_sig_figs), helpers::round_to_sf(before_buyer_balance - sale_price, test_precision_sig_figs), "buyer did not receive the sale price");
+
+    println!("      Passed ✅ test_sell_nft_listed_on_marketplace");
     Ok(())
 }
 
