@@ -65,7 +65,7 @@ async fn main() -> anyhow::Result<()> {
     // TODO: uncomment below tests
     test_nft_mint_call(&owner, &alice, &nft_contract, &worker).await?;
     test_nft_approve_call(&bob, &nft_contract, &market_contract, &worker).await?;
-    // test_nft_approve_call_long_msg_string(&alice, &ft_contract, &worker).await?;
+    test_nft_approve_call_long_msg_string(&alice, &nft_contract, &market_contract, &worker).await?;
     // test_sell_nft_listed_on_marketplace(&alice, &ft_contract, &worker).await?;
     // test_transfer_nft_when_listed_on_marketplace(&owner, &charlie, &ft_contract, &defi_contract, &worker).await?;
     // test_approval_revoke(&owner, &ft_contract, &defi_contract, &worker).await?;
@@ -182,28 +182,50 @@ async fn test_nft_approve_call(
 }
 
 async fn test_nft_approve_call_long_msg_string(
-    user_with_funds: &Account,
-    contract: &Contract,
+    user: &Account,
+    nft_contract: &Contract,
+    market_contract: &Contract,
     worker: &Worker<Sandbox>,
 ) -> anyhow::Result<()> {
-    match user_with_funds
-        .call(&worker, contract.id(), "storage_unregister")
-        .args_json(serde_json::json!({}))?
-        .deposit(1)
+    let token_id = "3";
+    helpers::mint_nft(user, nft_contract, worker, token_id).await?;
+
+    let approve_payload  = json!({
+        "token_id": token_id,
+        "account_id": market_contract.id(),
+        "msg": "sample message".repeat(10240),
+    });
+
+    match user.call(&worker, nft_contract.id(), "nft_approve")
+        .args_json(approve_payload)?
+        .deposit(helpers::DEFAULT_DEPOSIT)
         .transact()
         .await
     {
         Ok(_result) => {
-            panic!("storage_unregister worked despite account being funded")
+            panic!("test_nft_approve_call_long_msg_string worked despite insufficient gas")
         }
         Err(e) => {
             let e_string = e.to_string();
             if !e_string
-                .contains("Can't unregister the account with the positive balance without force")
+                .contains("Exceeded the prepaid gas")
             {
-                panic!("storage_unregister with balance displays unexpected error message")
+                panic!("test_nft_approve_call_long_msg_string displays unexpected error message: {:?}", e_string);
             }
-            println!("      Passed ✅ test_close_account_non_empty_balance");
+
+            let view_payload = json!({
+                "token_id": token_id,
+                "approved_account_id": market_contract.id(),
+            });
+            let result: bool = user
+                .call(&worker, nft_contract.id(), "nft_is_approved")
+                .args_json(view_payload)?
+                .transact()
+                .await?
+                .json()?;
+            
+            assert_eq!(result, false);
+            println!("      Passed ✅ test_nft_approve_call_long_msg_string");
         }
     }
     Ok(())

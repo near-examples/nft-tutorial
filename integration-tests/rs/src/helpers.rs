@@ -1,7 +1,7 @@
 use serde_json::json;
 use workspaces::{network::Sandbox, Account, Contract, Worker};
 
-const DEFAULT_DEPOSIT: u128 = 6760000000000000000000 as u128;
+pub const DEFAULT_DEPOSIT: u128 = 6760000000000000000000 as u128;
 // const DEFAULT_GAS: u128 = u128(9050000000000000000000);
 
 pub async fn mint_nft(
