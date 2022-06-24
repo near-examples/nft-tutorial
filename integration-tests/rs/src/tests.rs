@@ -5,6 +5,8 @@ use workspaces::prelude::*;
 use workspaces::result::CallExecutionDetails;
 use workspaces::{network::Sandbox, Account, Contract, Worker};
 
+mod helpers;
+
 const NFT_WASM_FILEPATH: &str = "../../out/main.wasm";
 const MARKET_WASM_FILEPATH: &str = "../../out/market.wasm";
 
@@ -62,7 +64,7 @@ async fn main() -> anyhow::Result<()> {
     test_nft_metadata_view(&owner, &nft_contract, &worker).await?;
     // TODO: uncomment below tests
     test_nft_mint_call(&owner, &alice, &nft_contract, &worker).await?;
-    // test_nft_approve_call(&bob, &ft_contract, &worker).await?;
+    test_nft_approve_call(&bob, &nft_contract, &market_contract, &worker).await?;
     // test_nft_approve_call_long_msg_string(&alice, &ft_contract, &worker).await?;
     // test_sell_nft_listed_on_marketplace(&alice, &ft_contract, &worker).await?;
     // test_transfer_nft_when_listed_on_marketplace(&owner, &charlie, &ft_contract, &defi_contract, &worker).await?;
@@ -155,28 +157,27 @@ async fn test_nft_mint_call(
 
 async fn test_nft_approve_call(
     user: &Account,
-    contract: &Contract,
+    nft_contract: &Contract,
+    market_contract: &Contract,
     worker: &Worker<Sandbox>,
 ) -> anyhow::Result<()> {
-    // register user
-    user.call(&worker, contract.id(), "storage_deposit")
-        .args_json(serde_json::json!({
-            "account_id": user.id()
-        }))?
-        .deposit(parse_near!("0.008 N"))
-        .transact()
-        .await?;
+    let token_id = "2";
+    helpers::mint_nft(user, nft_contract, worker, token_id).await?;
+    helpers::approve_nft(market_contract, user, nft_contract, worker, token_id).await?;
 
+    let view_payload = json!({
+        "token_id": token_id,
+        "approved_account_id": market_contract.id(),
+    });
     let result: bool = user
-        .call(&worker, contract.id(), "storage_unregister")
-        .args_json(serde_json::json!({}))?
-        .deposit(1)
+        .call(&worker, nft_contract.id(), "nft_is_approved")
+        .args_json(view_payload)?
         .transact()
         .await?
         .json()?;
-
+    
     assert_eq!(result, true);
-    println!("      Passed ✅ test_can_close_empty_balance_account");
+    println!("      Passed ✅ test_nft_approve_call");
     Ok(())
 }
 
