@@ -61,7 +61,7 @@ async fn main() -> anyhow::Result<()> {
     // begin tests
     test_nft_metadata_view(&owner, &nft_contract, &worker).await?;
     // TODO: uncomment below tests
-    // test_nft_mint_call(&owner, &alice, &ft_contract, &worker).await?;
+    test_nft_mint_call(&owner, &alice, &nft_contract, &worker).await?;
     // test_nft_approve_call(&bob, &ft_contract, &worker).await?;
     // test_nft_approve_call_long_msg_string(&alice, &ft_contract, &worker).await?;
     // test_sell_nft_listed_on_marketplace(&alice, &ft_contract, &worker).await?;
@@ -76,7 +76,6 @@ async fn test_nft_metadata_view(
     contract: &Contract,
     worker: &Worker<Sandbox>,
 ) -> anyhow::Result<()> {
-    use std::option::Option::Some;
     let expected = json!({
         "base_uri": serde_json::Value::Null,
         "icon": serde_json::Value::Null,
@@ -103,50 +102,54 @@ async fn test_nft_mint_call(
     contract: &Contract,
     worker: &Worker<Sandbox>,
 ) -> anyhow::Result<()> {
-    let transfer_amount = U128::from(parse_near!("1,000 N"));
+    let request_payload = json!({
+        "token_id": "1",
+        "receiver_id": user.id(),
+        "metadata": {
+            "title": "LEEROYYYMMMJENKINSSS",
+            "description": "Alright time's up, let's do this.",
+            "media": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.Fhp4lHufCdTzTeGCAblOdgHaF7%26pid%3DApi&f=1"
+        },
+    });
 
-    // register user
-    user.call(&worker, contract.id(), "storage_deposit")
-        .args_json(serde_json::json!({
-            "account_id": user.id()
-        }))?
+    user.call(&worker, contract.id(), "nft_mint")
+        .args_json(request_payload)?
         .deposit(parse_near!("0.008 N"))
         .transact()
         .await?;
 
-    // transfer ft
-    owner
-        .call(&worker, contract.id(), "ft_transfer")
-        .args_json(serde_json::json!({
-            "receiver_id": user.id(),
-            "amount": transfer_amount
-        }))?
-        .deposit(1)
-        .transact()
-        .await?;
-
-    let root_balance: U128 = owner
-        .call(&worker, contract.id(), "ft_balance_of")
-        .args_json(serde_json::json!({
-            "account_id": owner.id()
-        }))?
+    let tokens: serde_json::Value = owner
+        .call(&worker, contract.id(), "nft_tokens")
+        .args_json(serde_json::json!({}))?
         .transact()
         .await?
         .json()?;
 
-    let alice_balance: U128 = owner
-        .call(&worker, contract.id(), "ft_balance_of")
-        .args_json(serde_json::json!({
-            "account_id": user.id()
-        }))?
-        .transact()
-        .await?
-        .json()?;
+    let expected = json!([
+        {   
+            "approved_account_ids": {},
+            "royalty": {},
+            "token_id": "1",
+            "owner_id": user.id(),
+            "metadata": {
+                "expires_at": serde_json::Value::Null, 
+                "extra": serde_json::Value::Null, 
+                "issued_at": serde_json::Value::Null, 
+                "copies": serde_json::Value::Null,
+                "media_hash": serde_json::Value::Null,
+                "reference": serde_json::Value::Null,
+                "reference_hash": serde_json::Value::Null,
+                "starts_at": serde_json::Value::Null,
+                "updated_at": serde_json::Value::Null,
+                "title": "LEEROYYYMMMJENKINSSS",
+                "description": "Alright time's up, let's do this.",
+                "media": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.Fhp4lHufCdTzTeGCAblOdgHaF7%26pid%3DApi&f=1"
+            }
+        }
+    ]);
 
-    assert_eq!(root_balance, U128::from(parse_near!("999,999,000 N")));
-    assert_eq!(alice_balance, transfer_amount);
-
-    println!("      Passed ✅ test_simple_transfer");
+    assert_eq!(tokens, expected);
+    println!("      Passed ✅ test_nft_mint_call");
     Ok(())
 }
 
