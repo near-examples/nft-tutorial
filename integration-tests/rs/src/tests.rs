@@ -250,9 +250,9 @@ async fn test_sell_nft_listed_on_marketplace(
     let after_seller_balance: u128 = helpers::get_user_balance(seller, worker).await?;
     let after_buyer_balance: u128 = helpers::get_user_balance(buyer, worker).await?;
 
-    let test_precision_sig_figs = 3;  // being exact requires keeping track of gas usage, this precision is 0.01 NEAR 
-    assert_eq!(helpers::round_to_sf(after_seller_balance, test_precision_sig_figs), helpers::round_to_sf(before_seller_balance + sale_price, test_precision_sig_figs), "seller did not receive the sale price");
-    assert_eq!(helpers::round_to_sf(after_buyer_balance, test_precision_sig_figs), helpers::round_to_sf(before_buyer_balance - sale_price, test_precision_sig_figs), "buyer did not receive the sale price");
+    let dp = 1;  // being exact requires keeping track of gas usage, this precision is 0.1 NEAR 
+    assert_eq!(helpers::round_to_near_dp(after_seller_balance, dp), helpers::round_to_near_dp(before_seller_balance + sale_price, dp), "seller did not receive the sale price");
+    assert_eq!(helpers::round_to_near_dp(after_buyer_balance, dp), helpers::round_to_near_dp(before_buyer_balance - sale_price, dp), "buyer did not receive the sale price");
 
     println!("      Passed ✅ test_sell_nft_listed_on_marketplace");
     Ok(())

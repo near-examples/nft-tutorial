@@ -122,13 +122,10 @@ pub async fn purchase_listed_nft(
     Ok(())
 }
 
-pub fn round_to_sf(
+pub fn round_to_near_dp(
     amount: u128,
     sf: u128,
-) -> u128 {
-    let value_str: String = format!("{}", amount);
-    let str_len = value_str.chars().count();
-    let slice = &value_str[..sf as usize];
-    let var_2 = slice.to_owned() + &"0".repeat(str_len - sf as usize);
-    return var_2.parse::<u128>().unwrap();
+) -> String {
+    let near_amount = amount as f64 / 1_000_000_000_000_000_000_000_000.0;  // yocto in 1 NEAR
+    return format!("{:.1$}", near_amount, sf as usize);
 } 
