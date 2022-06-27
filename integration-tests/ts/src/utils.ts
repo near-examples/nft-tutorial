@@ -64,11 +64,11 @@ export async function payForStorage(alice: NearAccount, market_contract: NearAcc
     );
 }
 
-export async function transferNFT(transfer_to_account: NearAccount, executing_account: NearAccount, nft_contract: NearAccount) {
+export async function transferNFT(receiver: NearAccount, sender: NearAccount, nft_contract: NearAccount) {
     const transfer_payload = {
-        receiver_id: transfer_to_account,
+        receiver_id: receiver,
         token_id: "TEST123",
         approval_id: 0, // first and only approval done in line 224
     };
-    await executing_account.call(nft_contract, "nft_transfer", transfer_payload, defaultCallOptions(DEFAULT_GAS, "1"));
+    await sender.call(nft_contract, "nft_transfer", transfer_payload, defaultCallOptions(DEFAULT_GAS, "1"));
 }
