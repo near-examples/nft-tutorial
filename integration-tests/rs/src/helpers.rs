@@ -1,5 +1,5 @@
 use serde_json::json;
-use workspaces::{network::Sandbox, Account, Contract, Worker, AccountDetails, AccountId};
+use workspaces::{network::Sandbox, Account, Contract, Worker, AccountDetails};
 
 pub const DEFAULT_DEPOSIT: u128 = 6760000000000000000000 as u128;
 pub const DEFAULT_GAS: u128 = 300000000000000 as u128;
