@@ -3,7 +3,7 @@ use near_units::{parse_gas, parse_near};
 use serde_json::json;
 use workspaces::prelude::*;
 use workspaces::result::CallExecutionDetails;
-use workspaces::{network::Sandbox, Account, Contract, Worker};
+use workspaces::{network::Sandbox, Account, Contract, Worker, AccountId};
 
 mod helpers;
 
@@ -67,7 +67,7 @@ async fn main() -> anyhow::Result<()> {
     test_nft_approve_call(&bob, &nft_contract, &market_contract, &worker).await?;
     test_nft_approve_call_long_msg_string(&alice, &nft_contract, &market_contract, &worker).await?;
     test_sell_nft_listed_on_marketplace(&alice, &nft_contract, &market_contract, &bob, &worker).await?;
-    // test_transfer_nft_when_listed_on_marketplace(&owner, &charlie, &ft_contract, &defi_contract, &worker).await?;
+    test_transfer_nft_when_listed_on_marketplace(&alice, &bob, &charlie, &nft_contract, &market_contract, &worker).await?;
     // test_approval_revoke(&owner, &ft_contract, &defi_contract, &worker).await?;
     // test_reselling_and_royalties(&owner, &dave, ft_contract, &worker).await?;
     Ok(())
@@ -259,81 +259,40 @@ async fn test_sell_nft_listed_on_marketplace(
 }
 
 async fn test_transfer_nft_when_listed_on_marketplace(
-    owner: &Account,
-    user: &Account,
-    ft_contract: &Contract,
-    defi_contract: &Contract,
+    seller: &Account,
+    first_buyer: &Account,
+    second_buyer: &Account,
+    nft_contract: &Contract,
+    market_contract: &Contract,
     worker: &Worker<Sandbox>,
 ) -> anyhow::Result<()> {
-    let transfer_amount_str = parse_near!("1,000,000 N").to_string();
-    let ftc_amount_str = parse_near!("1,000 N").to_string();
+    let token_id = "5";
+    let sale_price = 3000000000000000000000000 as u128;  // 3 NEAR in yoctoNEAR
+    helpers::mint_nft(seller, nft_contract, worker, token_id).await?;
+    helpers::pay_for_storage(seller, market_contract, worker, 10000000000000000000000 as u128).await?;
+    helpers::place_nft_for_sale(seller, market_contract, nft_contract, worker, token_id, sale_price).await?;
 
-    // register user
-    owner
-        .call(&worker, ft_contract.id(), "storage_deposit")
-        .args_json(serde_json::json!({
-            "account_id": user.id()
-        }))?
-        .deposit(parse_near!("0.008 N"))
-        .transact()
-        .await?;
+    helpers::transfer_nft(seller, first_buyer, nft_contract, worker, token_id).await?;
 
-    // transfer ft
-    owner
-        .call(&worker, ft_contract.id(), "ft_transfer")
-        .args_json(serde_json::json!({
-            "receiver_id": user.id(),
-            "amount": transfer_amount_str
-        }))?
-        .deposit(1)
-        .transact()
-        .await?;
+    // attempt purchase NFT
+    let before_seller_balance: u128 = helpers::get_user_balance(seller, worker).await?;
+    let before_buyer_balance: u128 = helpers::get_user_balance(second_buyer, worker).await?;
+    helpers::purchase_listed_nft(second_buyer, market_contract, nft_contract, worker, token_id, sale_price).await?;
+    let after_seller_balance: u128 = helpers::get_user_balance(seller, worker).await?;
+    let after_buyer_balance: u128 = helpers::get_user_balance(second_buyer, worker).await?;
 
-    user.call(&worker, ft_contract.id(), "ft_transfer_call")
-        .args_json(serde_json::json!({
-            "receiver_id": defi_contract.id(),
-            "amount": ftc_amount_str,
-            "msg": "0",
-        }))?
-        .deposit(1)
-        .gas(parse_gas!("200 Tgas") as u64)
-        .transact()
-        .await?;
+    // assert owner remains first_buyer
+    let token_info: serde_json::Value = helpers::get_nft_token_info(nft_contract, worker, token_id).await?;
+    let owner_id: String = token_info["owner_id"].as_str().unwrap().to_string();
+    assert_eq!(owner_id, first_buyer.id().to_string(), "token owner is not first_buyer");
 
-    let storage_result: CallExecutionDetails = user
-        .call(&worker, ft_contract.id(), "storage_unregister")
-        .args_json(serde_json::json!({"force": true }))?
-        .deposit(1)
-        .transact()
-        .await?;
+    // assert balances remain equal
+    let dp = 1;     
+    assert_eq!(helpers::round_to_near_dp(after_seller_balance, dp), helpers::round_to_near_dp(before_seller_balance, dp), "seller balance changed");
+    assert_eq!(helpers::round_to_near_dp(after_buyer_balance, dp), helpers::round_to_near_dp(before_buyer_balance, dp), "buyer balance changed");
 
-    // assert new state
-    assert_eq!(
-        storage_result.logs()[0],
-        format!(
-            "Closed @{} with {}",
-            user.id(),
-            parse_near!("999,000 N") // balance after defi ft transfer
-        )
-    );
+    println!("      Passed ✅ test_transfer_nft_when_listed_on_marketplace");
 
-    let total_supply: U128 = owner
-        .call(&worker, ft_contract.id(), "ft_total_supply")
-        .args_json(json!({}))?
-        .transact()
-        .await?
-        .json()?;
-    assert_eq!(total_supply, U128::from(parse_near!("999,000,000 N")));
-
-    let defi_balance: U128 = owner
-        .call(&worker, ft_contract.id(), "ft_total_supply")
-        .args_json(json!({"account_id": defi_contract.id()}))?
-        .transact()
-        .await?
-        .json()?;
-    assert_eq!(defi_balance, U128::from(parse_near!("999,000,000 N")));
-
-    println!("      Passed ✅ test_transfer_call_with_burned_amount");
     Ok(())
 }
 

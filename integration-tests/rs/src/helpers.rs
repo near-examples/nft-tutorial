@@ -1,8 +1,8 @@
 use serde_json::json;
-use workspaces::{network::Sandbox, Account, Contract, Worker, AccountDetails};
+use workspaces::{network::Sandbox, Account, Contract, Worker, AccountDetails, AccountId};
 
 pub const DEFAULT_DEPOSIT: u128 = 6760000000000000000000 as u128;
-const DEFAULT_GAS: u128 = 300000000000000 as u128;
+pub const DEFAULT_GAS: u128 = 300000000000000 as u128;
 
 pub async fn mint_nft(
     user: &Account,
@@ -120,6 +120,44 @@ pub async fn purchase_listed_nft(
         .await?;
 
     Ok(())
+}
+
+pub async fn transfer_nft(
+    sender: &Account,
+    receiver: &Account,
+    nft_contract: &Contract,
+    worker: &Worker<Sandbox>,
+    token_id: &str,
+) -> anyhow::Result<()> {
+    let request_payload  = json!({
+        "token_id": token_id,
+        "receiver_id": receiver.id(),
+        "approval_id": 0,
+    });
+
+    sender.call(&worker, nft_contract.id(), "nft_transfer")
+        .args_json(request_payload)?
+        .gas(DEFAULT_GAS as u64)
+        .deposit(1)
+        .transact()
+        .await?;
+    
+    Ok(())
+}
+
+pub async fn get_nft_token_info(
+    nft_contract: &Contract,
+    worker: &Worker<Sandbox>,
+    token_id: &str,
+) -> anyhow::Result<serde_json::Value> {
+    let token_info: serde_json::Value = nft_contract
+        .call(&worker, "nft_token")
+        .args_json(json!({"token_id": token_id}))?
+        .transact()
+        .await?
+        .json()?;
+
+    Ok(token_info)
 }
 
 pub fn round_to_near_dp(
