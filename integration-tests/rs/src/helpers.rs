@@ -132,7 +132,7 @@ pub async fn transfer_nft(
     let request_payload  = json!({
         "token_id": token_id,
         "receiver_id": receiver.id(),
-        "approval_id": 0,
+        "approval_id": 1 as u64,
     });
 
     sender.call(&worker, nft_contract.id(), "nft_transfer")

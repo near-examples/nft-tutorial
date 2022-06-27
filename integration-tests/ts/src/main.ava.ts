@@ -217,7 +217,7 @@ test("cross contract: approval revoke", async t => {
     const transfer_payload = {
         receiver_id: bob,
         token_id: "TEST123",
-        approval_id: 0,
+        approval_id: 1,
     };
     const result = await market_contract.call_raw(nft_contract, "nft_transfer", transfer_payload, defaultCallOptions(DEFAULT_GAS, "1"));
 
