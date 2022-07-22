@@ -5,8 +5,8 @@ Welcome to NEAR's NFT tutorial, where we will help you parse the details around 
 ## Prerequisites
 
 * [NEAR Wallet Account](wallet.testnet.near.org)
-* [Rust Toolchain](https://docs.near.org/docs/develop/contracts/rust/intro#installing-the-rust-toolchain)
-* [NEAR-CLI](https://docs.near.org/docs/tools/near-cli#setup)
+* [Rust Toolchain](https://docs.near.org/develop/prerequisites)
+* [NEAR-CLI](https://docs.near.org/tools/near-cli#setup)
 * [yarn](https://classic.yarnpkg.com/en/docs/install#mac-stable)
 
 ## Tutorial Stages 
