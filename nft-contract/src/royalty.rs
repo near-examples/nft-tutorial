@@ -34,8 +34,16 @@ impl NonFungibleTokenCore for Contract {
         let mut payout_object = Payout {
             payout: HashMap::new()
         };
-        //get the royalty object from token
-		let royalty = token.royalty;
+		//get the royalty object from token
+        let (type_id_int, _) = type_and_token_ids(&token_id);
+        let nft_type = self.types_by_id.get(&type_id_int).expect("Not a type");
+		let royalty_option = nft_type.royalty;
+        if royalty_option.is_none() {
+            return Payout{
+                payout: HashMap::new()
+            };
+        }
+        let royalty = royalty_option.unwrap();
 
         //make sure we're not paying out to too many people (GAS limits this)
 		assert!(royalty.len() as u32 <= max_len_payout, "Market cannot payout to that many receivers");
@@ -99,8 +107,17 @@ impl NonFungibleTokenCore for Contract {
         let mut payout_object = Payout {
             payout: HashMap::new()
         };
+        
         //get the royalty object from token
-		let royalty = previous_token.royalty;
+        let (type_id_int, _) = type_and_token_ids(&token_id);
+        let nft_type = self.types_by_id.get(&type_id_int).expect("Not a type");
+		let royalty_option = nft_type.royalty;
+        if royalty_option.is_none() {
+            return Payout{
+                payout: HashMap::new()
+            };
+        }
+        let royalty = royalty_option.unwrap();
 
         //make sure we're not paying out to too many people (GAS limits this)
 		assert!(royalty.len() as u32 <= max_len_payout, "Market cannot payout to that many receivers");

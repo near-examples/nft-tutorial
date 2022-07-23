@@ -5,7 +5,7 @@ impl Contract {
     //Query for the total supply of NFTs on the contract
     pub fn nft_total_supply(&self) -> U128 {
         //return the length of the token metadata by ID
-        U128(self.token_metadata_by_id.len() as u128)
+        U128(self.tokens_by_id.len() as u128)
     }
 
     //Query for nft tokens on the contract regardless of the owner using pagination
@@ -14,7 +14,7 @@ impl Contract {
         let start = u128::from(from_index.unwrap_or(U128(0)));
 
         //iterate through each token using an iterator
-        self.token_metadata_by_id.keys()
+        self.tokens_by_id.keys()
             //skip to the index we specified in the start variable
             .skip(start as usize) 
             //take the first "limit" elements in the vector. If we didn't specify a limit, use 50

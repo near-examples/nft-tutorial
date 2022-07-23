@@ -2,6 +2,14 @@ use crate::*;
 use near_sdk::{CryptoHash};
 use std::mem::size_of;
 
+//split token_id as string into component parts and parse u64 int
+pub(crate) fn type_and_token_ids(token_id: &str) -> (u64, u64) {
+    let (type_id_str, token_id_str) = token_id.split_once(" - ").expect("bad type and token id");
+    let type_id_int = type_id_str.parse::<u64>().expect("bad type id");
+    let token_id_int = token_id_str.parse::<u64>().expect("bad token id");
+    (type_id_int, token_id_int)
+}
+
 //convert the royalty percentage and amount to pay into a payout (U128)
 pub(crate) fn royalty_to_payout(royalty_percentage: u32, amount_to_pay: Balance) -> U128 {
     U128(royalty_percentage as u128 * amount_to_pay / 10_000u128)
@@ -86,6 +94,11 @@ pub(crate) fn refund_deposit(storage_used: u64) {
 }
 
 impl Contract {
+    //add a token to the set of tokens an owner has
+    pub(crate) fn assert_contract_owner(&mut self) {
+        assert!(self.owner_id == env::predecessor_account_id(), "only contract owner")
+    }
+
     //add a token to the set of tokens an owner has
     pub(crate) fn internal_add_token_to_owner(
         &mut self,
@@ -192,8 +205,6 @@ impl Contract {
             //reset the approval account IDs
             approved_account_ids: Default::default(),
             next_approval_id: token.next_approval_id,
-            //we copy over the royalties from the previous token
-            royalty: token.royalty.clone(),
         };
         //insert that new token into the tokens_by_id, replacing the old entry 
         self.tokens_by_id.insert(token_id, &new_token);
