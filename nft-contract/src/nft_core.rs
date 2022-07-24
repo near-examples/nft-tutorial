@@ -160,19 +160,29 @@ impl NonFungibleTokenCore for Contract {
 
     //get the information for a specific token ID
     fn nft_token(&self, token_id: TokenId) -> Option<JsonToken> {
-        let (type_id_int, _) = type_and_token_ids(&token_id);
-        let nft_type = self.types_by_id.get(&type_id_int).expect("Not a type");
         //if there is some token ID in the tokens_by_id collection
         if let Some(token) = self.tokens_by_id.get(&token_id) {
-            //we'll get the metadata for that token
-            let metadata = self.token_metadata_by_id.get(&type_id_int).unwrap();
+            let cur_series = self.series_by_id.get(&token.series_id).expect("Not a series");
+            let mut metadata = cur_series.metadata;
+            
+            
+            let split: Vec<&str>  = token_id.split(":").collect();
+            let edition_number = split[1];
+            // If there is a title for the NFT, add the token ID to it.
+            if let Some(title) = metadata.title {
+                metadata.title = Some(format!("{} - {}", title, edition_number));
+            } else { // If there is no title, we simply create one based on the series number and edition number
+                metadata.title = Some(format!("Series {} : Edition {}", split[0], split[1]));
+            }
+
             //we return the JsonToken (wrapped by Some since we return an option)
             Some(JsonToken {
+                series_id: token.series_id,
                 token_id,
                 owner_id: token.owner_id,
                 metadata,
                 approved_account_ids: token.approved_account_ids,
-                royalty: nft_type.royalty,
+                royalty: cur_series.royalty,
             })
         } else { //if there wasn't a token ID in the tokens_by_id collection, we return None
             None

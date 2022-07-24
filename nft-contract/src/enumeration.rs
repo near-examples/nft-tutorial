@@ -73,4 +73,49 @@ impl Contract {
             //since we turned the keys into an iterator, we need to turn it back into a vector to return
             .collect()
     }
+
+    //get the total supply of NFTs for a given owner
+    pub fn nft_supply_for_series(
+        &self,
+        id: u64,
+    ) -> U128 {
+        //get the series
+        let series = self.series_by_id.get(&id);
+
+        //if there is some series, get the length of the tokens. Otherwise return -
+        if let Some(series) = series {
+            U128(series.tokens.len() as u128)
+        } else {
+            U128(0)
+        }
+    }
+
+    //Query for all the tokens for an owner
+    pub fn nft_tokens_for_series(
+        &self,
+        id: u64,
+        from_index: Option<U128>,
+        limit: Option<u64>,
+    ) -> Vec<JsonToken> {
+        let series = self.series_by_id.get(&id);
+        let tokens = if let Some(series) = series {
+            series.tokens
+        } else {
+            return vec![]
+        };
+
+        //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
+        let start = u128::from(from_index.unwrap_or(U128(0)));
+
+        //iterate through the keys vector
+        tokens.iter()
+            //skip to the index we specified in the start variable
+            .skip(start as usize) 
+            //take the first "limit" elements in the vector. If we didn't specify a limit, use 50
+            .take(limit.unwrap_or(50) as usize) 
+            //we'll map the token IDs which are strings into Json Tokens
+            .map(|token_id| self.nft_token(token_id.clone()).unwrap())
+            //since we turned the keys into an iterator, we need to turn it back into a vector to return
+            .collect()
+    }
 }
