@@ -2,14 +2,6 @@ use crate::*;
 use near_sdk::{CryptoHash};
 use std::mem::size_of;
 
-//split token_id as string into component parts and parse u64 int
-pub(crate) fn type_and_token_ids(token_id: &str) -> (u64, u64) {
-    let (type_id_str, token_id_str) = token_id.split_once(" - ").expect("bad type and token id");
-    let type_id_int = type_id_str.parse::<u64>().expect("bad type id");
-    let token_id_int = token_id_str.parse::<u64>().expect("bad token id");
-    (type_id_int, token_id_int)
-}
-
 //convert the royalty percentage and amount to pay into a payout (U128)
 pub(crate) fn royalty_to_payout(royalty_percentage: u32, amount_to_pay: Balance) -> U128 {
     U128(royalty_percentage as u128 * amount_to_pay / 10_000u128)
@@ -45,7 +37,7 @@ pub(crate) fn refund_approved_account_ids(
 }
 
 //used to generate a unique prefix in our storage collections (this is to avoid data collisions)
-pub(crate) fn hash_account_id(account_id: &AccountId) -> CryptoHash {
+pub(crate) fn hash_account_id(account_id: &String) -> CryptoHash {
     //get the default hash
     let mut hash = CryptoHash::default();
     //we hash the account ID and return it
@@ -111,7 +103,7 @@ impl Contract {
             UnorderedSet::new(
                 StorageKey::TokenPerOwnerInner {
                     //we get a new unique prefix for the collection
-                    account_id_hash: hash_account_id(&account_id),
+                    account_id_hash: hash_account_id(&account_id.to_string()),
                 }
                 .try_to_vec()
                 .unwrap(),
@@ -201,6 +193,7 @@ impl Contract {
 
         //we create a new token struct 
         let new_token = Token {
+            series_id: token.series_id,
             owner_id: receiver_id.clone(),
             //reset the approval account IDs
             approved_account_ids: Default::default(),

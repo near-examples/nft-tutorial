@@ -35,9 +35,8 @@ impl NonFungibleTokenCore for Contract {
             payout: HashMap::new()
         };
 		//get the royalty object from token
-        let (type_id_int, _) = type_and_token_ids(&token_id);
-        let nft_type = self.types_by_id.get(&type_id_int).expect("Not a type");
-		let royalty_option = nft_type.royalty;
+        let cur_series = self.series_by_id.get(&token.series_id).expect("Not a series");
+		let royalty_option = cur_series.royalty;
         if royalty_option.is_none() {
             return Payout{
                 payout: HashMap::new()
@@ -46,7 +45,7 @@ impl NonFungibleTokenCore for Contract {
         let royalty = royalty_option.unwrap();
 
         //make sure we're not paying out to too many people (GAS limits this)
-		assert!(royalty.len() as u32 <= max_len_payout, "Market cannot payout to that many receivers");
+		assert!(royalty.len() as u32 <= max_len_payout, "Market can&not payout to that many receivers");
 
         //go through each key and value in the royalty object
 		for (k, v) in royalty.iter() {
@@ -109,9 +108,8 @@ impl NonFungibleTokenCore for Contract {
         };
         
         //get the royalty object from token
-        let (type_id_int, _) = type_and_token_ids(&token_id);
-        let nft_type = self.types_by_id.get(&type_id_int).expect("Not a type");
-		let royalty_option = nft_type.royalty;
+        let cur_series = self.series_by_id.get(&previous_token.series_id).expect("Not a series");
+		let royalty_option = cur_series.royalty;
         if royalty_option.is_none() {
             return Payout{
                 payout: HashMap::new()

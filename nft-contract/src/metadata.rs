@@ -38,6 +38,8 @@ pub struct TokenMetadata {
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct Token {
+    // Series that the token belongs to
+    pub series_id: u64,
     //owner of the token
     pub owner_id: AccountId,
     //list of approved account IDs that have access to transfer the token. This maps an account ID to an approval ID
@@ -50,6 +52,8 @@ pub struct Token {
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct JsonToken {
+    // Series that the token belongs to
+    pub series_id: u64,
     //token ID
     pub token_id: TokenId,
     //owner of the token
