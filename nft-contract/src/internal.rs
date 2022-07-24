@@ -1,5 +1,5 @@
 use crate::*;
-use near_sdk::{CryptoHash};
+use near_sdk::CryptoHash;
 use std::mem::size_of;
 
 //convert the royalty percentage and amount to pay into a payout (U128)
@@ -13,7 +13,7 @@ pub(crate) fn bytes_for_approved_account_id(account_id: &AccountId) -> u64 {
     account_id.as_str().len() as u64 + 4 + size_of::<u64>() as u64
 }
 
-//refund the storage taken up by passed in approved account IDs and send the funds to the passed in account ID. 
+//refund the storage taken up by passed in approved account IDs and send the funds to the passed in account ID.
 pub(crate) fn refund_approved_account_ids_iter<'a, I>(
     account_id: AccountId,
     approved_account_ids: I, //the approved account IDs must be passed in as an iterator
@@ -22,7 +22,9 @@ where
     I: Iterator<Item = &'a AccountId>,
 {
     //get the storage total by going through and summing all the bytes for each approved account IDs
-    let storage_released: u64 = approved_account_ids.map(bytes_for_approved_account_id).sum();
+    let storage_released: u64 = approved_account_ids
+        .map(bytes_for_approved_account_id)
+        .sum();
     //transfer the account the storage that is released
     Promise::new(account_id).transfer(Balance::from(storage_released) * env::storage_byte_cost())
 }
@@ -37,7 +39,7 @@ pub(crate) fn refund_approved_account_ids(
 }
 
 //used to generate a unique prefix in our storage collections (this is to avoid data collisions)
-pub(crate) fn hash_account_id(account_id: &AccountId) -> CryptoHash {
+pub(crate) fn hash_account_id(account_id: &String) -> CryptoHash {
     //get the default hash
     let mut hash = CryptoHash::default();
     //we hash the account ID and return it
@@ -87,6 +89,14 @@ pub(crate) fn refund_deposit(storage_used: u64) {
 
 impl Contract {
     //add a token to the set of tokens an owner has
+    pub(crate) fn assert_contract_owner(&mut self) {
+        assert!(
+            self.owner_id == env::predecessor_account_id(),
+            "only contract owner"
+        )
+    }
+
+    //add a token to the set of tokens an owner has
     pub(crate) fn internal_add_token_to_owner(
         &mut self,
         account_id: &AccountId,
@@ -98,7 +108,7 @@ impl Contract {
             UnorderedSet::new(
                 StorageKey::TokenPerOwnerInner {
                     //we get a new unique prefix for the collection
-                    account_id_hash: hash_account_id(&account_id),
+                    account_id_hash: hash_account_id(&account_id.to_string()),
                 }
                 .try_to_vec()
                 .unwrap(),
@@ -108,7 +118,7 @@ impl Contract {
         //we insert the token ID into the set
         tokens_set.insert(token_id);
 
-        //we insert that set for the given account ID. 
+        //we insert that set for the given account ID.
         self.tokens_per_owner.insert(account_id, &tokens_set);
     }
 
@@ -132,7 +142,7 @@ impl Contract {
         if tokens_set.is_empty() {
             self.tokens_per_owner.remove(account_id);
         } else {
-        //if the token set is not empty, we simply insert it back for the account ID. 
+            //if the token set is not empty, we simply insert it back for the account ID.
             self.tokens_per_owner.insert(account_id, &tokens_set);
         }
     }
@@ -151,29 +161,29 @@ impl Contract {
         let token = self.tokens_by_id.get(token_id).expect("No token");
 
         //if the sender doesn't equal the owner, we check if the sender is in the approval list
-		if sender_id != &token.owner_id {
-			//if the token's approved account IDs doesn't contain the sender, we panic
-			if !token.approved_account_ids.contains_key(sender_id) {
-				env::panic_str("Unauthorized");
-			}
+        if sender_id != &token.owner_id {
+            //if the token's approved account IDs doesn't contain the sender, we panic
+            if !token.approved_account_ids.contains_key(sender_id) {
+                env::panic_str("Unauthorized");
+            }
 
-			// If they included an approval_id, check if the sender's actual approval_id is the same as the one included
-			if let Some(enforced_approval_id) = approval_id {
+            // If they included an approval_id, check if the sender's actual approval_id is the same as the one included
+            if let Some(enforced_approval_id) = approval_id {
                 //get the actual approval ID
-				let actual_approval_id = token
-					.approved_account_ids
-					.get(sender_id)
+                let actual_approval_id = token
+                    .approved_account_ids
+                    .get(sender_id)
                     //if the sender isn't in the map, we panic
-					.expect("Sender is not approved account");
+                    .expect("Sender is not approved account");
 
                 //make sure that the actual approval ID is the same as the one provided
                 assert_eq!(
-					actual_approval_id, &enforced_approval_id,
-					"The actual approval_id {} is different from the given approval_id {}",
-					actual_approval_id, enforced_approval_id,
-				);
-			}
-		}
+                    actual_approval_id, &enforced_approval_id,
+                    "The actual approval_id {} is different from the given approval_id {}",
+                    actual_approval_id, enforced_approval_id,
+                );
+            }
+        }
 
         //we make sure that the sender isn't sending the token to themselves
         assert_ne!(
@@ -186,19 +196,18 @@ impl Contract {
         //we then add the token to the receiver_id's set
         self.internal_add_token_to_owner(receiver_id, token_id);
 
-        //we create a new token struct 
+        //we create a new token struct
         let new_token = Token {
+            series_id: token.series_id,
             owner_id: receiver_id.clone(),
             //reset the approval account IDs
             approved_account_ids: Default::default(),
             next_approval_id: token.next_approval_id,
-            //we copy over the royalties from the previous token
-            royalty: token.royalty.clone(),
         };
-        //insert that new token into the tokens_by_id, replacing the old entry 
+        //insert that new token into the tokens_by_id, replacing the old entry
         self.tokens_by_id.insert(token_id, &new_token);
 
-        //if there was some memo attached, we log it. 
+        //if there was some memo attached, we log it.
         if let Some(memo) = memo.as_ref() {
             env::log_str(&format!("Memo: {}", memo).to_string());
         }
@@ -233,8 +242,8 @@ impl Contract {
 
         // Log the serialized json.
         env::log_str(&nft_transfer_log.to_string());
-        
+
         //return the previous token object that was transferred.
         token
     }
-} 
+}

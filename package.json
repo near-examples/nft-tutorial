@@ -7,11 +7,11 @@
     "scripts": {
         "build": "cd nft-contract && bash build.sh && cd .. && ls && cd market-contract && bash build.sh && cd ..",
         "test": "npm run test:unit && npm run test:integration",
-            "test:unit": "npm run test:unit:nft && npm run test:unit:market",
-                "test:unit:nft": "cd nft-contract && cargo test -- --nocapture --color=always && cd ..",
-                "test:unit:market": "cd market-contract && cargo test -- --nocapture --color=always && cd ..",
-            "test:integration": "npm run test:integration:ts && npm run test:integration:rs",
-                "test:integration:ts": "cd integration-tests/ts && npm i && npm run test",
-                "test:integration:rs": "cd integration-tests/rs && cargo run --example integration-tests"
+        "test:unit": "npm run test:unit:nft && npm run test:unit:market",
+        "test:unit:nft": "cd nft-contract && cargo test -- --nocapture --color=always && cd ..",
+        "test:unit:market": "cd market-contract && cargo test -- --nocapture --color=always && cd ..",
+        "test:integration": "npm run test:integration:ts && npm run test:integration:rs",
+        "test:integration:ts": "cd integration-tests/ts && npm i && npm run test",
+        "test:integration:rs": "cd integration-tests/rs && cargo run --example integration-tests"
     }
 }
