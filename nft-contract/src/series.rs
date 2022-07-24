@@ -7,22 +7,36 @@ impl Contract {
         &mut self,
         collection_id: u64,
         metadata: TokenMetadata,
-        royalty: Option<HashMap<AccountId, u32>>
+        royalty: Option<HashMap<AccountId, u32>>,
     ) {
         //measure the initial storage being used on the contract
         let initial_storage_usage = env::storage_usage();
 
         let caller = env::predecessor_account_id();
-        require!(self.approved_creators.contains(&caller) == true, "only approved creators can add a type");
-        require!(self.series_by_id.insert(&collection_id, &Series{
-            metadata,
-            //we add an optional parameter for perpetual royalties
-            royalty,
-            tokens: UnorderedSet::new(StorageKey::SeriesByIdInner {
-                // We get a new unique prefix for the collection
-                account_id_hash: hash_account_id(&format!("{}{}", collection_id, caller)),
-            })
-        }).is_none(), "collection ID already exists");
+        require!(
+            self.approved_creators.contains(&caller) == true,
+            "only approved creators can add a type"
+        );
+        require!(
+            self.series_by_id
+                .insert(
+                    &collection_id,
+                    &Series {
+                        metadata,
+                        //we add an optional parameter for perpetual royalties
+                        royalty,
+                        tokens: UnorderedSet::new(StorageKey::SeriesByIdInner {
+                            // We get a new unique prefix for the collection
+                            account_id_hash: hash_account_id(&format!(
+                                "{}{}",
+                                collection_id, caller
+                            )),
+                        })
+                    }
+                )
+                .is_none(),
+            "collection ID already exists"
+        );
 
         //calculate the required storage which was the used - initial
         let required_storage_in_bytes = env::storage_usage() - initial_storage_usage;
@@ -32,29 +46,31 @@ impl Contract {
     }
 
     #[payable]
-    pub fn nft_mint(
-        &mut self,
-        id: u64,
-        receiver_id: AccountId
-    ) {
+    pub fn nft_mint(&mut self, id: u64, receiver_id: AccountId) {
         //measure the initial storage being used on the contract
         let initial_storage_usage = env::storage_usage();
 
         let predecessor = env::predecessor_account_id();
-        assert!(self.approved_minters.contains(&predecessor), "Not approved minter");
+        assert!(
+            self.approved_minters.contains(&predecessor),
+            "Not approved minter"
+        );
 
         let mut series = self.series_by_id.get(&id).expect("Not a series");
         let cur_len = series.tokens.len();
         // Ensure we haven't overflowed on the number of copies minted
         if let Some(copies) = series.metadata.copies {
-            require!(cur_len < copies, "cannot mint anymore NFTs for the given series. Limit reached");
+            require!(
+                cur_len < copies,
+                "cannot mint anymore NFTs for the given series. Limit reached"
+            );
         }
 
         let token_id = format!("{}:{}", id, cur_len + 1);
         series.tokens.insert(&token_id);
         self.series_by_id.insert(&id, &series);
 
-        //specify the token struct that contains the owner ID 
+        //specify the token struct that contains the owner ID
         let token = Token {
             // Series ID that the token belongs to
             series_id: id,

@@ -1,30 +1,31 @@
-use std::collections::HashMap;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::{LazyOption, LookupMap, UnorderedMap, UnorderedSet, LookupSet};
+use near_sdk::collections::{LazyOption, LookupMap, LookupSet, UnorderedMap, UnorderedSet};
 use near_sdk::json_types::{Base64VecU8, U128};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
-    env, near_bindgen, AccountId, Balance, CryptoHash, PanicOnDefault, Promise, PromiseOrValue, require, BorshStorageKey,
+    env, near_bindgen, require, AccountId, Balance, BorshStorageKey, CryptoHash, PanicOnDefault,
+    Promise, PromiseOrValue,
 };
+use std::collections::HashMap;
 
+pub use crate::approval::*;
+pub use crate::events::*;
 use crate::internal::*;
 pub use crate::metadata::*;
-pub use crate::series::*;
 pub use crate::nft_core::*;
-pub use crate::approval::*;
-pub use crate::royalty::*;
-pub use crate::events::*;
 pub use crate::owner::*;
+pub use crate::royalty::*;
+pub use crate::series::*;
 
-mod internal;
-mod approval; 
-mod enumeration; 
-mod metadata; 
-mod series; 
-mod owner; 
-mod nft_core; 
-mod royalty; 
+mod approval;
+mod enumeration;
 mod events;
+mod internal;
+mod metadata;
+mod nft_core;
+mod owner;
+mod royalty;
+mod series;
 
 /// This spec can be treated like a version of the standard.
 pub const NFT_METADATA_SPEC: &str = "nft-1.0.0";
@@ -39,7 +40,7 @@ pub struct Series {
     // Royalty used for all tokens in the collection
     royalty: Option<HashMap<AccountId, u32>>,
     // Set of tokens in the collection
-    tokens: UnorderedSet<TokenId>
+    tokens: UnorderedSet<TokenId>,
 }
 
 pub type CollectionId = u64;
@@ -61,7 +62,7 @@ pub struct Contract {
 
     //keeps track of the token struct for a given token ID
     pub tokens_by_id: UnorderedMap<TokenId, Token>,
-    
+
     //keeps track of all the token IDs for a given account
     pub tokens_per_owner: LookupMap<AccountId, UnorderedSet<TokenId>>,
 
@@ -79,7 +80,7 @@ pub enum StorageKey {
     TokensPerOwner,
     TokenPerOwnerInner { account_id_hash: CryptoHash },
     TokensById,
-    NFTContractMetadata
+    NFTContractMetadata,
 }
 
 #[near_bindgen]
@@ -91,7 +92,7 @@ impl Contract {
     */
     #[init]
     pub fn new_default_meta(owner_id: AccountId) -> Self {
-        //calls the other function "new: with some default metadata and the owner_id passed in 
+        //calls the other function "new: with some default metadata and the owner_id passed in
         Self::new(
             owner_id,
             NFTContractMetadata {
@@ -109,17 +110,19 @@ impl Contract {
     /*
         initialization function (can only be called once).
         this initializes the contract with metadata that was passed in and
-        the owner_id. 
+        the owner_id.
     */
     #[init]
     pub fn new(owner_id: AccountId, metadata: NFTContractMetadata) -> Self {
         //create a variable of type Self with all the fields initialized.
-        let mut approved_minters = LookupSet::new(StorageKey::ApprovedMinters.try_to_vec().unwrap());
+        let mut approved_minters =
+            LookupSet::new(StorageKey::ApprovedMinters.try_to_vec().unwrap());
         approved_minters.insert(&owner_id);
 
-        let mut approved_creators = LookupSet::new(StorageKey::ApprovedCreators.try_to_vec().unwrap());
+        let mut approved_creators =
+            LookupSet::new(StorageKey::ApprovedCreators.try_to_vec().unwrap());
         approved_creators.insert(&owner_id);
-        
+
         let this = Self {
             approved_minters,
             approved_creators,
@@ -127,7 +130,7 @@ impl Contract {
             //Storage keys are simply the prefixes used for the collections. This helps avoid data collision
             tokens_per_owner: LookupMap::new(StorageKey::TokensPerOwner.try_to_vec().unwrap()),
             tokens_by_id: UnorderedMap::new(StorageKey::TokensById.try_to_vec().unwrap()),
-            //set the &owner_id field equal to the passed in owner_id. 
+            //set the &owner_id field equal to the passed in owner_id.
             owner_id,
             metadata: LazyOption::new(
                 StorageKey::NFTContractMetadata.try_to_vec().unwrap(),

@@ -1,8 +1,8 @@
 /* unit tests */
+use crate::approval::NonFungibleTokenCore;
 #[cfg(test)]
 use crate::Contract;
 use crate::TokenMetadata;
-use crate::approval::NonFungibleTokenCore;
 use near_sdk::json_types::{U128, U64};
 use near_sdk::test_utils::{accounts, VMContextBuilder};
 use near_sdk::testing_env;
