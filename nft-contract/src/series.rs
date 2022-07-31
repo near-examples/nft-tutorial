@@ -5,7 +5,7 @@ impl Contract {
     #[payable]
     pub fn create_series(
         &mut self,
-        collection_id: u64,
+        id: u64,
         metadata: TokenMetadata,
         royalty: Option<HashMap<AccountId, u32>>,
     ) {
@@ -20,7 +20,7 @@ impl Contract {
         require!(
             self.series_by_id
                 .insert(
-                    &collection_id,
+                    &id,
                     &Series {
                         metadata,
                         //we add an optional parameter for perpetual royalties
@@ -29,7 +29,7 @@ impl Contract {
                             // We get a new unique prefix for the collection
                             account_id_hash: hash_account_id(&format!(
                                 "{}{}",
-                                collection_id, caller
+                                id, caller
                             )),
                         })
                     }
