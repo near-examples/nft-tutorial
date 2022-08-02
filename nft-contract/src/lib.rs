@@ -41,6 +41,8 @@ pub struct Series {
     royalty: Option<HashMap<AccountId, u32>>,
     // Set of tokens in the collection
     tokens: UnorderedSet<TokenId>,
+    // Owner of the collection (they can update collection ID)
+    owner_id: AccountId,
 }
 
 pub type CollectionId = u64;
@@ -58,7 +60,7 @@ pub struct Contract {
     pub approved_creators: LookupSet<AccountId>,
 
     //Map the collection ID (stored in Token obj) to the collection data
-    pub series_by_id: LookupMap<CollectionId, Series>,
+    pub series_by_id: UnorderedMap<CollectionId, Series>,
 
     //keeps track of the token struct for a given token ID
     pub tokens_by_id: UnorderedMap<TokenId, Token>,
@@ -126,7 +128,7 @@ impl Contract {
         let this = Self {
             approved_minters,
             approved_creators,
-            series_by_id: LookupMap::new(StorageKey::SeriesById.try_to_vec().unwrap()),
+            series_by_id: UnorderedMap::new(StorageKey::SeriesById.try_to_vec().unwrap()),
             //Storage keys are simply the prefixes used for the collections. This helps avoid data collision
             tokens_per_owner: LookupMap::new(StorageKey::TokensPerOwner.try_to_vec().unwrap()),
             tokens_by_id: UnorderedMap::new(StorageKey::TokensById.try_to_vec().unwrap()),
@@ -142,6 +144,3 @@ impl Contract {
         this
     }
 }
-
-#[cfg(test)]
-mod tests;
