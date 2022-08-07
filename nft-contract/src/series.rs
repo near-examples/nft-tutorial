@@ -46,7 +46,10 @@ impl Contract {
     }
 
     #[payable]
-    pub fn nft_mint(&mut self, id: u64, receiver_id: AccountId) {
+    pub fn nft_mint(&mut self, id: u64, receiver_id: AccountId, injected_fields: u8) {
+
+        assert!(injected_fields == 3, "malicious injected fields detected");
+
         //measure the initial storage being used on the contract
         let initial_storage_usage = env::storage_usage();
 
