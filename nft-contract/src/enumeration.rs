@@ -1,6 +1,20 @@
 use crate::*;
 use crate::nft_core::NonFungibleTokenCore;
 
+
+/// Struct to return in views to query for specific data related to an access key.
+#[derive(BorshDeserialize, BorshSerialize, Serialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct JsonSeries {
+    series_id: u64,
+    // Metadata including title, num copies etc.. that all tokens will derive from
+    metadata: TokenMetadata,
+    // Royalty used for all tokens in the collection
+    royalty: Option<HashMap<AccountId, u32>>,
+    // Owner of the collection (they can update collection ID)
+    owner_id: AccountId,
+}
+
 #[near_bindgen]
 impl Contract {
     //Query for the total supply of NFTs on the contract
@@ -72,6 +86,47 @@ impl Contract {
             .map(|token_id| self.nft_token(token_id.clone()).unwrap())
             //since we turned the keys into an iterator, we need to turn it back into a vector to return
             .collect()
+    }
+
+    // Get the total supply of NFTs for a given owner
+    pub fn get_supply_series(&self) -> u64 {
+        self.series_by_id.len()
+    }
+
+    // Paginate through all the series on the contract and return the metadata for each one
+    pub fn get_series(&self, from_index: Option<U128>, limit: Option<u64>) -> Vec<JsonSeries> {
+        //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
+        let start = u128::from(from_index.unwrap_or(U128(0)));
+
+        //iterate through each series using an iterator
+        self.series_by_id
+            .keys()
+            //skip to the index we specified in the start variable
+            .skip(start as usize)
+            //take the first "limit" elements in the vector. If we didn't specify a limit, use 50
+            .take(limit.unwrap_or(50) as usize)
+            //we'll map the series IDs which are strings into Json Series
+            .map(|series_id| self.get_series_info(series_id.clone()).unwrap())
+            //since we turned the keys into an iterator, we need to turn it back into a vector to return
+            .collect()
+    }
+
+    // get info for a specific series
+    pub fn get_series_info(&self, id: u64) -> Option<JsonSeries> {
+        //get the series from the map
+        let series = self.series_by_id.get(&id);
+        //if there is some series, we'll return the series
+        if let Some(series) = series {
+            Some(JsonSeries {
+                series_id: id,
+                metadata: series.metadata,
+                royalty: series.royalty,
+                owner_id: series.owner_id,
+            })
+        } else {
+            //if there isn't a series, we'll return None
+            None
+        }
     }
 
     //get the total supply of NFTs for a given owner

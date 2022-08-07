@@ -31,7 +31,8 @@ impl Contract {
                                 "{}{}",
                                 id, caller
                             )),
-                        })
+                        }),
+                        owner_id: caller
                     }
                 )
                 .is_none(),
@@ -119,5 +120,28 @@ impl Contract {
 
         //refund any excess storage if the user attached too much. Panic if they didn't attach enough to cover the required.
         refund_deposit(required_storage_in_bytes);
+    }
+
+    #[payable]
+    /// Update the series ID for a given series. Caller must be series owner.
+    pub fn update_series_id(
+        &mut self,
+        current_id: u64,
+        new_id: u64,
+    ) {
+        let caller = env::predecessor_account_id();
+        // Ensure the caller is the owner of the current series
+        let series = self.series_by_id.remove(&current_id).expect("Not a series");
+        require!(
+            series.owner_id == caller,
+            "Only the owner can update the series ID"
+        );
+        // Add the series to the new ID and make sure the new ID doesn't exist yet
+        require!(
+            self.series_by_id
+                .insert(&new_id, &series)
+                .is_none(),
+            "Series ID already exists"
+        );
     }
 }
