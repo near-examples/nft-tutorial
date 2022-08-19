@@ -41,6 +41,9 @@ pub struct Series {
     royalty: Option<HashMap<AccountId, u32>>,
     // Set of tokens in the collection
     tokens: UnorderedSet<TokenId>,
+    // What is the price of each token in this series? If this is specified, when minting,
+    // Users will need to attach enough $NEAR to cover the price.
+    price: Option<Balance>,
     // Owner of the collection (they can update collection ID)
     owner_id: AccountId,
 }

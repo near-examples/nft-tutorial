@@ -15,6 +15,7 @@ impl Contract {
         id: u64,
         metadata: TokenMetadata,
         royalty: Option<HashMap<AccountId, u32>>,
+        price: Option<U128>
     ) {
         // Measure the initial storage being used on the contract
         let initial_storage_usage = env::storage_usage();
@@ -41,7 +42,8 @@ impl Contract {
                                 id, caller
                             )),
                         }),
-                        owner_id: caller
+                        owner_id: caller,
+                        price: price.map(|p| p.into()),
                     }
                 )
                 .is_none(),
@@ -52,13 +54,13 @@ impl Contract {
         let required_storage_in_bytes = env::storage_usage() - initial_storage_usage;
 
         //refund any excess storage if the user attached too much. Panic if they didn't attach enough to cover the required.
-        refund_deposit(required_storage_in_bytes);
+        refund_deposit(required_storage_in_bytes, 0);
     }
 
     /// Mint a new NFT that is part of a series. The caller must be an approved minter.
     /// The series ID must exist and if the metadata specifies a copy limit, you cannot exceed it.
     #[payable]
-    pub fn nft_mint(&mut self, id: U64, receiver_id: AccountId {
+    pub fn nft_mint(&mut self, id: U64, receiver_id: AccountId) {
         // Measure the initial storage being used on the contract
         let initial_storage_usage = env::storage_usage();
 
@@ -71,6 +73,11 @@ impl Contract {
 
         // Get the series and how many tokens currently exist (edition number = cur_len + 1)
         let mut series = self.series_by_id.get(&id.0).expect("Not a series");
+        
+        // Check if the series has a price per token and ensure the caller has attached at least that amount
+        let price_per_token = series.price.unwrap_or(0);
+        require!(env::attached_deposit() > price_per_token, "Need to attach at least enough to cover price");
+
         let cur_len = series.tokens.len();
         // Ensure we haven't overflowed on the number of copies minted
         if let Some(copies) = series.metadata.copies {
@@ -129,8 +136,9 @@ impl Contract {
         //calculate the required storage which was the used - initial
         let required_storage_in_bytes = env::storage_usage() - initial_storage_usage;
 
-        //refund any excess storage if the user attached too much. Panic if they didn't attach enough to cover the required.
-        refund_deposit(required_storage_in_bytes);
+        // Refund any excess storage if the user attached too much. Panic if they didn't attach enough to cover the required.
+        // Pass along the price per token to include in the calculation.
+        refund_deposit(required_storage_in_bytes, price_per_token);
     }
 
     #[payable]
@@ -147,7 +155,7 @@ impl Contract {
             series.owner_id == caller,
             "Only the owner can update the series ID"
         );
-        
+
         // Add the series to the new ID and make sure the new ID doesn't exist yet
         require!(
             self.series_by_id
