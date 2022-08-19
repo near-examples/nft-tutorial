@@ -33,17 +33,22 @@ impl NonFungibleTokenCore for Contract {
         let mut payout_object = Payout {
             payout: HashMap::new(),
         };
-        //get the royalty object from token
+        //get the royalty object from series
         let cur_series = self
             .series_by_id
             .get(&token.series_id)
             .expect("Not a series");
+
+        // If the series doesn't have a royalty, we'll return an a payout object that just includes the owner
         let royalty_option = cur_series.royalty;
         if royalty_option.is_none() {
+            let mut payout = HashMap::new();
+            payout.insert(owner_id, balance);
             return Payout {
-                payout: HashMap::new(),
+                payout: payout
             };
         }
+        // Otherwise, we will get the royalty object from the series
         let royalty = royalty_option.unwrap();
 
         //make sure we're not paying out to too many people (GAS limits this)
@@ -112,17 +117,22 @@ impl NonFungibleTokenCore for Contract {
             payout: HashMap::new(),
         };
 
-        //get the royalty object from token
+        //get the royalty object from series
         let cur_series = self
             .series_by_id
             .get(&previous_token.series_id)
             .expect("Not a series");
+
+        // If the series doesn't have a royalty, we'll return an a payout object that just includes the owner
         let royalty_option = cur_series.royalty;
         if royalty_option.is_none() {
+            let mut payout = HashMap::new();
+            payout.insert(owner_id, balance);
             return Payout {
-                payout: HashMap::new(),
+                payout: payout
             };
         }
+        // Otherwise, we will get the royalty object from the series
         let royalty = royalty_option.unwrap();
 
         //make sure we're not paying out to too many people (GAS limits this)

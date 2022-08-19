@@ -157,12 +157,15 @@ impl NonFungibleTokenCore for Contract {
     fn nft_token(&self, token_id: TokenId) -> Option<JsonToken> {
         //if there is some token ID in the tokens_by_id collection
         if let Some(token) = self.tokens_by_id.get(&token_id) {
+            // Get the series information
             let cur_series = self
                 .series_by_id
                 .get(&token.series_id)
                 .expect("Not a series");
+            // Get the metadata for the series
             let mut metadata = cur_series.metadata;
 
+            // Get the edition number and series ID
             let split: Vec<&str> = token_id.split(":").collect();
             let edition_number = split[1];
             // If there is a title for the NFT, add the token ID to it.

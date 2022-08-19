@@ -88,7 +88,7 @@ pub(crate) fn refund_deposit(storage_used: u64) {
 }
 
 impl Contract {
-    //add a token to the set of tokens an owner has
+    /// Ensure that the caller is the owner of the contract
     pub(crate) fn assert_contract_owner(&mut self) {
         assert!(
             self.owner_id == env::predecessor_account_id(),

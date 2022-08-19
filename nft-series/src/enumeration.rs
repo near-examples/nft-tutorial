@@ -2,7 +2,7 @@ use crate::*;
 use crate::nft_core::NonFungibleTokenCore;
 
 
-/// Struct to return in views to query for specific data related to an access key.
+/// Struct to return in views to query for specific data related to a series
 #[derive(BorshDeserialize, BorshSerialize, Serialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct JsonSeries {
@@ -19,7 +19,7 @@ pub struct JsonSeries {
 impl Contract {
     //Query for the total supply of NFTs on the contract
     pub fn nft_total_supply(&self) -> U128 {
-        //return the length of the token metadata by ID
+        //return the length of the tokens by id
         U128(self.tokens_by_id.len() as u128)
     }
 
@@ -88,12 +88,12 @@ impl Contract {
             .collect()
     }
 
-    // Get the total supply of NFTs for a given owner
+    // Get the total supply of series on the contract
     pub fn get_supply_series(&self) -> u64 {
         self.series_by_id.len()
     }
 
-    // Paginate through all the series on the contract and return the metadata for each one
+    // Paginate through all the series on the contract and return the a vector of JsonSeries
     pub fn get_series(&self, from_index: Option<U128>, limit: Option<u64>) -> Vec<JsonSeries> {
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
         let start = u128::from(from_index.unwrap_or(U128(0)));
@@ -129,7 +129,7 @@ impl Contract {
         }
     }
 
-    //get the total supply of NFTs for a given owner
+    //get the total supply of NFTs on a current series
     pub fn nft_supply_for_series(&self, id: u64) -> U128 {
         //get the series
         let series = self.series_by_id.get(&id);
@@ -142,13 +142,14 @@ impl Contract {
         }
     }
 
-    //Query for all the tokens for an owner
+    /// Paginate through NFTs within a given series 
     pub fn nft_tokens_for_series(
         &self,
         id: u64,
         from_index: Option<U128>,
         limit: Option<u64>,
     ) -> Vec<JsonToken> {
+        // Get the series and its tokens
         let series = self.series_by_id.get(&id);
         let tokens = if let Some(series) = series {
             series.tokens
@@ -159,7 +160,7 @@ impl Contract {
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
         let start = u128::from(from_index.unwrap_or(U128(0)));
 
-        //iterate through the keys vector
+        //iterate through the tokens
         tokens
             .iter()
             //skip to the index we specified in the start variable
