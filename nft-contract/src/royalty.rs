@@ -40,8 +40,10 @@ impl NonFungibleTokenCore for Contract {
             .expect("Not a series");
         let royalty_option = cur_series.royalty;
         if royalty_option.is_none() {
+            let mut payout = HashMap::new();
+            payout.insert(owner_id, balance);
             return Payout {
-                payout: HashMap::new(),
+                payout: payout
             };
         }
         let royalty = royalty_option.unwrap();
@@ -119,8 +121,10 @@ impl NonFungibleTokenCore for Contract {
             .expect("Not a series");
         let royalty_option = cur_series.royalty;
         if royalty_option.is_none() {
+            let mut payout = HashMap::new();
+            payout.insert(owner_id, balance);
             return Payout {
-                payout: HashMap::new(),
+                payout: payout
             };
         }
         let royalty = royalty_option.unwrap();
