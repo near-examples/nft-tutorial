@@ -54,7 +54,7 @@ impl Contract {
         let required_storage_in_bytes = env::storage_usage() - initial_storage_usage;
 
         //refund any excess storage if the user attached too much. Panic if they didn't attach enough to cover the required.
-        refund_deposit(required_storage_in_bytes, 0);
+        refund_deposit(required_storage_in_bytes);
     }
 
     /// Mint a new NFT that is part of a series. The caller must be an approved minter.
@@ -81,7 +81,7 @@ impl Contract {
                 "Not approved minter"
             );
         }
-        
+
         let cur_len = series.tokens.len();
         // Ensure we haven't overflowed on the number of copies minted
         if let Some(copies) = series.metadata.copies {
@@ -140,9 +140,12 @@ impl Contract {
         //calculate the required storage which was the used - initial
         let required_storage_in_bytes = env::storage_usage() - initial_storage_usage;
 
-        // Refund any excess storage if the user attached too much. Panic if they didn't attach enough to cover the required.
-        // Pass along the price per token to include in the calculation.
-        refund_deposit(required_storage_in_bytes, price_per_token);
+        // If there's some price for the token, we'll payout the series owner. Otherwise, refund the excess deposit for storage to the caller
+        if price_per_token > 0 {
+            payout_series_owner(required_storage_in_bytes, price_per_token, series.owner_id);
+        } else {
+            refund_deposit(required_storage_in_bytes);
+        }
     }
 
     #[payable]
