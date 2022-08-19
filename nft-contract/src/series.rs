@@ -134,20 +134,23 @@ impl Contract {
     /// Update the series ID for a given series. Caller must be series owner.
     pub fn update_mint_id(
         &mut self,
-        series_id: u64,
-        mint_id: u64,
+        old_mint_id: u64,
+        new_mint_id: u64,
     ) {
         let caller = env::predecessor_account_id();
         // Ensure the caller is the owner of the current series
+        
+        let series_id = self.series_id_by_mint_id.remove(&old_mint_id).expect("mint_id record not found");
         let series = self.series_by_id.get(&series_id).expect("Not a series");
         require!(
             series.owner_id == caller,
             "Only the owner can add a mint_id for this series_id"
         );
+
         // Add the series to the new ID and make sure the new ID doesn't exist yet
         require!(
             self.series_id_by_mint_id
-                .insert(&mint_id, &series_id)
+                .insert(&new_mint_id, &series_id)
                 .is_none(),
             &format!("mint_id already exists and points to {}", &series_id)
         );
