@@ -43,6 +43,8 @@ pub struct Series {
     tokens: UnorderedSet<TokenId>,
     // Owner of the collection (they can update collection ID)
     owner_id: AccountId,
+
+    mint_id: u64,
 }
 
 pub type CollectionId = u64;
@@ -62,6 +64,8 @@ pub struct Contract {
     //Map the collection ID (stored in Token obj) to the collection data
     pub series_by_id: UnorderedMap<CollectionId, Series>,
 
+    pub series_id_by_mint_id: LookupMap<u64, u64>,
+
     //keeps track of the token struct for a given token ID
     pub tokens_by_id: UnorderedMap<TokenId, Token>,
 
@@ -78,6 +82,7 @@ pub enum StorageKey {
     ApprovedMinters,
     ApprovedCreators,
     SeriesById,
+    SeriesIdByMintId,
     SeriesByIdInner { account_id_hash: CryptoHash },
     TokensPerOwner,
     TokenPerOwnerInner { account_id_hash: CryptoHash },
@@ -129,6 +134,7 @@ impl Contract {
             approved_minters,
             approved_creators,
             series_by_id: UnorderedMap::new(StorageKey::SeriesById.try_to_vec().unwrap()),
+            series_id_by_mint_id: LookupMap::new(StorageKey::SeriesIdByMintId.try_to_vec().unwrap()),
             //Storage keys are simply the prefixes used for the collections. This helps avoid data collision
             tokens_per_owner: LookupMap::new(StorageKey::TokensPerOwner.try_to_vec().unwrap()),
             tokens_by_id: UnorderedMap::new(StorageKey::TokensById.try_to_vec().unwrap()),
