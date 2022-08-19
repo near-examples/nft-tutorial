@@ -64,20 +64,24 @@ impl Contract {
         // Measure the initial storage being used on the contract
         let initial_storage_usage = env::storage_usage();
 
-        // Ensure the caller is an approved minter
-        let predecessor = env::predecessor_account_id();
-        assert!(
-            self.approved_minters.contains(&predecessor),
-            "Not approved minter"
-        );
-
         // Get the series and how many tokens currently exist (edition number = cur_len + 1)
         let mut series = self.series_by_id.get(&id.0).expect("Not a series");
         
-        // Check if the series has a price per token and ensure the caller has attached at least that amount
-        let price_per_token = series.price.unwrap_or(0);
-        require!(env::attached_deposit() > price_per_token, "Need to attach at least enough to cover price");
-
+        // Check if the series has a price per token. If it does, ensure the caller has attached at least that amount
+        let mut price_per_token = 0; 
+        if let Some(price) = series.price {
+            price_per_token = price;
+            require!(env::attached_deposit() > price_per_token, "Need to attach at least enough to cover price");
+        // If the series doesn't have a price, ensure the caller is an approved minter.
+        } else {
+            // Ensure the caller is an approved minter
+            let predecessor = env::predecessor_account_id();
+            assert!(
+                self.approved_minters.contains(&predecessor),
+                "Not approved minter"
+            );
+        }
+        
         let cur_len = series.tokens.len();
         // Ensure we haven't overflowed on the number of copies minted
         if let Some(copies) = series.metadata.copies {
