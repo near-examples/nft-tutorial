@@ -141,7 +141,7 @@ impl Contract {
         // Ensure the caller is the owner of the current series
         
         let series_id = self.series_id_by_mint_id.remove(&old_mint_id).expect("mint_id record not found");
-        let series = self.series_by_id.get(&series_id).expect("Not a series");
+        let mut series = self.series_by_id.get(&series_id).expect("Not a series");
         require!(
             series.owner_id == caller,
             "Only the owner can add a mint_id for this series_id"
@@ -154,5 +154,8 @@ impl Contract {
                 .is_none(),
             &format!("mint_id already exists and points to {}", &series_id)
         );
+
+        series.mint_id = new_mint_id;
+        self.series_by_id.insert(&series_id, &series);
     }
 }

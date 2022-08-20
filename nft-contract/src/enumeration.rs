@@ -7,6 +7,7 @@ use crate::nft_core::NonFungibleTokenCore;
 #[serde(crate = "near_sdk::serde")]
 pub struct JsonSeries {
     series_id: u64,
+    mint_id: u64,
     // Metadata including title, num copies etc.. that all tokens will derive from
     metadata: TokenMetadata,
     // Royalty used for all tokens in the collection
@@ -119,6 +120,7 @@ impl Contract {
         if let Some(series) = series {
             Some(JsonSeries {
                 series_id: id,
+                mint_id: series.mint_id,
                 metadata: series.metadata,
                 royalty: series.royalty,
                 owner_id: series.owner_id,
