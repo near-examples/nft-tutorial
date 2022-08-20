@@ -44,7 +44,7 @@ pub struct Series {
     // What is the price of each token in this series? If this is specified, when minting,
     // Users will need to attach enough $NEAR to cover the price.
     price: Option<Balance>,
-    // Owner of the collection (they can update collection ID)
+    // Owner of the collection
     owner_id: AccountId,
 }
 

@@ -11,7 +11,7 @@ pub struct JsonSeries {
     metadata: TokenMetadata,
     // Royalty used for all tokens in the collection
     royalty: Option<HashMap<AccountId, u32>>,
-    // Owner of the collection (they can update collection ID)
+    // Owner of the collection
     owner_id: AccountId,
 }
 
