@@ -7,7 +7,7 @@ impl Contract {
     #[payable]
     pub fn create_series(
         &mut self,
-        mint_id: u64,
+        mint_id: Option<u64>,
         metadata: TokenMetadata,
         royalty: Option<HashMap<AccountId, u32>>,
     ) {
@@ -21,13 +21,24 @@ impl Contract {
         );
 
         let series_id: u64 = self.series_by_id.len() + 1;
+        let mut final_mint_id = series_id;
+        if mint_id.is_some() {
+            final_mint_id = mint_id.unwrap();
+        }
+
+        require!(
+            self.series_id_by_mint_id
+                .insert(&final_mint_id, &series_id)
+                .is_none(),
+            &format!("mint_id {} already exists and points to {}", &final_mint_id, &series_id)
+        );
 
         require!(
             self.series_by_id
                 .insert(
                     &series_id,
                     &Series {
-                        mint_id,
+                        mint_id: final_mint_id,
                         metadata,
                         //we add an optional parameter for perpetual royalties
                         royalty,
@@ -44,8 +55,6 @@ impl Contract {
                 .is_none(),
             "collection ID already exists"
         );
-
-        self.series_id_by_mint_id.insert(&mint_id, &series_id);
 
         //calculate the required storage which was the used - initial
         let required_storage_in_bytes = env::storage_usage() - initial_storage_usage;
@@ -153,7 +162,7 @@ impl Contract {
             self.series_id_by_mint_id
                 .insert(&new_mint_id, &series_id)
                 .is_none(),
-            &format!("mint_id already exists and points to {}", &series_id)
+            &format!("mint_id {} already exists and points to {}", &new_mint_id, &series_id)
         );
 
         series.mint_id = new_mint_id;
