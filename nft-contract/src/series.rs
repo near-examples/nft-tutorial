@@ -20,11 +20,12 @@ impl Contract {
             "only approved creators can add a type"
         );
 
-        let id: u64 = self.series_by_id.len().into();
+        let series_id: u64 = self.series_by_id.len() + 1;
+
         require!(
             self.series_by_id
                 .insert(
-                    &id,
+                    &series_id,
                     &Series {
                         mint_id,
                         metadata,
@@ -34,7 +35,7 @@ impl Contract {
                             // We get a new unique prefix for the collection
                             account_id_hash: hash_account_id(&format!(
                                 "{}{}",
-                                id, caller
+                                series_id, caller
                             )),
                         }),
                         owner_id: caller
@@ -44,7 +45,7 @@ impl Contract {
             "collection ID already exists"
         );
 
-        self.series_id_by_mint_id.insert(&mint_id, &id);
+        self.series_id_by_mint_id.insert(&mint_id, &series_id);
 
         //calculate the required storage which was the used - initial
         let required_storage_in_bytes = env::storage_usage() - initial_storage_usage;
@@ -54,7 +55,7 @@ impl Contract {
     }
 
     #[payable]
-    pub fn nft_mint(&mut self, id: U64, receiver_id: AccountId, injected_fields: U64) {
+    pub fn nft_mint(&mut self, mint_id: U64, receiver_id: AccountId, injected_fields: U64) {
 
         assert!(injected_fields.0 == 3, "malicious injected fields detected");
 
@@ -67,7 +68,7 @@ impl Contract {
             "Not approved minter"
         );
 
-        let series_id = self.series_id_by_mint_id.get(&id.0).expect("No mint_id record found");
+        let series_id = self.series_id_by_mint_id.get(&mint_id.0).expect("No mint_id record found");
         let mut series = self.series_by_id.get(&series_id).expect("Not a series");
         let cur_len = series.tokens.len();
         // Ensure we haven't overflowed on the number of copies minted
@@ -78,14 +79,14 @@ impl Contract {
             );
         }
 
-        let token_id = format!("{}:{}", id.0, cur_len + 1);
+        let token_id = format!("{}:{}", series_id, cur_len + 1);
         series.tokens.insert(&token_id);
-        self.series_by_id.insert(&id.0, &series);
+        self.series_by_id.insert(&series_id, &series);
 
         //specify the token struct that contains the owner ID
         let token = Token {
             // Series ID that the token belongs to
-            series_id: id.0,
+            series_id,
             //set the owner ID equal to the receiver ID passed into the function
             owner_id: receiver_id,
             //we set the approved account IDs to the default value (an empty map)
