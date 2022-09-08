@@ -89,7 +89,7 @@ impl Contract {
     }
 
     // Get the total supply of series on the contract
-    pub fn get_supply_series(&self) -> u64 {
+    pub fn get_series_total_supply(&self) -> u64 {
         self.series_by_id.len()
     }
 
@@ -106,13 +106,13 @@ impl Contract {
             //take the first "limit" elements in the vector. If we didn't specify a limit, use 50
             .take(limit.unwrap_or(50) as usize)
             //we'll map the series IDs which are strings into Json Series
-            .map(|series_id| self.get_series_info(series_id.clone()).unwrap())
+            .map(|series_id| self.get_series_details(series_id.clone()).unwrap())
             //since we turned the keys into an iterator, we need to turn it back into a vector to return
             .collect()
     }
 
     // get info for a specific series
-    pub fn get_series_info(&self, id: u64) -> Option<JsonSeries> {
+    pub fn get_series_details(&self, id: u64) -> Option<JsonSeries> {
         //get the series from the map
         let series = self.series_by_id.get(&id);
         //if there is some series, we'll return the series
