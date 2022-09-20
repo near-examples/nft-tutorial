@@ -26,7 +26,6 @@ jobs:
       - name: Run unit tests
         run: npm run test:unit
   integration-tests:
-    depends-on: unit-tests
     name: Integration tests
     strategy:
       matrix:
