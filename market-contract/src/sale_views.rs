@@ -15,10 +15,10 @@ impl Contract {
     //returns the number of sales for a given account (result is a string)
     pub fn get_supply_by_owner_id(
         &self,
-        account_id: AccountId,
+        account_id: &AccountId,
     ) -> U64 {
         //get the set of sales for the given owner Id
-        let by_owner_id = self.by_owner_id.get(&account_id);
+        let by_owner_id = self.by_owner_id.get(account_id);
         
         //if there as some set, we return the length but if there wasn't a set, we return 0
         if let Some(by_owner_id) = by_owner_id {
@@ -31,12 +31,12 @@ impl Contract {
     //returns paginated sale objects for a given account. (result is a vector of sales)
     pub fn get_sales_by_owner_id(
         &self,
-        account_id: AccountId,
+        account_id: &AccountId,
         from_index: Option<U128>,
         limit: Option<u64>,
     ) -> Vec<Sale> {
         //get the set of token IDs for sale for the given account ID
-        let by_owner_id = self.by_owner_id.get(&account_id);
+        let by_owner_id = self.by_owner_id.get(account_id);
         //if there was some set, we set the sales variable equal to that set. If there wasn't, sales is set to an empty vector
         let sales = if let Some(by_owner_id) = by_owner_id {
             by_owner_id

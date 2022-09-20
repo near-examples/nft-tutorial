@@ -38,37 +38,21 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
     ) {
         // get the contract ID which is the predecessor
         let nft_contract_id = env::predecessor_account_id();
-        //get the signer which is the person who initiated the transaction
-        let signer_id = env::signer_account_id();
-
-        //make sure that the signer isn't the predecessor. This is so that we're sure
-        //this was called via a cross-contract call
-        assert_ne!(
-            nft_contract_id,
-            signer_id,
-            "nft_on_approve should only be called via cross-contract call"
-        );
-        //make sure the owner ID is the signer. 
-        assert_eq!(
-            owner_id,
-            signer_id,
-            "owner_id should be signer_id"
-        );
 
         //we need to enforce that the user has enough storage for 1 EXTRA sale.  
 
         //get the storage for a sale. dot 0 converts from U128 to u128
         let storage_amount = self.storage_minimum_balance().0;
         //get the total storage paid by the owner
-        let owner_paid_storage = self.storage_deposits.get(&signer_id).unwrap_or(0);
+        let owner_paid_storage = self.storage_deposits.get(&nft_contract_id).unwrap_or(0);
         //get the storage required which is simply the storage for the number of sales they have + 1 
-        let signer_storage_required = (self.get_supply_by_owner_id(signer_id).0 + 1) as u128 * storage_amount;
+        let storage_required = (self.get_supply_by_owner_id(&nft_contract_id).0 + 1) as u128 * storage_amount;
         
         //make sure that the total paid is >= the required storage
         assert!(
-            owner_paid_storage >= signer_storage_required,
+            owner_paid_storage >= storage_required,
             "Insufficient storage paid: {}, for {} sales at {} rate of per sale",
-            owner_paid_storage, signer_storage_required / STORAGE_PER_SALE, STORAGE_PER_SALE
+            owner_paid_storage, storage_required / STORAGE_PER_SALE, STORAGE_PER_SALE
         );
 
         //if all these checks pass we can create the sale conditions object.
