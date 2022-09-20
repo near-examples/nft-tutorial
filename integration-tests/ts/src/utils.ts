@@ -3,6 +3,7 @@ import { BN, NearAccount } from "near-workspaces";
 export const DEFAULT_GAS: string = "30000000000000";
 export const DEFAULT_DEPOSIT: string = "9050000000000000000000";
 
+
 export async function purchaseListedNFT(
   nft_contract: NearAccount,
   bidder_account: NearAccount,
@@ -13,7 +14,7 @@ export async function purchaseListedNFT(
     nft_contract_id: nft_contract,
     token_id: "TEST123",
   };
-  await bidder_account.call_raw(
+  await bidder_account.callRaw(
     market_contract,
     "offer",
     offer_payload,
