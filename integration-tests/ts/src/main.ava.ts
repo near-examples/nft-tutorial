@@ -3,7 +3,7 @@ import { NEAR, NearAccount, Worker } from "near-workspaces";
 import path from "path";
 import {
   approveNFT, defaultCallOptions, DEFAULT_GAS, mintNFT, payForStorage,
-  placeNFTForSale, purchaseListedNFT
+  placeNFTForSale, purchaseListedNFT, transferNFT
 } from "./utils";
 
 const test = anyTest as TestFn<{
@@ -43,8 +43,12 @@ test.beforeEach(async (t) => {
     initialBalance: NEAR.parse("100 N").toJSON(),
   });
 
+  const charlie = await root.createSubAccount("charlie", {
+    initialBalance: NEAR.parse("100 N").toJSON(),
+  });
+
   t.context.worker = worker;
-  t.context.accounts = { root, nft_contract, market_contract, alice, bob };
+  t.context.accounts = { root, nft_contract, market_contract, alice, bob, charlie };
 });
 
 test.afterEach.always(async (t) => {
@@ -174,7 +178,7 @@ test("cross contract: sell NFT listed on marketplace", async (t) => {
 
   // assert alice balance increased by sale price
   const test_precision_dp_near = 1;
-  const slice_val = test_precision_dp_near - 24; 
+  const slice_val = test_precision_dp_near - 24;
   t.is(
     alice_balance_after.toString().slice(0, slice_val),
     alice_balance_before.add(NEAR.from(sale_price)).toString().slice(0, slice_val),
@@ -198,47 +202,45 @@ test("cross contract: sell NFT listed on marketplace", async (t) => {
   t.is(sale_supply, "0", "Expected no sales to be left on market");
 });
 
-// TODO: rewrite
-// test("cross contract: transfer NFT when listed on marketplace", async (t) => {
-//   const { alice, nft_contract, market_contract, bob, charlie } =
-//     t.context.accounts;
-//   await mintNFT(alice, nft_contract);
-//   await payForStorage(alice, market_contract);
+test("cross contract: transfer NFT when listed on marketplace", async (t) => {
+  const { alice, nft_contract, market_contract, bob, charlie } = t.context.accounts;
+  await mintNFT(alice, nft_contract);
+  await payForStorage(alice, market_contract);
 
-//   const sale_price = "300000000000000000000000"; // sale price string in yoctoNEAR is 0.3 NEAR
-//   await placeNFTForSale(market_contract, alice, nft_contract, sale_price);
+  const sale_price = "300000000000000000000000"; // sale price string in yoctoNEAR is 0.3 NEAR
+  await placeNFTForSale(market_contract, alice, nft_contract, sale_price);
 
-//   await transferNFT(bob, market_contract, nft_contract);
+  await transferNFT(bob, market_contract, nft_contract);
 
-//   // purchase NFT
-//   const offer_payload = {
-//     nft_contract_id: nft_contract,
-//     token_id: "TEST123",
-//   };
-//   const result = await charlie.callRaw(
-//     market_contract,
-//     "offer",
-//     offer_payload,
-//     defaultCallOptions(
-//       DEFAULT_GAS + "0", // 10X default amount for XCC
-//       sale_price // Attached deposit must be greater than or equal to the current price
-//     )
-//   );
+  // purchase NFT
+  const offer_payload = {
+    nft_contract_id: nft_contract,
+    token_id: "TEST123",
+  };
+  const result = await charlie.callRaw(
+    market_contract,
+    "offer",
+    offer_payload,
+    defaultCallOptions(
+      DEFAULT_GAS + "0", // 10X default amount for XCC
+      sale_price // Attached deposit must be greater than or equal to the current price
+    )
+  );
 
-//   // assert expectations
-//   // NFT has same owner
-//   const view_payload = {
-//     token_id: "TEST123",
-//   };
-//   const token_info: Object = await nft_contract.view("nft_token", view_payload);
-//   t.is(
-//     token_info["owner_id"],
-//     bob.accountId, // NFT was transferred to bob
-//     "NFT should have bob as owner"
-//   );
-//   // Unauthorized error should be found
-//   t.regex(result.receiptFailureMessages.join("\n"), /Unauthorized+/);
-// });
+  // assert expectations
+  // NFT has same owner
+  const view_payload = {
+    token_id: "TEST123",
+  };
+  const token_info: any = await nft_contract.view("nft_token", view_payload);
+  t.is(
+    token_info.owner_id,
+    bob.accountId, // NFT was transferred to bob
+    "NFT should have bob as owner"
+  );
+  // Unauthorized error should be found
+  t.regex(result.receiptFailureMessages.join("\n"), /Unauthorized+/);
+});
 
 // TODO: rewrite
 test.skip("cross contract: approval revoke", async (t) => {
