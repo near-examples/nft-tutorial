@@ -242,8 +242,7 @@ test("cross contract: transfer NFT when listed on marketplace", async (t) => {
   t.regex(result.receiptFailureMessages.join("\n"), /Unauthorized+/);
 });
 
-// TODO: rewrite
-test.skip("cross contract: approval revoke", async (t) => {
+test("cross contract: approval revoke", async (t) => {
   const { alice, nft_contract, market_contract, bob } = t.context.accounts;
   await mintNFT(alice, nft_contract);
   await payForStorage(alice, market_contract);
