@@ -3,7 +3,7 @@ import { NEAR, NearAccount, Worker } from "near-workspaces";
 import path from "path";
 import {
   approveNFT, defaultCallOptions, DEFAULT_GAS, mintNFT, payForStorage,
-  placeNFTForSale
+  placeNFTForSale, purchaseListedNFT
 } from "./utils";
 
 const test = anyTest as TestFn<{
@@ -39,8 +39,12 @@ test.beforeEach(async (t) => {
     initialBalance: NEAR.parse("100 N").toJSON(),
   });
 
+  const bob = await root.createSubAccount("bob", {
+    initialBalance: NEAR.parse("100 N").toJSON(),
+  });
+
   t.context.worker = worker;
-  t.context.accounts = { root, nft_contract, market_contract, alice };
+  t.context.accounts = { root, nft_contract, market_contract, alice, bob };
 });
 
 test.afterEach.always(async (t) => {
@@ -154,39 +158,45 @@ test("nft contract: nft approve call long msg string", async (t) => {
   t.true(approved, "NFT approval apss without sale args");
 });
 
+test("cross contract: sell NFT listed on marketplace", async (t) => {
+  const { alice, nft_contract, market_contract, bob } = t.context.accounts;
+  await mintNFT(alice, nft_contract);
+  await payForStorage(alice, market_contract);
 
-// TODO: rewrite
-// test("cross contract: sell NFT listed on marketplace", async (t) => {
-//   const { alice, nft_contract, market_contract, bob } = t.context.accounts;
-//   await mintNFT(alice, nft_contract);
-//   await payForStorage(alice, market_contract);
+  const sale_price = "300000000000000000000000"; // sale price string in yoctoNEAR is 0.3 NEAR
+  await placeNFTForSale(market_contract, alice, nft_contract, sale_price);
 
-//   const sale_price = "300000000000000000000000"; // sale price string in yoctoNEAR is 0.3 NEAR
-//   await placeNFTForSale(market_contract, alice, nft_contract, sale_price);
+  const alice_balance_before = await alice.availableBalance();
+  const bob_balance_before = await bob.availableBalance();
+  await purchaseListedNFT(nft_contract, bob, market_contract, sale_price);
+  const alice_balance_after = await alice.availableBalance();
+  const bob_balance_after = await bob.availableBalance();
 
-//   const result1 = await expect(
-//     async () =>
-//       await purchaseListedNFT(nft_contract, bob, market_contract, sale_price),
-//     toChangeNearBalance(alice, "0.3 N"),
-//     toChangeNearBalance(bob, "-0.3 N")
-//   );
-//   t.deepEqual(
-//     result1.actual,
-//     result1.expected,
-//     "Should change user balances by sale_price of 0.3 N"
-//   );
+  // assert alice balance increased by sale price
+  const test_precision_dp_near = 1;
+  const slice_val = test_precision_dp_near - 24; 
+  t.is(
+    alice_balance_after.toString().slice(0, slice_val),
+    alice_balance_before.add(NEAR.from(sale_price)).toString().slice(0, slice_val),
+    "Alice balance should increase by sale price"
+  );
+  // bob balance should decrease by sale price
+  t.is(
+    bob_balance_after.toString().slice(0, slice_val),
+    bob_balance_before.sub(NEAR.from(sale_price)).toString().slice(0, slice_val),
+    "Bob balance should decrease by sale price"
+  );
 
-//   // NFT has new owner
-//   const view_payload = {
-//     token_id: "TEST123",
-//   };
-//   const token_info: Object = await nft_contract.view("nft_token", view_payload);
-//   t.is(token_info["owner_id"], bob.accountId, "NFT should have been sold");
-//   // nothing left for sale on market
-//   const sale_supply = await market_contract.view("get_supply_sales");
-//   t.is(sale_supply, "0", "Expected no sales to be left on market");
-// });
-
+  // NFT has new owner
+  const view_payload = {
+    token_id: "TEST123",
+  };
+  const token_info: any = await nft_contract.view("nft_token", view_payload);
+  t.is(token_info.owner_id, bob.accountId, "NFT should have been sold");
+  // nothing left for sale on market
+  const sale_supply = await market_contract.view("get_supply_sales");
+  t.is(sale_supply, "0", "Expected no sales to be left on market");
+});
 
 // TODO: rewrite
 // test("cross contract: transfer NFT when listed on marketplace", async (t) => {
