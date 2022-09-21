@@ -126,7 +126,7 @@ test("nft contract: nft approve call", async (t) => {
   t.true(approved, "Failed to approve NFT");
 });
 
-test.only("nft contract: nft approve call long msg string", async (t) => {
+test("nft contract: nft approve call long msg string", async (t) => {
   const { alice, nft_contract, market_contract } = t.context.accounts;
   await mintNFT(alice, nft_contract);
   await payForStorage(alice, market_contract);
