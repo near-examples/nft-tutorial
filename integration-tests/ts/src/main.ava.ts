@@ -126,10 +126,10 @@ test("nft contract: nft approve call", async (t) => {
   t.true(approved, "Failed to approve NFT");
 });
 
-// TODO: rewrite
-test.skip("nft contract: nft approve call long msg string", async (t) => {
+test.only("nft contract: nft approve call long msg string", async (t) => {
   const { alice, nft_contract, market_contract } = t.context.accounts;
   await mintNFT(alice, nft_contract);
+  await payForStorage(alice, market_contract);
 
   // approve NFT
   const approve_payload = {
@@ -143,7 +143,7 @@ test.skip("nft contract: nft approve call long msg string", async (t) => {
     approve_payload,
     defaultCallOptions()
   );
-  t.regex(result.receiptFailureMessages.join("\n"), /Insufficient storage paid: 0+/);
+  t.regex(result.receiptFailureMessages.join("\n"), /Not valid SaleArgs+/);
 
   // test if approved
   const view_payload = {
@@ -151,7 +151,7 @@ test.skip("nft contract: nft approve call long msg string", async (t) => {
     approved_account_id: market_contract,
   };
   const approved = await nft_contract.view("nft_is_approved", view_payload);
-  t.false(approved, "NFT approval should have failed");
+  t.true(approved, "NFT approval apss without sale args");
 });
 
 
