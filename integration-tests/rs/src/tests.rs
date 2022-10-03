@@ -181,6 +181,7 @@ async fn test_nft_approve_call_long_msg_string(
 ) -> anyhow::Result<()> {
     let token_id = "3";
     helpers::mint_nft(user, nft_contract, worker, token_id).await?;
+    helpers::pay_for_storage(user, market_contract, worker, 10000000000000000000000).await?;
 
     let approve_payload  = json!({
         "token_id": token_id,
@@ -191,6 +192,7 @@ async fn test_nft_approve_call_long_msg_string(
     match user.call(&worker, nft_contract.id(), "nft_approve")
         .args_json(approve_payload)?
         .deposit(helpers::DEFAULT_DEPOSIT)
+        .gas(helpers::DEFAULT_GAS as u64)
         .transact()
         .await
     {
@@ -200,7 +202,7 @@ async fn test_nft_approve_call_long_msg_string(
         Err(e) => {
             let e_string = e.to_string();
             if !e_string
-                .contains("Exceeded the prepaid gas")
+                .contains("Not valid SaleArgs")
             {
                 panic!("test_nft_approve_call_long_msg_string displays unexpected error message: {:?}", e_string);
             }
@@ -216,7 +218,7 @@ async fn test_nft_approve_call_long_msg_string(
                 .await?
                 .json()?;
             
-            assert_eq!(result, false);
+            assert_eq!(result, true);
             println!("      Passed ✅ test_nft_approve_call_long_msg_string");
         }
     }
