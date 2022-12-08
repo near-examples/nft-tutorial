@@ -1,5 +1,7 @@
 # NEAR NFT-Tutorial
 
+[![](https://img.shields.io/github/workflow/status/near-examples/nft-tutorial/Tests/main?label=Tests)](https://github.com/near-examples/nft-tutorial/actions/workflows/tests.yml)
+
 Welcome to NEAR's NFT tutorial, where we will help you parse the details around NEAR's [NEP-171 standard](https://nomicon.io/Standards/NonFungibleToken/Core.html) (Non-Fungible Token Standard), and show you how to build your own NFT smart contract from the ground up, improving your understanding about the NFT standard along the way. 
 
 ## Prerequisites
