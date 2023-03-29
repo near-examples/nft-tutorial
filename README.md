@@ -6,7 +6,7 @@ Welcome to NEAR's NFT tutorial, where we will help you parse the details around 
 
 ## Prerequisites
 
-* [NEAR Wallet Account](wallet.testnet.near.org)
+* [NEAR Wallet Account](https://wallet.testnet.near.org/)
 * [Rust Toolchain](https://docs.near.org/develop/prerequisites)
 * [NEAR-CLI](https://docs.near.org/tools/near-cli#setup)
 * [yarn](https://classic.yarnpkg.com/en/docs/install#mac-stable)
@@ -19,17 +19,17 @@ Each branch you will find in this repo corresponds to various stages of this tut
 
 | Branch        | Docs Tutorial                                                                                    | Description |
 | ------------- | ------------------------------------------------------------------------------------------------ | ----------- |
-| 1.skeleton    | [Contract Architecture](https://docs.near.org/docs/tutorials/contracts/nfts/rs/skeleton) | You'll learn the basic architecture of the NFT smart contract, and you'll compile this skeleton code with the Rust toolchain.            |
-| 2.minting     | [Minting](https://docs.near.org/docs/tutorials/contracts/nfts/rs/minting)                |Here you'll flesh out the skeleton so the smart contract can mint a non-fungible token             |
-| 3.enumeration | [Enumeration](https://docs.near.org/docs/tutorials/contracts/nfts/rs/enumeration)        |    Here you'll find different enumeration methods that can be used to return the smart contract's states.          |
-| 4.core        | [Core](https://docs.near.org/docs/tutorials/contracts/nfts/rs/core)                      | In this tutorial you'll extend the NFT contract using the core standard, which will allow you to transfer non-fungible tokens.             |
-| 5.approval    | [Approval](https://docs.near.org/docs/tutorials/contracts/nfts/rs/approvals)             | Here you'll expand the contract allowing other accounts to transfer NFTs on your behalf.            |
-| 6.royalty     | [Royalty](https://docs.near.org/docs/tutorials/contracts/nfts/rs/royalty)                                                                                        |Here you'll add the ability for non-fungible tokens to have royalties. This will allow people to get a percentage of the purchase price when an NFT is purchased.             |
-| 7.events      | -----------                                                                                        |   This allows indexers to know what functions are being called and make it easier and more reliable to keep track of information that can be used to populate the collectibles tab in the wallet for example. (tutorial docs have yet to be implemented )          |
-| 8.marketplace | -----------                                                                                      | -----------             |
+| 1.skeleton    | [Contract Architecture](https://docs.near.org/tutorials/nfts/skeleton) | You'll learn the basic architecture of the NFT smart contract, and you'll compile this skeleton code with the Rust toolchain.            |
+| 2.minting     | [Minting](https://docs.near.org/tutorials/nfts/minting)                |Here you'll flesh out the skeleton so the smart contract can mint a non-fungible token             |
+| 3.enumeration | [Enumeration](https://docs.near.org/tutorials/nfts/enumeration)        |    Here you'll find different enumeration methods that can be used to return the smart contract's states.          |
+| 4.core        | [Core](https://docs.near.org/tutorials/nfts/core)                      | In this tutorial you'll extend the NFT contract using the core standard, which will allow you to transfer non-fungible tokens.             |
+| 5.approval    | [Approval](https://docs.near.org/tutorials/nfts/approvals)             | Here you'll expand the contract allowing other accounts to transfer NFTs on your behalf.            |
+| 6.royalty     | [Royalty](https://docs.near.org/tutorials/nfts/royalty)                                                                                        |Here you'll add the ability for non-fungible tokens to have royalties. This will allow people to get a percentage of the purchase price when an NFT is purchased.             |
+| 7.events      | [Events](https://docs.near.org/tutorials/nfts/events)               |   This allows indexers to know what functions are being called and make it easier and more reliable to keep track of information that can be used to populate the collectibles tab in the wallet for example. (tutorial docs have yet to be implemented )          |
+| 8.marketplace | [Marketplace](https://docs.near.org/tutorials/nfts/marketplace)     | Get a comprehensive understanding of how an NFT marketplace contract can be built on NEAR through this tutorial. This contract facilitates the buying and selling of non-fungible tokens with $NEAR.             |
 
 
-The tutorial series also contains a very helpful section on [**Upgrading Smart Contracts**](https://docs.near.org/docs/tutorials/contracts/nfts/rs/upgrade-contract). Definitely go and check it out as this is a common pain point.
+The tutorial series also contains a very helpful section on [**Upgrading Smart Contracts**](https://docs.near.org/tutorials/nfts/upgrade-contract). Definitely go and check it out as this is a common pain point.
 
 # Quick-Start 
 
