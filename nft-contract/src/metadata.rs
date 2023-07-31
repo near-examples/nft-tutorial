@@ -67,11 +67,18 @@ pub struct JsonToken {
 pub trait NonFungibleTokenMetadata {
     //view call for returning the contract metadata
     fn nft_metadata(&self) -> NFTContractMetadata;
+
+    //view call for returning the token metadata -- without this the token is not visible on any wallet!
+    fn nft_token_metadata(&self, token_id: TokenId) -> TokenMetadata;
 }
 
 #[near_bindgen]
 impl NonFungibleTokenMetadata for Contract {
     fn nft_metadata(&self) -> NFTContractMetadata {
         self.metadata.get().unwrap()
+    }
+
+    fn nft_token_metadata(&self, token_id: TokenId) -> TokenMetadata {
+        self.token_metadata_by_id.get(&token_id).unwrap()
     }
 }
