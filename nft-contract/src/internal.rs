@@ -107,9 +107,9 @@ impl Contract {
         let token = self.tokens_by_id.get(token_id).expect("No token");
 
         //if the sender doesn't equal the owner, we panic
-		if sender_id != &token.owner_id {
-			env::panic_str("Unauthorized");
-		}
+        if sender_id != &token.owner_id {
+          env::panic_str("Unauthorized");
+        }
         //we make sure that the sender isn't sending the token to themselves
         assert_ne!(
             &token.owner_id, receiver_id,
