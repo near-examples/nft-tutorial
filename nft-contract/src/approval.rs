@@ -6,7 +6,7 @@ pub trait NonFungibleTokenCore {
     fn nft_approve(&mut self, token_id: TokenId, account_id: AccountId, msg: Option<String>);
 
     //check if the passed in account has access to approve the token ID
-	fn nft_is_approved(
+	  fn nft_is_approved(
         &self,
         token_id: TokenId,
         approved_account_id: AccountId,
@@ -44,7 +44,7 @@ impl NonFungibleTokenCore for Contract {
     }
 
     //check if the passed in account has access to approve the token ID
-	fn nft_is_approved(
+	  fn nft_is_approved(
         &self,
         token_id: TokenId,
         approved_account_id: AccountId,
