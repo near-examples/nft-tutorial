@@ -6,7 +6,7 @@ pub trait NonFungibleTokenCore {
     fn nft_approve(&mut self, token_id: TokenId, account_id: AccountId, msg: Option<String>);
 
     //check if the passed in account has access to approve the token ID
-	fn nft_is_approved(
+	  fn nft_is_approved(
         &self,
         token_id: TokenId,
         approved_account_id: AccountId,
@@ -34,7 +34,6 @@ trait NonFungibleTokenApprovalsReceiver {
 
 #[near_bindgen]
 impl NonFungibleTokenCore for Contract {
-
     //allow a specific account ID to approve a token on your behalf
     #[payable]
     fn nft_approve(&mut self, token_id: TokenId, account_id: AccountId, msg: Option<String>) {
@@ -96,7 +95,7 @@ impl NonFungibleTokenCore for Contract {
     }
 
     //check if the passed in account has access to approve the token ID
-	fn nft_is_approved(
+	  fn nft_is_approved(
         &self,
         token_id: TokenId,
         approved_account_id: AccountId,
@@ -111,17 +110,17 @@ impl NonFungibleTokenCore for Contract {
         //if there was some approval ID found for the account ID
         if let Some(approval) = approval {
             //if a specific approval_id was passed into the function
-			if let Some(approval_id) = approval_id {
-                //return if the approval ID passed in matches the actual approval ID for the account
-				approval_id == *approval
-            //if there was no approval_id passed into the function, we simply return true
-			} else {
-				true
-			}
-        //if there was no approval ID found for the account ID, we simply return false
-		} else {
-			false
-		}
+            if let Some(approval_id) = approval_id {
+                      //return if the approval ID passed in matches the actual approval ID for the account
+              approval_id == *approval
+                  //if there was no approval_id passed into the function, we simply return true
+            } else {
+              true
+            }
+            //if there was no approval ID found for the account ID, we simply return false
+        } else {
+            false
+        }
     }
 
     //revoke a specific account from transferring the token on your behalf 
