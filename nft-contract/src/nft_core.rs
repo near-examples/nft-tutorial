@@ -67,7 +67,6 @@ trait NonFungibleTokenResolver {
 
 #[near_bindgen]
 impl NonFungibleTokenCore for Contract {
-
     //implementation of the nft_transfer method. This transfers the NFT from the current owner to the receiver. 
     #[payable]
     fn nft_transfer(
