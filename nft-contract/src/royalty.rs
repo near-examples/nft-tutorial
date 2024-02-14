@@ -36,25 +36,25 @@ impl NonFungibleTokenCore for Contract {
         //get the royalty object from token
         let royalty = token.royalty;
 
-            //make sure we're not paying out to too many people (GAS limits this)
+        //make sure we're not paying out to too many people (GAS limits this)
         assert!(royalty.len() as u32 <= max_len_payout, "Market cannot payout to that many receivers");
 
-            //go through each key and value in the royalty object
+        //go through each key and value in the royalty object
         for (k, v) in royalty.iter() {
-                //get the key
-          let key = k.clone();
-                //only insert into the payout if the key isn't the token owner (we add their payout at the end)
-          if key != owner_id {
-                    //
-            payout_object.payout.insert(key, royalty_to_payout(*v, balance_u128));
-            total_perpetual += *v;
-          }
+            //get the key
+            let key = k.clone();
+
+            //only insert into the payout if the key isn't the token owner (we add their payout at the end)
+            if key != owner_id {
+                payout_object.payout.insert(key, royalty_to_payout(*v, balance_u128));
+                total_perpetual += *v;
+            }
         }
 
         // payout to previous owner who gets 100% - total perpetual royalties
         payout_object.payout.insert(owner_id, royalty_to_payout(10000 - total_perpetual, balance_u128));
 
-            //return the payout object
+        //return the payout object
         payout_object
     }
 
@@ -106,20 +106,20 @@ impl NonFungibleTokenCore for Contract {
 
         //go through each key and value in the royalty object
         for (k, v) in royalty.iter() {
-                //get the key
-          let key = k.clone();
-                //only insert into the payout if the key isn't the token owner (we add their payout at the end)
-          if key != owner_id {
-                    //
-            payout_object.payout.insert(key, royalty_to_payout(*v, balance_u128));
-            total_perpetual += *v;
-          }
+            //get the key
+            let key = k.clone();
+
+            //only insert into the payout if the key isn't the token owner (we add their payout at the end)
+            if key != owner_id {
+                payout_object.payout.insert(key, royalty_to_payout(*v, balance_u128));
+                total_perpetual += *v;
+            }
         }
 
         // payout to previous owner who gets 100% - total perpetual royalties
         payout_object.payout.insert(owner_id, royalty_to_payout(10000 - total_perpetual, balance_u128));
 
-            //return the payout object
+        //return the payout object
         payout_object
     }
 }
