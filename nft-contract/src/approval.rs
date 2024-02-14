@@ -34,7 +34,6 @@ trait NonFungibleTokenApprovalsReceiver {
 
 #[near_bindgen]
 impl NonFungibleTokenCore for Contract {
-
     //allow a specific account ID to approve a token on your behalf
     #[payable]
     fn nft_approve(&mut self, token_id: TokenId, account_id: AccountId, msg: Option<String>) {
