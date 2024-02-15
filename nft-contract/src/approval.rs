@@ -6,7 +6,7 @@ pub trait NonFungibleTokenCore {
     fn nft_approve(&mut self, token_id: TokenId, account_id: AccountId, msg: Option<String>);
 
     //check if the passed in account has access to approve the token ID
-	fn nft_is_approved(
+	  fn nft_is_approved(
         &self,
         token_id: TokenId,
         approved_account_id: AccountId,
@@ -96,7 +96,7 @@ impl NonFungibleTokenCore for Contract {
     }
 
     //check if the passed in account has access to approve the token ID
-	fn nft_is_approved(
+	  fn nft_is_approved(
         &self,
         token_id: TokenId,
         approved_account_id: AccountId,
@@ -106,22 +106,22 @@ impl NonFungibleTokenCore for Contract {
         let token = self.tokens_by_id.get(&token_id).expect("No token");
 
         //get the approval number for the passed in account ID
-		let approval = token.approved_account_ids.get(&approved_account_id);
+		    let approval = token.approved_account_ids.get(&approved_account_id);
 
         //if there was some approval ID found for the account ID
         if let Some(approval) = approval {
             //if a specific approval_id was passed into the function
-			if let Some(approval_id) = approval_id {
+            if let Some(approval_id) = approval_id {
                 //return if the approval ID passed in matches the actual approval ID for the account
-				approval_id == *approval
+                approval_id == *approval
             //if there was no approval_id passed into the function, we simply return true
-			} else {
-				true
-			}
-        //if there was no approval ID found for the account ID, we simply return false
-		} else {
-			false
-		}
+            } else {
+                true
+            }
+              //if there was no approval ID found for the account ID, we simply return false
+        } else {
+            false
+        }
     }
 
     //revoke a specific account from transferring the token on your behalf 
