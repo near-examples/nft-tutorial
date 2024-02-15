@@ -12,10 +12,7 @@ pub(crate) fn bytes_for_approved_account_id(account_id: &AccountId) -> u64 {
 pub(crate) fn refund_approved_account_ids_iter<'a, I>(
     account_id: AccountId,
     approved_account_ids: I, //the approved account IDs must be passed in as an iterator
-) -> Promise
-where
-    I: Iterator<Item = &'a AccountId>,
-{
+) -> Promise where I: Iterator<Item = &'a AccountId> {
     //get the storage total by going through and summing all the bytes for each approved account IDs
     let storage_released: u64 = approved_account_ids.map(bytes_for_approved_account_id).sum();
     //transfer the account the storage that is released
@@ -127,7 +124,7 @@ impl Contract {
         if tokens_set.is_empty() {
             self.tokens_per_owner.remove(account_id);
         } else {
-        //if the token set is not empty, we simply insert it back for the account ID. 
+            //if the token set is not empty, we simply insert it back for the account ID. 
             self.tokens_per_owner.insert(account_id, &tokens_set);
         }
     }
@@ -146,29 +143,29 @@ impl Contract {
         let token = self.tokens_by_id.get(token_id).expect("No token");
 
         //if the sender doesn't equal the owner, we check if the sender is in the approval list
-		if sender_id != &token.owner_id {
-			//if the token's approved account IDs doesn't contain the sender, we panic
-			if !token.approved_account_ids.contains_key(sender_id) {
-				env::panic_str("Unauthorized");
-			}
+		    if sender_id != &token.owner_id {
+            //if the token's approved account IDs doesn't contain the sender, we panic
+            if !token.approved_account_ids.contains_key(sender_id) {
+                env::panic_str("Unauthorized");
+            }
 
-			// If they included an approval_id, check if the sender's actual approval_id is the same as the one included
-			if let Some(enforced_approval_id) = approval_id {
+            // If they included an approval_id, check if the sender's actual approval_id is the same as the one included
+            if let Some(enforced_approval_id) = approval_id {
                 //get the actual approval ID
-				let actual_approval_id = token
-					.approved_account_ids
-					.get(sender_id)
-                    //if the sender isn't in the map, we panic
-					.expect("Sender is not approved account");
+                let actual_approval_id = token
+                  .approved_account_ids
+                  .get(sender_id)
+                            //if the sender isn't in the map, we panic
+                  .expect("Sender is not approved account");
 
                 //make sure that the actual approval ID is the same as the one provided
                 assert_eq!(
-					actual_approval_id, &enforced_approval_id,
-					"The actual approval_id {} is different from the given approval_id {}",
-					actual_approval_id, enforced_approval_id,
-				);
-			}
-		}
+                  actual_approval_id, &enforced_approval_id,
+                  "The actual approval_id {} is different from the given approval_id {}",
+                  actual_approval_id, enforced_approval_id,
+                );
+            }
+        }
 
         //we make sure that the sender isn't sending the token to themselves
         assert_ne!(
