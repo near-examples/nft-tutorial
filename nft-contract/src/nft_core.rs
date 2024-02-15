@@ -58,7 +58,6 @@ trait NonFungibleTokenResolver {
 
 #[near_bindgen]
 impl NonFungibleTokenCore for Contract {
-
     //implementation of the nft_transfer method. This transfers the NFT from the current owner to the receiver. 
     #[payable]
     fn nft_transfer(
@@ -103,7 +102,7 @@ impl NonFungibleTokenCore for Contract {
             memo,
         );
 
-// Initiating receiver's call and the callback
+        // Initiating receiver's call and the callback
         // Defaulting GAS weight to 1, no attached deposit, and static GAS equal to the GAS for nft on transfer.
         ext_non_fungible_token_receiver::ext(receiver_id.clone())
             .with_static_gas(GAS_FOR_NFT_ON_TRANSFER)

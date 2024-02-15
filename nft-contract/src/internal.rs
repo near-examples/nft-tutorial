@@ -90,7 +90,7 @@ impl Contract {
         if tokens_set.is_empty() {
             self.tokens_per_owner.remove(account_id);
         } else {
-        //if the token set is not empty, we simply insert it back for the account ID. 
+            //if the token set is not empty, we simply insert it back for the account ID. 
             self.tokens_per_owner.insert(account_id, &tokens_set);
         }
     }
@@ -107,9 +107,9 @@ impl Contract {
         let token = self.tokens_by_id.get(token_id).expect("No token");
 
         //if the sender doesn't equal the owner, we panic
-		if sender_id != &token.owner_id {
-			env::panic_str("Unauthorized");
-		}
+        if sender_id != &token.owner_id {
+            env::panic_str("Unauthorized");
+        }
         //we make sure that the sender isn't sending the token to themselves
         assert_ne!(
             &token.owner_id, receiver_id,
