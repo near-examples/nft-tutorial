@@ -7,7 +7,6 @@ use near_sdk::json_types::{U128, U64};
 use near_sdk::test_utils::{accounts, VMContextBuilder};
 use near_sdk::testing_env;
 use near_sdk::{env, AccountId};
-
 use std::collections::HashMap;
 
 const MINT_STORAGE_COST: u128 = 100_000_000_000_000_000_000_000;

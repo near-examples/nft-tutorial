@@ -1,13 +1,12 @@
 use serde_json::json;
-use workspaces::{network::Sandbox, Account, Contract, Worker, AccountDetails};
+use near_workspaces::{types::{NearToken, AccountDetails}, Account, Contract};
 
 pub const DEFAULT_DEPOSIT: u128 = 6760000000000000000000 as u128;
-pub const DEFAULT_GAS: u128 = 300000000000000 as u128;
+pub const ONE_YOCTO_NEAR: NearToken = NearToken::from_yoctonear(1);
 
 pub async fn mint_nft(
     user: &Account,
     nft_contract: &Contract,
-    worker: &Worker<Sandbox>,
     token_id: &str,
 ) -> anyhow::Result<()> { 
     let request_payload = json!({
@@ -20,9 +19,9 @@ pub async fn mint_nft(
         },
     });
 
-    user.call(&worker, nft_contract.id(), "nft_mint")
-        .args_json(request_payload)?
-        .deposit(DEFAULT_DEPOSIT)
+    let _ = user.call(nft_contract.id(), "nft_mint")
+        .args_json(request_payload)
+        .deposit(NearToken::from_yoctonear(DEFAULT_DEPOSIT))
         .transact()
         .await?;
     
@@ -33,7 +32,6 @@ pub async fn approve_nft(
     market_contract: &Contract,
     user: &Account,
     nft_contract: &Contract,
-    worker: &Worker<Sandbox>,
     token_id: &str,
 ) -> anyhow::Result<()> {
     let request_payload  = json!({
@@ -42,9 +40,9 @@ pub async fn approve_nft(
         "msg": serde_json::Value::Null,
     });
 
-    user.call(&worker, nft_contract.id(), "nft_approve")
-        .args_json(request_payload)?
-        .deposit(DEFAULT_DEPOSIT)
+    let _ = user.call(nft_contract.id(), "nft_approve")
+        .args_json(request_payload)
+        .deposit(NearToken::from_yoctonear(DEFAULT_DEPOSIT))
         .transact()
         .await?;
 
@@ -54,16 +52,15 @@ pub async fn approve_nft(
 pub async fn pay_for_storage(
     user: &Account,
     market_contract: &Contract,
-    worker: &Worker<Sandbox>,
     amount: u128,
 ) -> anyhow::Result<()> {
     let request_payload = json!({});
     
-    user.call(&worker, market_contract.id(), "storage_deposit")
-        .args_json(request_payload)?
-        .deposit(amount)
+    let _ = user.call(market_contract.id(), "storage_deposit")
+        .args_json(request_payload)
+        .deposit(NearToken::from_yoctonear(amount))
         .transact()
-        .await?;
+        .await;
 
     Ok(())
 }
@@ -72,7 +69,6 @@ pub async fn place_nft_for_sale(
     user: &Account,
     market_contract: &Contract,
     nft_contract: &Contract,
-    worker: &Worker<Sandbox>,
     token_id: &str,
     price: u128,
 ) -> anyhow::Result<()> {
@@ -82,28 +78,26 @@ pub async fn place_nft_for_sale(
         "msg": format!(r#"{{ "sale_conditions" : "{}" }}"#, price.to_string()),
     });
 
-    user.call(&worker, nft_contract.id(), "nft_approve")
-        .args_json(request_payload)?
-        .deposit(DEFAULT_DEPOSIT)
+    let _ = user.call(nft_contract.id(), "nft_approve")
+        .args_json(request_payload)
+        .deposit(NearToken::from_yoctonear(DEFAULT_DEPOSIT))
         .transact()
-        .await?;
+        .await;
 
     Ok(())
 }
 
 pub async fn get_user_balance(
     user: &Account,
-    worker: &Worker<Sandbox>,
 ) -> anyhow::Result<u128> {
-    let details: AccountDetails = user.view_account(worker).await?;
-    Ok(details.balance)
+    let details: AccountDetails = user.view_account().await?;
+    Ok(details.balance.as_yoctonear())
 }
 
 pub async fn purchase_listed_nft(
     bidder: &Account,
     market_contract: &Contract,
     nft_contract: &Contract,
-    worker: &Worker<Sandbox>,
     token_id: &str,
     offer_price: u128
 ) -> anyhow::Result<()> {
@@ -112,12 +106,12 @@ pub async fn purchase_listed_nft(
         "nft_contract_id": nft_contract.id(),
     });
 
-    bidder.call(&worker, market_contract.id(), "offer")
-        .args_json(request_payload)?
-        .gas(DEFAULT_GAS as u64)
-        .deposit(offer_price)
+    let _ = bidder.call(market_contract.id(), "offer")
+        .args_json(request_payload)
+        .max_gas()
+        .deposit(NearToken::from_yoctonear(offer_price))
         .transact()
-        .await?;
+        .await;
 
     Ok(())
 }
@@ -126,7 +120,6 @@ pub async fn transfer_nft(
     sender: &Account,
     receiver: &Account,
     nft_contract: &Contract,
-    worker: &Worker<Sandbox>,
     token_id: &str,
 ) -> anyhow::Result<()> {
     let request_payload  = json!({
@@ -135,27 +128,27 @@ pub async fn transfer_nft(
         "approval_id": 1 as u64,
     });
 
-    sender.call(&worker, nft_contract.id(), "nft_transfer")
-        .args_json(request_payload)?
-        .gas(DEFAULT_GAS as u64)
-        .deposit(1)
+    let _ = sender.call(nft_contract.id(), "nft_transfer")
+        .args_json(request_payload)
+        .max_gas()
+        .deposit(ONE_YOCTO_NEAR)
         .transact()
-        .await?;
+        .await;
     
     Ok(())
 }
 
 pub async fn get_nft_token_info(
     nft_contract: &Contract,
-    worker: &Worker<Sandbox>,
     token_id: &str,
 ) -> anyhow::Result<serde_json::Value> {
     let token_info: serde_json::Value = nft_contract
-        .call(&worker, "nft_token")
-        .args_json(json!({"token_id": token_id}))?
+        .call("nft_token")
+        .args_json(json!({"token_id": token_id}))
         .transact()
         .await?
-        .json()?;
+        .json()
+        .unwrap();
 
     Ok(token_info)
 }

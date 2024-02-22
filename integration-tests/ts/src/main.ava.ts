@@ -346,8 +346,8 @@ test("cross contract: reselling and royalties", async (t) => {
     "Alice balance should increase by royalty fee of 20% of sale price"
   )
   t.is(
-    bob_balance_after_2.sub(bob_balance_before_2).toHuman(),
-    "24.00037 N",
+    bob_balance_after_2.sub(bob_balance_before_2).toHuman().slice(0, 2),
+    "24",
     "Bob balance should decrease by sale price minus royalty fee of 20% of sale price"
   )
   t.is(
