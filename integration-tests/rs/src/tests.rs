@@ -177,6 +177,7 @@ async fn test_sell_nft_listed_on_marketplace(
     let sale_price = 300000000000000000000000 as u128;  // 0.3 NEAR in yoctoNEAR
     helpers::mint_nft(seller, nft_contract, token_id).await?;
     helpers::pay_for_storage(seller, market_contract, 10000000000000000000000 as u128).await?;
+    helpers::approve_nft(market_contract, seller, nft_contract, token_id).await?;
     helpers::place_nft_for_sale(seller, market_contract, nft_contract, token_id, sale_price).await?;
 
     let before_seller_balance: u128 = helpers::get_user_balance(seller).await?;
@@ -204,6 +205,7 @@ async fn test_transfer_nft_when_listed_on_marketplace(
     let sale_price = 3000000000000000000000000 as u128;  // 3 NEAR in yoctoNEAR
     helpers::mint_nft(seller, nft_contract, token_id).await?;
     helpers::pay_for_storage(seller, market_contract, 10000000000000000000000 as u128).await?;
+    helpers::approve_nft(market_contract, seller, nft_contract, token_id).await?;
     helpers::place_nft_for_sale(seller, market_contract, nft_contract, token_id, sale_price).await?;
 
     helpers::transfer_nft(seller, first_buyer, nft_contract, token_id).await?;
@@ -305,6 +307,7 @@ async fn test_reselling_and_royalties(
         .await;
 
     helpers::pay_for_storage(user, market_contract, 10000000000000000000000 as u128).await?;
+    helpers::approve_nft(market_contract, user, nft_contract, token_id).await?;
     helpers::place_nft_for_sale(user, market_contract, nft_contract, token_id, sale_price).await?;
 
     // first_buyer purchases NFT
@@ -325,6 +328,7 @@ async fn test_reselling_and_royalties(
 
     // first buyer lists nft for sale
     helpers::pay_for_storage(first_buyer, market_contract, 10000000000000000000000 as u128).await?;
+    helpers::approve_nft(market_contract, first_buyer, nft_contract, token_id).await?;
     helpers::place_nft_for_sale(first_buyer, market_contract, nft_contract, token_id, sale_price).await?;
 
     // second_buyer purchases NFT

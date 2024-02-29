@@ -23,7 +23,7 @@ pub async fn mint_nft(
         .args_json(request_payload)
         .deposit(NearToken::from_yoctonear(DEFAULT_DEPOSIT))
         .transact()
-        .await?;
+        .await;
     
     Ok(())
 }
@@ -44,7 +44,7 @@ pub async fn approve_nft(
         .args_json(request_payload)
         .deposit(NearToken::from_yoctonear(DEFAULT_DEPOSIT))
         .transact()
-        .await?;
+        .await;
 
     Ok(())
 }
@@ -72,14 +72,15 @@ pub async fn place_nft_for_sale(
     token_id: &str,
     price: u128,
 ) -> anyhow::Result<()> {
-    let request_payload  = json!({
+    let request_payload = json!({
+        "nft_contract_id": nft_contract.id(),
         "token_id": token_id,
-        "account_id": market_contract.id(),
+        "approval_id": 0,
         "msg": format!(r#"{{ "sale_conditions" : "{}" }}"#, price.to_string()),
     });
-
-    let _ = user.call(nft_contract.id(), "nft_approve")
+    let _ = user.call(market_contract.id(), "list_nft_for_sale")
         .args_json(request_payload)
+        .max_gas()
         .deposit(NearToken::from_yoctonear(DEFAULT_DEPOSIT))
         .transact()
         .await;
