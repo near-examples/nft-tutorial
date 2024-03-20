@@ -5,12 +5,12 @@ use crate::TokenMetadata;
 use crate::approval::NonFungibleTokenCore;
 use near_sdk::json_types::{U128, U64};
 use near_sdk::test_utils::{accounts, VMContextBuilder};
-use near_sdk::testing_env;
+use near_sdk::{testing_env, NearToken};
 use near_sdk::{env, AccountId};
 use std::collections::HashMap;
 
-const MINT_STORAGE_COST: u128 = 100_000_000_000_000_000_000_000;
-const MIN_REQUIRED_APPROVAL_YOCTO: u128 = 170000000000000000000;
+const MINT_STORAGE_COST: NearToken = NearToken::from_millinear(1000);
+const MIN_REQUIRED_APPROVAL_YOCTO: NearToken = NearToken::from_yoctonear(1700000000000000000000);
 
 fn get_context(predecessor: AccountId) -> VMContextBuilder {
     let mut builder = VMContextBuilder::new();
@@ -102,7 +102,7 @@ fn test_internal_transfer() {
 
     testing_env!(context
         .storage_usage(env::storage_usage())
-        .attached_deposit(1)
+        .attached_deposit(NearToken::from_yoctonear(1))
         .predecessor_account_id(accounts(0))
         .build());
     contract.internal_transfer(
@@ -117,7 +117,7 @@ fn test_internal_transfer() {
         .storage_usage(env::storage_usage())
         .account_balance(env::account_balance())
         .is_view(true)
-        .attached_deposit(0)
+        .attached_deposit(NearToken::from_yoctonear(0))
         .build());
 
     let tokens = contract.nft_tokens_for_owner(accounts(1), Some(U128(0)), None);
@@ -163,7 +163,7 @@ fn test_nft_approve() {
         .storage_usage(env::storage_usage())
         .account_balance(env::account_balance())
         .is_view(true)
-        .attached_deposit(0)
+        .attached_deposit(NearToken::from_near(0))
         .build());
     assert!(contract.nft_is_approved(token_id.clone(), accounts(1), None));
 }
@@ -193,7 +193,7 @@ fn test_nft_revoke() {
     // alice revokes bob
     testing_env!(context
         .storage_usage(env::storage_usage())
-        .attached_deposit(1)
+        .attached_deposit(NearToken::from_yoctonear(1))
         .predecessor_account_id(accounts(0))
         .build());
     contract.nft_revoke(token_id.clone(), accounts(1));
@@ -201,7 +201,7 @@ fn test_nft_revoke() {
         .storage_usage(env::storage_usage())
         .account_balance(env::account_balance())
         .is_view(true)
-        .attached_deposit(0)
+        .attached_deposit(NearToken::from_near(0))
         .build());
     assert!(!contract.nft_is_approved(token_id.clone(), accounts(1), None));
 }
@@ -231,7 +231,7 @@ fn test_revoke_all() {
     // alice revokes bob
     testing_env!(context
         .storage_usage(env::storage_usage())
-        .attached_deposit(1)
+        .attached_deposit(NearToken::from_yoctonear(1))
         .predecessor_account_id(accounts(0))
         .build());
     contract.nft_revoke_all(token_id.clone());
@@ -239,7 +239,7 @@ fn test_revoke_all() {
         .storage_usage(env::storage_usage())
         .account_balance(env::account_balance())
         .is_view(true)
-        .attached_deposit(0)
+        .attached_deposit(NearToken::from_near(0))
         .build());
     assert!(!contract.nft_is_approved(token_id.clone(), accounts(1), Some(1)));
 }
@@ -289,8 +289,8 @@ fn test_nft_payout() {
         .build());
     contract.nft_approve(token_id.clone(), accounts(1), None);
 
-    let payout = contract.nft_payout(token_id.clone(), U128(10), 1);
-    let expected = HashMap::from([(accounts(0), U128(10))]);
+    let payout = contract.nft_payout(token_id.clone(), NearToken::from_millinear(10), 1);
+    let expected = HashMap::from([(accounts(0), NearToken::from_near(100))]);
     assert_eq!(payout.payout, expected);
 }
 
