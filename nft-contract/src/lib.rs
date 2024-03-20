@@ -5,7 +5,7 @@ use near_sdk::collections::{LazyOption, LookupMap, UnorderedMap, UnorderedSet};
 use near_sdk::json_types::{Base64VecU8, U128};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
-    env, near_bindgen, AccountId, Balance, NearToken, CryptoHash, PanicOnDefault, Promise, PromiseOrValue,
+    env, near_bindgen, AccountId, Balance, NearToken, CryptoHash, PanicOnDefault, Promise, PromiseOrValue, BorshStorageKey,
 };
 
 use crate::internal::*;
@@ -31,7 +31,7 @@ pub const NFT_METADATA_SPEC: &str = "1.0.0";
 pub const NFT_STANDARD_NAME: &str = "nep171";
 
 #[near_bindgen]
-#[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
+#[derive(BorshDeserialize, BorshSerialize, BorshStorageKey, PanicOnDefault)]
 #[borsh(crate = "near_sdk::borsh")]
 pub struct Contract {
     //contract owner
@@ -51,7 +51,7 @@ pub struct Contract {
 }
 
 /// Helper structure for keys of the persistent collections.
-#[derive(BorshSerialize)]
+#[derive(BorshSerialize, BorshStorageKey)]
 #[borsh(crate = "near_sdk::borsh")]
 pub enum StorageKey {
     TokensPerOwner,
@@ -98,15 +98,13 @@ impl Contract {
         //create a variable of type Self with all the fields initialized. 
         let this = Self {
             //Storage keys are simply the prefixes used for the collections. This helps avoid data collision
-            tokens_per_owner: LookupMap::new(StorageKey::TokensPerOwner.try_to_vec().unwrap()),
-            tokens_by_id: LookupMap::new(StorageKey::TokensById.try_to_vec().unwrap()),
-            token_metadata_by_id: UnorderedMap::new(
-                StorageKey::TokenMetadataById.try_to_vec().unwrap(),
-            ),
+            tokens_per_owner: LookupMap::new(StorageKey::TokensPerOwner),
+            tokens_by_id: LookupMap::new(StorageKey::TokensById),
+            token_metadata_by_id: UnorderedMap::new(StorageKey::TokenMetadataById),
             //set the owner_id field equal to the passed in owner_id. 
             owner_id,
             metadata: LazyOption::new(
-                StorageKey::NFTContractMetadata.try_to_vec().unwrap(),
+                StorageKey::NFTContractMetadata,
                 Some(&metadata),
             ),
         };
