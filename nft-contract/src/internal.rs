@@ -1,16 +1,16 @@
 use crate::*;
-use near_sdk::{CryptoHash};
+use near_sdk::{CryptoHash, NearToken};
 use std::mem::size_of;
 
 //convert the royalty percentage and amount to pay into a payout (U128)
-pub(crate) fn royalty_to_payout(royalty_percentage: u32, amount_to_pay: Balance) -> U128 {
-    U128(royalty_percentage as u128 * amount_to_pay / 10_000u128)
+pub(crate) fn royalty_to_payout(royalty_percentage: u128, amount_to_pay: NearToken) -> NearToken {
+    amount_to_pay.saturating_mul(royalty_percentage)
 }
 
 //calculate how many bytes the account ID is taking up
-pub(crate) fn bytes_for_approved_account_id(account_id: &AccountId) -> u64 {
+pub(crate) fn bytes_for_approved_account_id(account_id: &AccountId) -> u128 {
     // The extra 4 bytes are coming from Borsh serialization to store the length of the string.
-    account_id.as_str().len() as u64 + 4 + size_of::<u64>() as u64
+    account_id.as_str().len() as u128 + 4 + size_of::<u128>() as u128
 }
 
 //refund the storage taken up by passed in approved account IDs and send the funds to the passed in account ID. 
@@ -19,9 +19,9 @@ pub(crate) fn refund_approved_account_ids_iter<'a, I>(
     approved_account_ids: I, //the approved account IDs must be passed in as an iterator
 ) -> Promise where I: Iterator<Item = &'a AccountId> {
     //get the storage total by going through and summing all the bytes for each approved account IDs
-    let storage_released: u64 = approved_account_ids.map(bytes_for_approved_account_id).sum();
+    let storage_released: u128 = approved_account_ids.map(bytes_for_approved_account_id).sum();
     //transfer the account the storage that is released
-    Promise::new(account_id).transfer(Balance::from(storage_released) * env::storage_byte_cost())
+    Promise::new(account_id).transfer(env::storage_byte_cost().saturating_mul(storage_released))
 }
 
 //refund a map of approved account IDs and send the funds to the passed in account ID
@@ -60,9 +60,9 @@ pub(crate) fn assert_at_least_one_yocto() {
 }
 
 //refund the initial deposit based on the amount of storage that was used up
-pub(crate) fn refund_deposit(storage_used: u64) {
+pub(crate) fn refund_deposit(storage_used: u128) {
     //get how much it would cost to store the information
-    let required_cost = env::storage_byte_cost() * Balance::from(storage_used);
+    let required_cost = env::storage_byte_cost().saturating_mul(storage_used);
     //get the attached deposit
     let attached_deposit = env::attached_deposit();
 
