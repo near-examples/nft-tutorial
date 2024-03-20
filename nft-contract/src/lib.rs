@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use schemars::JsonSchema;
 use near_sdk::borsh::{BorshSerialize, BorshDeserialize};
 use near_sdk::collections::{LazyOption, LookupMap, UnorderedMap, UnorderedSet};
 use near_sdk::json_types::{Base64VecU8, U128};
