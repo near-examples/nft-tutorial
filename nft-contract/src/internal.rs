@@ -46,7 +46,7 @@ pub(crate) fn hash_account_id(account_id: &AccountId) -> CryptoHash {
 pub(crate) fn assert_one_yocto() {
     assert_eq!(
         env::attached_deposit(),
-        1,
+        NearToken::from_yoctonear(1),
         "Requires attached deposit of exactly 1 yoctoNEAR",
     )
 }
@@ -54,7 +54,7 @@ pub(crate) fn assert_one_yocto() {
 //Assert that the user has attached at least 1 yoctoNEAR (for security reasons and to pay for storage)
 pub(crate) fn assert_at_least_one_yocto() {
     assert!(
-        env::attached_deposit() >= 1,
+        env::attached_deposit() >= NearToken::from_yoctonear(1),
         "Requires attached deposit of at least 1 yoctoNEAR",
     )
 }
@@ -74,10 +74,10 @@ pub(crate) fn refund_deposit(storage_used: u64) {
     );
 
     //get the refund amount from the attached deposit - required cost
-    let refund = attached_deposit - required_cost;
+    let refund = attached_deposit.saturating_sub(required_cost);
 
     //if the refund is greater than 1 yocto NEAR, we refund the predecessor that amount
-    if refund > 1 {
+    if refund.gt(&NearToken::from_yoctonear(1)) {
         Promise::new(env::predecessor_account_id()).transfer(refund);
     }
 }
