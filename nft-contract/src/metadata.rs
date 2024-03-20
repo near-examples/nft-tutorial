@@ -8,6 +8,7 @@ pub struct Payout {
 } 
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone)]
+#[borsh(crate = "near_sdk::borsh")]
 #[serde(crate = "near_sdk::serde")]
 pub struct NFTContractMetadata {
     pub spec: String,              // required, essentially a version like "nft-1.0.0"
@@ -20,6 +21,7 @@ pub struct NFTContractMetadata {
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+#[borsh(crate = "near_sdk::borsh")]
 #[serde(crate = "near_sdk::serde")]
 pub struct TokenMetadata {
     pub title: Option<String>, // ex. "Arch Nemesis: Mail Carrier" or "Parcel #5055"
@@ -37,6 +39,7 @@ pub struct TokenMetadata {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
+#[borsh(crate = "near_sdk::borsh")]
 pub struct Token {
     //owner of the token
     pub owner_id: AccountId,
