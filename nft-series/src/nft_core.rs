@@ -1,8 +1,8 @@
 use crate::*;
 use near_sdk::{ext_contract, Gas, PromiseResult};
 
-const GAS_FOR_RESOLVE_TRANSFER: Gas = Gas(10_000_000_000_000);
-const GAS_FOR_NFT_ON_TRANSFER: Gas = Gas(25_000_000_000_000);
+const GAS_FOR_RESOLVE_TRANSFER: Gas = Gas::from_tgas(10);
+const GAS_FOR_NFT_ON_TRANSFER: Gas = Gas::from_tgas(25);
 
 pub trait NonFungibleTokenCore {
     //transfers an NFT to a receiver ID

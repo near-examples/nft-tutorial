@@ -2,31 +2,26 @@ use crate::*;
 use near_sdk::CryptoHash;
 use std::mem::size_of;
 
-//convert the royalty percentage and amount to pay into a payout (U128)
-pub(crate) fn royalty_to_payout(royalty_percentage: u32, amount_to_pay: Balance) -> U128 {
-    U128(royalty_percentage as u128 * amount_to_pay / 10_000u128)
+//convert the royalty percentage and amount to pay into a payout
+pub(crate) fn royalty_to_payout(royalty_percentage: u128, amount_to_pay: NearToken) -> NearToken {
+  amount_to_pay.saturating_mul(royalty_percentage)
 }
 
 //calculate how many bytes the account ID is taking up
-pub(crate) fn bytes_for_approved_account_id(account_id: &AccountId) -> u64 {
+pub(crate) fn bytes_for_approved_account_id(account_id: &AccountId) -> u128 {
     // The extra 4 bytes are coming from Borsh serialization to store the length of the string.
-    account_id.as_str().len() as u64 + 4 + size_of::<u64>() as u64
+    account_id.as_str().len() as u128 + 4 + size_of::<u128>() as u128
 }
 
-//refund the storage taken up by passed in approved account IDs and send the funds to the passed in account ID.
+//refund the storage taken up by passed in approved account IDs and send the funds to the passed in account ID. 
 pub(crate) fn refund_approved_account_ids_iter<'a, I>(
-    account_id: AccountId,
-    approved_account_ids: I, //the approved account IDs must be passed in as an iterator
-) -> Promise
-where
-    I: Iterator<Item = &'a AccountId>,
-{
-    //get the storage total by going through and summing all the bytes for each approved account IDs
-    let storage_released: u64 = approved_account_ids
-        .map(bytes_for_approved_account_id)
-        .sum();
-    //transfer the account the storage that is released
-    Promise::new(account_id).transfer(Balance::from(storage_released) * env::storage_byte_cost())
+  account_id: AccountId,
+  approved_account_ids: I, //the approved account IDs must be passed in as an iterator
+) -> Promise where I: Iterator<Item = &'a AccountId> {
+  //get the storage total by going through and summing all the bytes for each approved account IDs
+  let storage_released: u128 = approved_account_ids.map(bytes_for_approved_account_id).sum();
+  //transfer the account the storage that is released
+  Promise::new(account_id).transfer(env::storage_byte_cost().saturating_mul(storage_released))
 }
 
 //refund a map of approved account IDs and send the funds to the passed in account ID
@@ -49,63 +44,63 @@ pub(crate) fn hash_account_id(account_id: &String) -> CryptoHash {
 
 //used to make sure the user attached exactly 1 yoctoNEAR
 pub(crate) fn assert_one_yocto() {
-    assert_eq!(
-        env::attached_deposit(),
-        1,
-        "Requires attached deposit of exactly 1 yoctoNEAR",
-    )
+  assert_eq!(
+      env::attached_deposit(),
+      NearToken::from_yoctonear(1),
+      "Requires attached deposit of exactly 1 yoctoNEAR",
+  )
 }
 
 //Assert that the user has attached at least 1 yoctoNEAR (for security reasons and to pay for storage)
 pub(crate) fn assert_at_least_one_yocto() {
-    assert!(
-        env::attached_deposit() >= 1,
-        "Requires attached deposit of at least 1 yoctoNEAR",
-    )
+  assert!(
+      env::attached_deposit() >= NearToken::from_yoctonear(1),
+      "Requires attached deposit of at least 1 yoctoNEAR",
+  )
 }
 
 // Send all the non storage funds to the series owner
-pub(crate) fn payout_series_owner(storage_used: u64, price_per_token: Balance, owner_id: AccountId) {
+pub(crate) fn payout_series_owner(storage_used: u128, price_per_token: NearToken, owner_id: AccountId) {
     //get how much it would cost to store the information
-    let required_cost = env::storage_byte_cost() * Balance::from(storage_used);
+    let required_cost = env::storage_byte_cost().saturating_mul(storage_used);
     //get the attached deposit
     let attached_deposit = env::attached_deposit();
 
     //make sure that the attached deposit is greater than or equal to the required cost
     assert!(
-        attached_deposit >= required_cost + price_per_token,
+        attached_deposit.ge(&required_cost.saturating_add(price_per_token)),
         "Must attach {} yoctoNEAR to cover storage and price per token {}",
         required_cost,
         price_per_token
     );
 
     // If there's a price for the token, transfer everything but the storage to the series owner
-    if price_per_token > 0 {
-        Promise::new(owner_id).transfer(attached_deposit - required_cost);
+    if price_per_token.gt(&NearToken::from_yoctonear(0)) {
+        Promise::new(owner_id).transfer(attached_deposit.saturating_sub(required_cost));
     }
 }
 
 //refund the initial deposit based on the amount of storage that was used up
-pub(crate) fn refund_deposit(storage_used: u64) {
-    //get how much it would cost to store the information
-    let required_cost = env::storage_byte_cost() * Balance::from(storage_used);
-    //get the attached deposit
-    let attached_deposit = env::attached_deposit();
+pub(crate) fn refund_deposit(storage_used: u128) {
+  //get how much it would cost to store the information
+  let required_cost = env::storage_byte_cost().saturating_mul(storage_used);
+  //get the attached deposit
+  let attached_deposit = env::attached_deposit();
 
-    //make sure that the attached deposit is greater than or equal to the required cost
-    assert!(
-        required_cost <= attached_deposit,
-        "Must attach {} yoctoNEAR to cover storage",
-        required_cost,
-    );
+  //make sure that the attached deposit is greater than or equal to the required cost
+  assert!(
+      required_cost <= attached_deposit,
+      "Must attach {} yoctoNEAR to cover storage",
+      required_cost,
+  );
 
-    //get the refund amount from the attached deposit - required cost
-    let refund = attached_deposit - required_cost;
+  //get the refund amount from the attached deposit - required cost
+  let refund = attached_deposit.saturating_sub(required_cost);
 
-    //if the refund is greater than 1 yocto NEAR, we refund the predecessor that amount
-    if refund > 1 {
-        Promise::new(env::predecessor_account_id()).transfer(refund);
-    }
+  //if the refund is greater than 1 yocto NEAR, we refund the predecessor that amount
+  if refund.gt(&NearToken::from_yoctonear(1)) {
+      Promise::new(env::predecessor_account_id()).transfer(refund);
+  }
 }
 
 impl Contract {
@@ -131,8 +126,6 @@ impl Contract {
                     //we get a new unique prefix for the collection
                     account_id_hash: hash_account_id(&account_id.to_string()),
                 }
-                .try_to_vec()
-                .unwrap(),
             )
         });
 

@@ -2,7 +2,7 @@ use crate::*;
 use near_sdk::{CryptoHash, NearToken};
 use std::mem::size_of;
 
-//convert the royalty percentage and amount to pay into a payout (U128)
+//convert the royalty percentage and amount to pay into a payout
 pub(crate) fn royalty_to_payout(royalty_percentage: u128, amount_to_pay: NearToken) -> NearToken {
     amount_to_pay.saturating_mul(royalty_percentage)
 }
@@ -54,7 +54,7 @@ pub(crate) fn assert_one_yocto() {
 //Assert that the user has attached at least 1 yoctoNEAR (for security reasons and to pay for storage)
 pub(crate) fn assert_at_least_one_yocto() {
     assert!(
-        env::attached_deposit() >= NearToken::from_yoctonear(1),
+        env::attached_deposit().ge(&NearToken::from_yoctonear(1)),
         "Requires attached deposit of at least 1 yoctoNEAR",
     )
 }

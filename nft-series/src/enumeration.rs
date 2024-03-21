@@ -3,7 +3,8 @@ use crate::nft_core::NonFungibleTokenCore;
 
 
 /// Struct to return in views to query for specific data related to a series
-#[derive(BorshDeserialize, BorshSerialize, Serialize)]
+#[derive(BorshDeserialize, BorshSerialize, Serialize, NearSchema)]
+#[borsh(crate = "near_sdk::borsh")]
 #[serde(crate = "near_sdk::serde")]
 pub struct JsonSeries {
     series_id: u64,

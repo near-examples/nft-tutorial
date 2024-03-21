@@ -3,8 +3,8 @@ use near_sdk::collections::{LazyOption, LookupMap, LookupSet, UnorderedMap, Unor
 use near_sdk::json_types::{Base64VecU8, U128};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
-    env, near_bindgen, require, AccountId, Balance, BorshStorageKey, CryptoHash, PanicOnDefault,
-    Promise, PromiseOrValue,
+    env, near_bindgen, require, AccountId, NearToken, BorshStorageKey, CryptoHash, PanicOnDefault,
+    Promise, PromiseOrValue, NearSchema
 };
 use std::collections::HashMap;
 
@@ -34,6 +34,7 @@ pub const NFT_STANDARD_NAME: &str = "nep171";
 
 // Represents the series type. All tokens will derive this data.
 #[derive(BorshDeserialize, BorshSerialize)]
+#[borsh(crate = "near_sdk::borsh")]
 pub struct Series {
     // Metadata including title, num copies etc.. that all tokens will derive from
     metadata: TokenMetadata,
@@ -43,7 +44,7 @@ pub struct Series {
     tokens: UnorderedSet<TokenId>,
     // What is the price of each token in this series? If this is specified, when minting,
     // Users will need to attach enough $NEAR to cover the price.
-    price: Option<Balance>,
+    price: Option<NearToken>,
     // Owner of the collection
     owner_id: AccountId,
 }
@@ -52,6 +53,7 @@ pub type SeriesId = u64;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
+#[borsh(crate = "near_sdk::borsh")]
 pub struct Contract {
     //contract owner
     pub owner_id: AccountId,
@@ -77,6 +79,7 @@ pub struct Contract {
 
 /// Helper structure for keys of the persistent collections.
 #[derive(BorshSerialize, BorshStorageKey)]
+#[borsh(crate = "near_sdk::borsh")]
 pub enum StorageKey {
     ApprovedMinters,
     ApprovedCreators,
@@ -121,26 +124,26 @@ impl Contract {
     pub fn new(owner_id: AccountId, metadata: NFTContractMetadata) -> Self {
         // Create the approved minters set and insert the owner
         let mut approved_minters =
-            LookupSet::new(StorageKey::ApprovedMinters.try_to_vec().unwrap());
+            LookupSet::new(StorageKey::ApprovedMinters);
         approved_minters.insert(&owner_id);
 
         // Create the approved creators set and insert the owner
         let mut approved_creators =
-            LookupSet::new(StorageKey::ApprovedCreators.try_to_vec().unwrap());
+            LookupSet::new(StorageKey::ApprovedCreators);
         approved_creators.insert(&owner_id);
         
         // Create a variable of type Self with all the fields initialized.
         let this = Self {
             approved_minters,
             approved_creators,
-            series_by_id: UnorderedMap::new(StorageKey::SeriesById.try_to_vec().unwrap()),
+            series_by_id: UnorderedMap::new(StorageKey::SeriesById),
             //Storage keys are simply the prefixes used for the collections. This helps avoid data collision
-            tokens_per_owner: LookupMap::new(StorageKey::TokensPerOwner.try_to_vec().unwrap()),
-            tokens_by_id: UnorderedMap::new(StorageKey::TokensById.try_to_vec().unwrap()),
+            tokens_per_owner: LookupMap::new(StorageKey::TokensPerOwner),
+            tokens_by_id: UnorderedMap::new(StorageKey::TokensById),
             //set the &owner_id field equal to the passed in owner_id.
             owner_id,
             metadata: LazyOption::new(
-                StorageKey::NFTContractMetadata.try_to_vec().unwrap(),
+                StorageKey::NFTContractMetadata,
                 Some(&metadata),
             ),
         };
