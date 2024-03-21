@@ -1,9 +1,10 @@
 use crate::*;
-use near_sdk::{log, promise_result_as_success, PromiseError};
+use near_sdk::{log, promise_result_as_success, NearSchema, PromiseError};
 use near_sdk::serde_json::json;
 
 //struct that holds important information about each sale on the market
-#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, NearSchema)]
+#[borsh(crate = "near_sdk::borsh")]
 #[serde(crate = "near_sdk::serde")]
 pub struct Sale {
     //owner of the sale
@@ -19,7 +20,7 @@ pub struct Sale {
 }
 
 //The Json token is what will be returned from view calls. 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, NearSchema)]
 #[serde(crate = "near_sdk::serde")]
 pub struct JsonToken {
     //owner of the token
@@ -47,10 +48,16 @@ impl Contract {
         let owner_id = env::predecessor_account_id();
 
         let nft_token_promise = Promise::new(nft_contract_id.clone()).function_call(
-            "nft_token".to_owned(), json!({ "token_id": token_id }).to_string().into_bytes(), 0, Gas(10u64.pow(13))
+          "nft_token".to_owned(),
+          json!({ "token_id": token_id }).to_string().into_bytes(),
+          ZERO_NEAR,
+          Gas::from_gas(10u64.pow(13))
         );
         let nft_is_approved_promise = Promise::new(nft_contract_id.clone()).function_call(
-          "nft_is_approved".to_owned(), json!({ "token_id": token_id, "approved_account_id": env::current_account_id(), "approval_id": approval_id }).to_string().into_bytes(), 0, Gas(10u64.pow(13))
+          "nft_is_approved".to_owned(),
+          json!({ "token_id": token_id, "approved_account_id": env::current_account_id(), "approval_id": approval_id }).to_string().into_bytes(),
+          ZERO_NEAR,
+          Gas::from_gas(10u64.pow(13))
         );
         nft_token_promise
           .and(nft_is_approved_promise)
@@ -106,7 +113,7 @@ impl Contract {
     pub fn offer(&mut self, nft_contract_id: AccountId, token_id: String) {
         //get the attached deposit and make sure it's greater than 0
         let deposit = env::attached_deposit();
-        assert!(deposit > 0, "Attached deposit must be greater than 0");
+        assert!(!deposit.is_zero(), "Attached deposit must be greater than 0");
 
         //convert the nft_contract_id from a AccountId to an AccountId
         let contract_id: AccountId = nft_contract_id.into();
@@ -124,13 +131,13 @@ impl Contract {
         let price = sale.sale_conditions.0;
 
         //make sure the deposit is greater than the price
-        assert!(deposit >= price, "Attached deposit must be greater than or equal to the current price: {:?}", price);
+        assert!(deposit.ge(&NearToken::from_yoctonear(price)), "Attached deposit must be greater than or equal to the current price: {:?}", price);
 
         //process the purchase (which will remove the sale, transfer and get the payout from the nft contract, and then distribute royalties) 
         self.process_purchase(
             contract_id,
             token_id,
-            U128(deposit),
+            deposit,
             buyer_id,
         );
     }
@@ -142,7 +149,7 @@ impl Contract {
         &mut self,
         nft_contract_id: AccountId,
         token_id: String,
-        price: U128,
+        price: NearToken,
         buyer_id: AccountId,
     ) -> Promise {
         //get the sale object by removing the sale
@@ -152,7 +159,7 @@ impl Contract {
         //a payout object used for the market to distribute funds to the appropriate accounts.
         ext_contract::ext(nft_contract_id)
             // Attach 1 yoctoNEAR with static GAS equal to the GAS for nft transfer. Also attach an unused GAS weight of 1 by default.
-            .with_attached_deposit(1)
+            .with_attached_deposit(ONE_YOCTONEAR)
             .with_static_gas(GAS_FOR_NFT_TRANSFER)
             .nft_transfer_payout(
                 buyer_id.clone(), //purchaser (person to transfer the NFT to)
@@ -188,8 +195,8 @@ impl Contract {
     pub fn resolve_purchase(
         &mut self,
         buyer_id: AccountId,
-        price: U128,
-    ) -> U128 {
+        price: NearToken,
+    ) -> NearToken {
         // checking for payout information returned from the nft_transfer_payout method
         let payout_option = promise_result_as_success().and_then(|value| {
             //if we set the payout_option to None, that means something went wrong and we should refund the buyer
@@ -206,17 +213,17 @@ impl Contract {
                     //if the payout object is the correct length, we move forward
                     } else {
                         //we'll keep track of how much the nft contract wants us to payout. Starting at the full price payed by the buyer
-                        let mut remainder = price.0;
+                        let mut remainder = price;
                         
                         //loop through the payout and subtract the values from the remainder. 
                         for &value in payout_object.payout.values() {
                             //checked sub checks for overflow or any errors and returns None if there are problems
-                            remainder = remainder.checked_sub(value.0)?;
+                            remainder = remainder.checked_sub(value)?;
                         }
                         //Check to see if the NFT contract sent back a faulty payout that requires us to pay more or too little. 
                         //The remainder will be 0 if the payout summed to the total price. The remainder will be 1 if the royalties
                         //we something like 3333 + 3333 + 3333. 
-                        if remainder == 0 || remainder == 1 {
+                        if remainder.is_zero() || remainder.eq(&ONE_YOCTONEAR) {
                             //set the payout_option to be the payout because nothing went wrong
                             Some(payout_object.payout)
                         } else {
@@ -232,14 +239,14 @@ impl Contract {
             payout_option
         //if the payout option was None, we refund the buyer for the price they payed and return
         } else {
-            Promise::new(buyer_id).transfer(u128::from(price));
+            Promise::new(buyer_id).transfer(price);
             // leave function and return the price that was refunded
             return price;
         };
 
         // NEAR payouts
         for (receiver_id, amount) in payout {
-            Promise::new(receiver_id).transfer(amount.0);
+            Promise::new(receiver_id).transfer(amount);
         }
 
         //return the price payout out
@@ -279,17 +286,17 @@ impl Contract {
         //we need to enforce that the user has enough storage for 1 EXTRA sale.
 
         //get the storage for a sale. dot 0 converts from U128 to u128
-        let storage_amount = self.storage_minimum_balance().0;
+        let storage_amount = self.storage_minimum_balance();
         //get the total storage paid by the owner
-        let owner_paid_storage = self.storage_deposits.get(&owner_id).unwrap_or(0);
+        let owner_paid_storage = self.storage_deposits.get(&owner_id).unwrap_or(ZERO_NEAR);
         //get the storage required which is simply the storage for the number of sales they have + 1 
-        let signer_storage_required = (self.get_supply_by_owner_id(owner_id.clone()).0 + 1) as u128 * storage_amount;
+        let signer_storage_required = storage_amount.saturating_mul((self.get_supply_by_owner_id(owner_id.clone()).0 + 1).into());
         
         //make sure that the total paid is >= the required storage
         assert!(
-            owner_paid_storage >= signer_storage_required,
+            owner_paid_storage.ge(&signer_storage_required),
             "Insufficient storage paid: {}, for {} sales at {} rate of per sale",
-            owner_paid_storage, signer_storage_required / STORAGE_PER_SALE, STORAGE_PER_SALE
+            owner_paid_storage, signer_storage_required.saturating_div(storage_per_sale().as_yoctonear()), storage_per_sale()
         );
 
         //if all these checks pass we can create the sale conditions object.
@@ -322,8 +329,6 @@ impl Contract {
                     //we get a new unique prefix for the collection by hashing the owner
                     account_id_hash: hash_account_id(&owner_id),
                 }
-                .try_to_vec()
-                .unwrap(),
             )
         });
         
@@ -342,8 +347,6 @@ impl Contract {
                         //we get a new unique prefix for the collection by hashing the owner
                         account_id_hash: hash_account_id(&nft_contract_id),
                     }
-                    .try_to_vec()
-                    .unwrap(),
                 )
             });
         

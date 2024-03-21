@@ -11,6 +11,8 @@ use std::collections::HashMap;
 
 const MINT_STORAGE_COST: NearToken = NearToken::from_millinear(1000);
 const MIN_REQUIRED_APPROVAL_YOCTO: NearToken = NearToken::from_yoctonear(1700000000000000000000);
+const ONE_YOCTONEAR: NearToken = NearToken::from_yoctonear(1);
+
 
 fn get_context(predecessor: AccountId) -> VMContextBuilder {
     let mut builder = VMContextBuilder::new();
@@ -102,7 +104,7 @@ fn test_internal_transfer() {
 
     testing_env!(context
         .storage_usage(env::storage_usage())
-        .attached_deposit(NearToken::from_yoctonear(1))
+        .attached_deposit(ONE_YOCTONEAR)
         .predecessor_account_id(accounts(0))
         .build());
     contract.internal_transfer(
@@ -193,7 +195,7 @@ fn test_nft_revoke() {
     // alice revokes bob
     testing_env!(context
         .storage_usage(env::storage_usage())
-        .attached_deposit(NearToken::from_yoctonear(1))
+        .attached_deposit(ONE_YOCTONEAR)
         .predecessor_account_id(accounts(0))
         .build());
     contract.nft_revoke(token_id.clone(), accounts(1));
@@ -231,7 +233,7 @@ fn test_revoke_all() {
     // alice revokes bob
     testing_env!(context
         .storage_usage(env::storage_usage())
-        .attached_deposit(NearToken::from_yoctonear(1))
+        .attached_deposit(ONE_YOCTONEAR)
         .predecessor_account_id(accounts(0))
         .build());
     contract.nft_revoke_all(token_id.clone());

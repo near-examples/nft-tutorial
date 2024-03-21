@@ -6,12 +6,15 @@ use near_sdk::{
     collections::UnorderedSet,
     env,
     json_types::{U128, U64},
+    NearToken,
     test_utils::{accounts, VMContextBuilder},
     testing_env, AccountId,
 };
 
-const MIN_REQUIRED_APPROVAL_YOCTO: u128 = 170000000000000000000;
-const MIN_REQUIRED_STORAGE_YOCTO: u128 = 10000000000000000000000;
+const MIN_REQUIRED_APPROVAL_YOCTO: NearToken = NearToken::from_yoctonear(170000000000000000000);
+const MIN_REQUIRED_STORAGE_YOCTO: NearToken =  NearToken::from_millinear(100);
+
+const ONE_YOCTONEAR: NearToken = NearToken::from_yoctonear(1);
 
 fn get_context(predecessor: AccountId) -> VMContextBuilder {
     let mut builder = VMContextBuilder::new();
@@ -28,7 +31,7 @@ fn test_default() {
 }
 
 #[test]
-#[should_panic(expected = "Requires minimum deposit of 10000000000000000000000")]
+#[should_panic(expected = "Requires minimum deposit of 0.010 NEAR")]
 fn test_storage_deposit_insufficient_deposit() {
     let mut context = get_context(accounts(0));
     testing_env!(context.build());
@@ -69,7 +72,7 @@ fn test_storage_balance_of() {
         .build());
     contract.storage_deposit(Some(accounts(0)));
     let balance = contract.storage_balance_of(accounts(0));
-    assert_eq!(balance, U128(MIN_REQUIRED_STORAGE_YOCTO));
+    assert!(balance.eq(&MIN_REQUIRED_STORAGE_YOCTO));
 }
 
 #[test]
@@ -89,13 +92,13 @@ fn test_storage_withdraw() {
     // withdraw amount
     testing_env!(context
         .storage_usage(env::storage_usage())
-        .attached_deposit(U128(1).0) // below func requires a min of 1 yocto attached
+        .attached_deposit(ONE_YOCTONEAR) // below func requires a min of 1 yocto attached
         .predecessor_account_id(accounts(0))
         .build());
     contract.storage_withdraw();
 
     let remaining_amount = contract.storage_balance_of(accounts(0));
-    assert_eq!(remaining_amount, U128(0))
+    assert!(remaining_amount.is_zero())
 }
 
 #[test]
@@ -137,7 +140,7 @@ fn test_remove_sale() {
     // remove sale
     testing_env!(context
         .storage_usage(env::storage_usage())
-        .attached_deposit(U128(1).0) // below func requires a min of 1 yocto attached
+        .attached_deposit(ONE_YOCTONEAR) // below func requires a min of 1 yocto attached
         .predecessor_account_id(accounts(0))
         .build());
     contract.remove_sale(nft_contract_id, token_id);
@@ -189,7 +192,7 @@ fn test_update_price() {
     let new_price = U128(150);
     testing_env!(context
         .storage_usage(env::storage_usage())
-        .attached_deposit(U128(1).0)
+        .attached_deposit(ONE_YOCTONEAR)
         .predecessor_account_id(accounts(0))  // bob to buy NFT from alice
         .build());
     contract.update_price(nft_contract_id, token_id, new_price);

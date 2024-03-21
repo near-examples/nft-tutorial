@@ -2,6 +2,10 @@ use crate::*;
 use near_sdk::CryptoHash;
 use std::mem::size_of;
 
+//Basic NEAR amounts as constants
+const ZERO_NEAR: NearToken = NearToken::from_yoctonear(0);
+const ONE_YOCTONEAR: NearToken = NearToken::from_yoctonear(1);
+
 //convert the royalty percentage and amount to pay into a payout
 pub(crate) fn royalty_to_payout(royalty_percentage: u128, amount_to_pay: NearToken) -> NearToken {
   amount_to_pay.saturating_mul(royalty_percentage)
@@ -46,7 +50,7 @@ pub(crate) fn hash_account_id(account_id: &String) -> CryptoHash {
 pub(crate) fn assert_one_yocto() {
   assert_eq!(
       env::attached_deposit(),
-      NearToken::from_yoctonear(1),
+      ONE_YOCTONEAR,
       "Requires attached deposit of exactly 1 yoctoNEAR",
   )
 }
@@ -54,7 +58,7 @@ pub(crate) fn assert_one_yocto() {
 //Assert that the user has attached at least 1 yoctoNEAR (for security reasons and to pay for storage)
 pub(crate) fn assert_at_least_one_yocto() {
   assert!(
-      env::attached_deposit() >= NearToken::from_yoctonear(1),
+      env::attached_deposit() >= ONE_YOCTONEAR,
       "Requires attached deposit of at least 1 yoctoNEAR",
   )
 }
@@ -75,7 +79,7 @@ pub(crate) fn payout_series_owner(storage_used: u128, price_per_token: NearToken
     );
 
     // If there's a price for the token, transfer everything but the storage to the series owner
-    if price_per_token.gt(&NearToken::from_yoctonear(0)) {
+    if price_per_token.gt(&ZERO_NEAR) {
         Promise::new(owner_id).transfer(attached_deposit.saturating_sub(required_cost));
     }
 }
@@ -98,7 +102,7 @@ pub(crate) fn refund_deposit(storage_used: u128) {
   let refund = attached_deposit.saturating_sub(required_cost);
 
   //if the refund is greater than 1 yocto NEAR, we refund the predecessor that amount
-  if refund.gt(&NearToken::from_yoctonear(1)) {
+  if refund.gt(&ONE_YOCTONEAR) {
       Promise::new(env::predecessor_account_id()).transfer(refund);
   }
 }

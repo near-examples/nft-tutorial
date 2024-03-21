@@ -29,6 +29,9 @@ pub const NFT_METADATA_SPEC: &str = "1.0.0";
 /// This is the name of the NFT standard we're using
 pub const NFT_STANDARD_NAME: &str = "nep171";
 
+//Basic NEAR amounts as constants
+const ONE_YOCTONEAR: NearToken = NearToken::from_yoctonear(1);
+
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, BorshStorageKey, PanicOnDefault)]
 #[borsh(crate = "near_sdk::borsh")]
