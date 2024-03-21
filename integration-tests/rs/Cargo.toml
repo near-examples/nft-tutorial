@@ -5,19 +5,15 @@ publish = false
 edition = "2021"
 
 [dependencies]
-near-sdk = "4.1.1"
+near-sdk = { version = "5.0.0", features = ["legacy"] }
 uint = { version = "0.9.3", default-features = false }
-
-[patch.crates-io]
-parity-secp256k1 = { git = 'https://github.com/paritytech/rust-secp256k1.git' }
 
 [dev-dependencies]
 anyhow = "1.0.80"
-near-sdk = "4.1.1"
-
-tokio = { version = "1.36.0", features = ["full"] }
-near-workspaces = { version = "0.10.0", default-features = false, features = ["install"] }
-serde_json = { version = "1.0.113", features = ["arbitrary_precision"] }
+near-sdk = { version = "5.0.0", features = ["unit-testing"] }
+near-workspaces = { version = "0.10.0", features = ["unstable"] }
+tokio = { version = "1.12.0", features = ["full"] }
+serde_json = "1"
 
 
 [[example]]
