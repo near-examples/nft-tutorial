@@ -8,7 +8,7 @@ pub async fn mint_nft(
     user: &Account,
     nft_contract: &Contract,
     token_id: &str,
-) -> anyhow::Result<()> { 
+) -> Result<(), Box<dyn std::error::Error>> { 
     let request_payload = json!({
         "token_id": token_id,
         "receiver_id": user.id(),
@@ -33,7 +33,7 @@ pub async fn approve_nft(
     user: &Account,
     nft_contract: &Contract,
     token_id: &str,
-) -> anyhow::Result<()> {
+) -> Result<(), Box<dyn std::error::Error>> {
     let request_payload  = json!({
         "token_id": token_id,
         "account_id": market_contract.id(),
@@ -52,13 +52,13 @@ pub async fn approve_nft(
 pub async fn pay_for_storage(
     user: &Account,
     market_contract: &Contract,
-    amount: u128,
-) -> anyhow::Result<()> {
+    amount: NearToken,
+) -> Result<(), Box<dyn std::error::Error>> {
     let request_payload = json!({});
     
     let _ = user.call(market_contract.id(), "storage_deposit")
         .args_json(request_payload)
-        .deposit(NearToken::from_yoctonear(amount))
+        .deposit(amount)
         .transact()
         .await;
 
@@ -70,8 +70,8 @@ pub async fn place_nft_for_sale(
     market_contract: &Contract,
     nft_contract: &Contract,
     token_id: &str,
-    price: u128,
-) -> anyhow::Result<()> {
+    price: NearToken,
+) -> Result<(), Box<dyn std::error::Error>> {
     let request_payload = json!({
         "nft_contract_id": nft_contract.id(),
         "token_id": token_id,
@@ -90,9 +90,9 @@ pub async fn place_nft_for_sale(
 
 pub async fn get_user_balance(
     user: &Account,
-) -> anyhow::Result<u128> {
-    let details: AccountDetails = user.view_account().await?;
-    Ok(details.balance.as_yoctonear())
+) -> NearToken {
+    let details: AccountDetails = user.view_account().await.expect("Account has to have some balance");
+    details.balance
 }
 
 pub async fn purchase_listed_nft(
@@ -100,8 +100,8 @@ pub async fn purchase_listed_nft(
     market_contract: &Contract,
     nft_contract: &Contract,
     token_id: &str,
-    offer_price: u128
-) -> anyhow::Result<()> {
+    offer_price: NearToken
+) -> Result<(), Box<dyn std::error::Error>> {
     let request_payload  = json!({
         "token_id": token_id,
         "nft_contract_id": nft_contract.id(),
@@ -110,7 +110,7 @@ pub async fn purchase_listed_nft(
     let _ = bidder.call(market_contract.id(), "offer")
         .args_json(request_payload)
         .max_gas()
-        .deposit(NearToken::from_yoctonear(offer_price))
+        .deposit(offer_price)
         .transact()
         .await;
 
@@ -122,7 +122,7 @@ pub async fn transfer_nft(
     receiver: &Account,
     nft_contract: &Contract,
     token_id: &str,
-) -> anyhow::Result<()> {
+) -> Result<(), Box<dyn std::error::Error>> {
     let request_payload  = json!({
         "token_id": token_id,
         "receiver_id": receiver.id(),
@@ -142,7 +142,7 @@ pub async fn transfer_nft(
 pub async fn get_nft_token_info(
     nft_contract: &Contract,
     token_id: &str,
-) -> anyhow::Result<serde_json::Value> {
+) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
     let token_info: serde_json::Value = nft_contract
         .call("nft_token")
         .args_json(json!({"token_id": token_id}))
@@ -153,11 +153,3 @@ pub async fn get_nft_token_info(
 
     Ok(token_info)
 }
-
-pub fn round_to_near_dp(
-    amount: u128,
-    sf: u128,
-) -> String {
-    let near_amount = amount as f64 / 1_000_000_000_000_000_000_000_000.0;  // yocto in 1 NEAR
-    return format!("{:.1$}", near_amount, sf as usize);
-} 
