@@ -4,7 +4,7 @@ use near_sdk::collections::{LazyOption, LookupMap, UnorderedMap, UnorderedSet};
 use near_sdk::json_types::{Base64VecU8, U128};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
-    near, env, AccountId, CryptoHash, PanicOnDefault, Promise, PromiseOrValue, NearSchema
+    near_bindgen, env, AccountId, CryptoHash, PanicOnDefault, Promise, PromiseOrValue, BorshStorageKey, NearSchema
 };
 
 pub use crate::metadata::*;
@@ -20,8 +20,9 @@ mod mint;
 mod nft_core; 
 mod royalty; 
 
-#[near(contract_state)]
-#[derive(PanicOnDefault)]
+#[near_bindgen]
+#[derive(BorshSerialize, BorshDeserialize, BorshStorageKey, PanicOnDefault)]
+#[borsh(crate = "near_sdk::borsh")]
 pub struct Contract {
     /*
         FILL THIS IN
