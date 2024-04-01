@@ -6,7 +6,7 @@ pub trait NonFungibleTokenCore {
     fn nft_approve(&mut self, token_id: TokenId, account_id: AccountId, msg: Option<String>);
 
     //check if the passed in account has access to approve the token ID
-	  fn nft_is_approved(
+    fn nft_is_approved(
         &self,
         token_id: TokenId,
         approved_account_id: AccountId,
@@ -78,7 +78,7 @@ impl NonFungibleTokenCore for Contract {
         self.tokens_by_id.insert(&token_id, &token);
 
         //refund any excess storage attached by the user. If the user didn't attach enough, panic. 
-        refund_deposit(storage_used.into());
+        refund_deposit(storage_used);
 
         //if some message was passed into the function, we initiate a cross contract call on the
         //account we're giving access to. 
@@ -103,10 +103,10 @@ impl NonFungibleTokenCore for Contract {
     ) -> bool {
         //get the token object from the token_id
         let token = self.tokens_by_id.get(&token_id).expect("No token");
-
+  
         //get the approval number for the passed in account ID
-		    let approval = token.approved_account_ids.get(&approved_account_id);
-
+        let approval = token.approved_account_ids.get(&approved_account_id);
+  
         //if there was some approval ID found for the account ID
         if let Some(approval) = approval {
             //if a specific approval_id was passed into the function
@@ -117,7 +117,7 @@ impl NonFungibleTokenCore for Contract {
             } else {
                 true
             }
-        //if there was no approval ID found for the account ID, we simply return false
+            //if there was no approval ID found for the account ID, we simply return false
         } else {
             false
         }

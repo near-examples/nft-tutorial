@@ -1,5 +1,5 @@
 use crate::*;
-use near_sdk::{ext_contract, Gas, PromiseResult};
+use near_sdk::{ext_contract, Gas, log, PromiseResult};
 
 const GAS_FOR_RESOLVE_TRANSFER: Gas = Gas::from_tgas(10);
 const GAS_FOR_NFT_ON_TRANSFER: Gas = Gas::from_tgas(25);
@@ -45,12 +45,12 @@ trait NonFungibleTokenReceiver {
 }
 
 #[ext_contract(ext_self)]
-/*
-    resolves the promise of the cross contract call to the receiver contract
-    this is stored on THIS contract and is meant to analyze what happened in the cross contract call when nft_on_transfer was called
-    as part of the nft_transfer_call method
-*/ 
 trait NonFungibleTokenResolver {
+    /*
+        resolves the promise of the cross contract call to the receiver contract
+        this is stored on THIS contract and is meant to analyze what happened in the cross contract call when nft_on_transfer was called
+        as part of the nft_transfer_call method
+    */
     fn nft_resolve_transfer(
         &mut self,
         //we introduce an authorized ID for logging the transfer event
@@ -169,7 +169,6 @@ impl NonFungibleTokenCore for Contract {
                 owner_id: token.owner_id,
                 metadata,
                 approved_account_ids: token.approved_account_ids,
-                royalty: token.royalty,
             })
         } else { //if there wasn't a token ID in the tokens_by_id collection, we return None
             None
@@ -227,6 +226,9 @@ impl NonFungibleTokenResolver for Contract {
             refund_approved_account_ids(owner_id, &approved_account_ids);
             return true;
         };
+
+        //if at the end, we haven't returned true, that means that we should return the token to it's original owner
+        log!("Return {} from @{} to @{}", token_id, receiver_id, owner_id);
 
         //we remove the token from the receiver
         self.internal_remove_token_from_owner(&receiver_id.clone(), &token_id);

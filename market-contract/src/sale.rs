@@ -83,7 +83,7 @@ impl Contract {
         &mut self,
         nft_contract_id: AccountId,
         token_id: String,
-        price: U128,
+        price: NearToken,
     ) {
         //assert that the user has attached exactly 1 yoctoNEAR (for security reasons)
         assert_one_yocto();
@@ -126,12 +126,11 @@ impl Contract {
         //get the buyer ID which is the person who called the function and make sure they're not the owner of the sale
         let buyer_id = env::predecessor_account_id();
         assert_ne!(sale.owner_id, buyer_id, "Cannot bid on your own sale.");
-        
-        //get the u128 price of the token (dot 0 converts from U128 to u128)
-        let price = sale.sale_conditions.0;
+
+        let price = sale.sale_conditions;
 
         //make sure the deposit is greater than the price
-        assert!(deposit.ge(&NearToken::from_yoctonear(price)), "Attached deposit must be greater than or equal to the current price: {:?}", price);
+        assert!(deposit.ge(&price), "Attached deposit must be greater than or equal to the current price: {:?}", price);
 
         //process the purchase (which will remove the sale, transfer and get the payout from the nft contract, and then distribute royalties) 
         self.process_purchase(
@@ -285,12 +284,12 @@ impl Contract {
     
         //we need to enforce that the user has enough storage for 1 EXTRA sale.
 
-        //get the storage for a sale. dot 0 converts from U128 to u128
+        //get the storage for a sale
         let storage_amount = self.storage_minimum_balance();
         //get the total storage paid by the owner
         let owner_paid_storage = self.storage_deposits.get(&owner_id).unwrap_or(ZERO_NEAR);
         //get the storage required which is simply the storage for the number of sales they have + 1 
-        let signer_storage_required = storage_amount.saturating_mul((self.get_supply_by_owner_id(owner_id.clone()).0 + 1).into());
+        let signer_storage_required = storage_amount.saturating_mul((self.get_supply_by_owner_id(owner_id.clone()) + 1).into());
         
         //make sure that the total paid is >= the required storage
         assert!(
@@ -369,6 +368,6 @@ trait ExtSelf {
     fn resolve_purchase(
         &mut self,
         buyer_id: AccountId,
-        price: U128,
+        price: NearToken,
     ) -> Promise;
 }

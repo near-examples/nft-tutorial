@@ -1,7 +1,5 @@
 use crate::*;
-
 pub type TokenId = String;
-
 //defines the payout type we'll be returning as a part of the royalty standards.
 #[derive(Serialize, Deserialize, NearSchema)]
 #[serde(crate = "near_sdk::serde")]
@@ -49,8 +47,6 @@ pub struct Token {
     pub approved_account_ids: HashMap<AccountId, u64>,
     //the next approval ID to give out. 
     pub next_approval_id: u64,
-    //keep track of the royalty percentages for the token in a hash map
-    pub royalty: HashMap<AccountId, u32>,
 }
 
 //The Json token is what will be returned from view calls. 
@@ -65,8 +61,6 @@ pub struct JsonToken {
     pub metadata: TokenMetadata,
     //list of approved account IDs that have access to transfer the token. This maps an account ID to an approval ID
     pub approved_account_ids: HashMap<AccountId, u64>,
-    //keep track of the royalty percentages for the token in a hash map
-    pub royalty: HashMap<AccountId, u32>,
 }
 
 pub trait NonFungibleTokenMetadata {

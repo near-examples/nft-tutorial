@@ -19,15 +19,15 @@ pub struct JsonSeries {
 #[near_bindgen]
 impl Contract {
     //Query for the total supply of NFTs on the contract
-    pub fn nft_total_supply(&self) -> U128 {
+    pub fn nft_total_supply(&self) -> u64 {
         //return the length of the tokens by id
-        U128(self.tokens_by_id.len() as u128)
+        self.tokens_by_id.len()
     }
 
     //Query for nft tokens on the contract regardless of the owner using pagination
-    pub fn nft_tokens(&self, from_index: Option<U128>, limit: Option<u64>) -> Vec<JsonToken> {
+    pub fn nft_tokens(&self, from_index: Option<u128>, limit: Option<u64>) -> Vec<JsonToken> {
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
-        let start = u128::from(from_index.unwrap_or(U128(0)));
+        let start = u128::from(from_index.unwrap_or(0));
 
         //iterate through each token using an iterator
         self.tokens_by_id
@@ -43,16 +43,16 @@ impl Contract {
     }
 
     //get the total supply of NFTs for a given owner
-    pub fn nft_supply_for_owner(&self, account_id: AccountId) -> U128 {
+    pub fn nft_supply_for_owner(&self, account_id: AccountId) -> u64 {
         //get the set of tokens for the passed in owner
         let tokens_for_owner_set = self.tokens_per_owner.get(&account_id);
 
-        //if there is some set of tokens, we'll return the length as a U128
+        //if there is some set of tokens, we'll return the length
         if let Some(tokens_for_owner_set) = tokens_for_owner_set {
-            U128(tokens_for_owner_set.len() as u128)
+            tokens_for_owner_set.len()
         } else {
             //if there isn't a set of tokens for the passed in account ID, we'll return 0
-            U128(0)
+            0
         }
     }
 
@@ -60,7 +60,7 @@ impl Contract {
     pub fn nft_tokens_for_owner(
         &self,
         account_id: AccountId,
-        from_index: Option<U128>,
+        from_index: Option<u128>,
         limit: Option<u64>,
     ) -> Vec<JsonToken> {
         //get the set of tokens for the passed in owner
@@ -74,7 +74,7 @@ impl Contract {
         };
 
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
-        let start = u128::from(from_index.unwrap_or(U128(0)));
+        let start = u128::from(from_index.unwrap_or(0));
 
         //iterate through the keys vector
         tokens
@@ -95,9 +95,9 @@ impl Contract {
     }
 
     // Paginate through all the series on the contract and return the a vector of JsonSeries
-    pub fn get_series(&self, from_index: Option<U128>, limit: Option<u64>) -> Vec<JsonSeries> {
+    pub fn get_series(&self, from_index: Option<u128>, limit: Option<u64>) -> Vec<JsonSeries> {
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
-        let start = u128::from(from_index.unwrap_or(U128(0)));
+        let start = u128::from(from_index.unwrap_or(0));
 
         //iterate through each series using an iterator
         self.series_by_id
@@ -131,15 +131,15 @@ impl Contract {
     }
 
     //get the total supply of NFTs on a current series
-    pub fn nft_supply_for_series(&self, id: u64) -> U128 {
+    pub fn nft_supply_for_series(&self, id: u64) -> u64 {
         //get the series
         let series = self.series_by_id.get(&id);
 
         //if there is some series, get the length of the tokens. Otherwise return -
         if let Some(series) = series {
-            U128(series.tokens.len() as u128)
+            series.tokens.len()
         } else {
-            U128(0)
+            0
         }
     }
 
@@ -147,7 +147,7 @@ impl Contract {
     pub fn nft_tokens_for_series(
         &self,
         id: u64,
-        from_index: Option<U128>,
+        from_index: Option<u128>,
         limit: Option<u64>,
     ) -> Vec<JsonToken> {
         // Get the series and its tokens
@@ -159,7 +159,7 @@ impl Contract {
         };
 
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
-        let start = u128::from(from_index.unwrap_or(U128(0)));
+        let start = u128::from(from_index.unwrap_or(0));
 
         //iterate through the tokens
         tokens

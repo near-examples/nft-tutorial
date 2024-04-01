@@ -1,5 +1,5 @@
 use crate::*;
-use near_sdk::{CryptoHash, NearToken};
+use near_sdk::{CryptoHash};
 use std::mem::size_of;
 
 //convert the royalty percentage and amount to pay into a payout
@@ -46,7 +46,7 @@ pub(crate) fn hash_account_id(account_id: &AccountId) -> CryptoHash {
 pub(crate) fn assert_one_yocto() {
     assert_eq!(
         env::attached_deposit(),
-        ONE_YOCTONEAR,
+        NearToken::from_yoctonear(1),
         "Requires attached deposit of exactly 1 yoctoNEAR",
     )
 }
@@ -54,7 +54,7 @@ pub(crate) fn assert_one_yocto() {
 //Assert that the user has attached at least 1 yoctoNEAR (for security reasons and to pay for storage)
 pub(crate) fn assert_at_least_one_yocto() {
     assert!(
-        env::attached_deposit().ge(&ONE_YOCTONEAR),
+        env::attached_deposit() >= NearToken::from_yoctonear(1),
         "Requires attached deposit of at least 1 yoctoNEAR",
     )
 }
@@ -96,7 +96,7 @@ impl Contract {
                 StorageKey::TokenPerOwnerInner {
                     //we get a new unique prefix for the collection
                     account_id_hash: hash_account_id(&account_id),
-                }
+                },
             )
         });
 
@@ -127,7 +127,7 @@ impl Contract {
         if tokens_set.is_empty() {
             self.tokens_per_owner.remove(account_id);
         } else {
-        //if the token set is not empty, we simply insert it back for the account ID. 
+            //if the token set is not empty, we simply insert it back for the account ID. 
             self.tokens_per_owner.insert(account_id, &tokens_set);
         }
     }

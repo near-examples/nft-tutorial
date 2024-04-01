@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use near_sdk::borsh::{BorshSerialize, BorshDeserialize};
 use near_sdk::collections::{LazyOption, LookupMap, UnorderedMap, UnorderedSet};
-use near_sdk::json_types::{Base64VecU8, U128};
+use near_sdk::json_types::Base64VecU8;
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
-  env, near_bindgen, AccountId, NearToken, CryptoHash, PanicOnDefault, Promise, PromiseOrValue, BorshStorageKey, NearSchema
+  near_bindgen, env, AccountId, NearToken, CryptoHash, PanicOnDefault, Promise, PromiseOrValue, BorshStorageKey, NearSchema
 };
 
 use crate::internal::*;
@@ -16,12 +16,12 @@ pub use crate::royalty::*;
 pub use crate::events::*;
 
 mod internal;
-mod approval; 
 mod enumeration; 
 mod metadata; 
 mod mint; 
 mod nft_core; 
-mod royalty; 
+mod approval; 
+mod royalty;
 mod events;
 
 /// This spec can be treated like a version of the standard.
@@ -33,7 +33,7 @@ pub const NFT_STANDARD_NAME: &str = "nep171";
 const ONE_YOCTONEAR: NearToken = NearToken::from_yoctonear(1);
 
 #[near_bindgen]
-#[derive(BorshDeserialize, BorshSerialize, BorshStorageKey, PanicOnDefault)]
+#[derive(BorshSerialize, BorshDeserialize, PanicOnDefault)]
 #[borsh(crate = "near_sdk::borsh")]
 pub struct Contract {
     //contract owner
@@ -115,6 +115,3 @@ impl Contract {
         this
     }
 }
-
-#[cfg(test)]
-mod tests;

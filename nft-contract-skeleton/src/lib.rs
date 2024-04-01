@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{LazyOption, LookupMap, UnorderedMap, UnorderedSet};
-use near_sdk::json_types::{Base64VecU8, U128};
+use near_sdk::json_types::Base64VecU8;
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
-    near_bindgen, env, AccountId, CryptoHash, PanicOnDefault, Promise, PromiseOrValue, BorshStorageKey, NearSchema
+    near_bindgen, env, NearToken, AccountId, CryptoHash, PanicOnDefault, Promise, PromiseOrValue, BorshStorageKey, NearSchema
 };
 
 pub use crate::metadata::*;
@@ -13,11 +13,11 @@ pub use crate::nft_core::*;
 pub use crate::approval::*;
 pub use crate::royalty::*;
 
-mod approval; 
 mod enumeration; 
 mod metadata; 
 mod mint; 
-mod nft_core; 
+mod nft_core;
+mod approval; 
 mod royalty; 
 
 #[near_bindgen]

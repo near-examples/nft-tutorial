@@ -1,5 +1,5 @@
 [package]
-name = "nft_contract"
+name = "nft_contract_skeleton"
 version = "0.1.0"
 authors = ["Near Inc <hello@nearprotocol.com>"]
 edition = "2021"
@@ -8,14 +8,8 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-near-sdk = { version = "5.0.0", features = ["legacy"] }
+near-sdk = { version = "5.1.0", features = ["legacy"] }
 serde_json = "1.0.113"
-
-[dev-dependencies]
-near-sdk = { version = "5.0.0", features = ["unit-testing"] }
-near-workspaces = { version = "0.10.0", features = ["unstable"] }
-tokio = { version = "1.12.0", features = ["full"] }
-serde_json = "1"
 
 [profile.release]
 codegen-units = 1

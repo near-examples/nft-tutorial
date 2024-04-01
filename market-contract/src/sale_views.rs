@@ -7,24 +7,24 @@ impl Contract {
     //returns the number of sales the marketplace has up (as a string)
     pub fn get_supply_sales(
         &self,
-    ) -> U64 {
-        //returns the sales object length wrapped as a U64
-        U64(self.sales.len())
+    ) -> u64 {
+        //returns the sales object length
+        self.sales.len()
     }
     
     //returns the number of sales for a given account (result is a string)
     pub fn get_supply_by_owner_id(
         &self,
         account_id: AccountId,
-    ) -> U64 {
+    ) -> u64 {
         //get the set of sales for the given owner Id
         let by_owner_id = self.by_owner_id.get(&account_id);
         
         //if there as some set, we return the length but if there wasn't a set, we return 0
         if let Some(by_owner_id) = by_owner_id {
-            U64(by_owner_id.len())
+            by_owner_id.len()
         } else {
-            U64(0)
+            0
         }
     }
 
@@ -32,7 +32,7 @@ impl Contract {
     pub fn get_sales_by_owner_id(
         &self,
         account_id: AccountId,
-        from_index: Option<U128>,
+        from_index: Option<u128>,
         limit: Option<u64>,
     ) -> Vec<Sale> {
         //get the set of token IDs for sale for the given account ID
@@ -48,7 +48,7 @@ impl Contract {
         let keys = sales.as_vector();
 
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
-        let start = u128::from(from_index.unwrap_or(U128(0)));
+        let start = u128::from(from_index.unwrap_or(0));
         
         //iterate through the keys vector
         keys.iter()
@@ -66,15 +66,15 @@ impl Contract {
     pub fn get_supply_by_nft_contract_id(
         &self,
         nft_contract_id: AccountId,
-    ) -> U64 {
+    ) -> u64 {
         //get the set of tokens for associated with the given nft contract
         let by_nft_contract_id = self.by_nft_contract_id.get(&nft_contract_id);
         
         //if there was some set, return it's length. Otherwise return 0
         if let Some(by_nft_contract_id) = by_nft_contract_id {
-            U64(by_nft_contract_id.len())
+            by_nft_contract_id.len()
         } else {
-            U64(0)
+            0
         }
     }
 
@@ -82,7 +82,7 @@ impl Contract {
     pub fn get_sales_by_nft_contract_id(
         &self,
         nft_contract_id: AccountId,
-        from_index: Option<U128>,
+        from_index: Option<u128>,
         limit: Option<u64>,
     ) -> Vec<Sale> {
         //get the set of token IDs for sale for the given contract ID
@@ -99,7 +99,7 @@ impl Contract {
         let keys = sales.as_vector();
 
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
-        let start = u128::from(from_index.unwrap_or(U128(0)));
+        let start = u128::from(from_index.unwrap_or(0));
         
         //iterate through the keys vector
         keys.iter()

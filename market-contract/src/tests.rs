@@ -5,7 +5,6 @@ use crate::Contract;
 use near_sdk::{
     collections::UnorderedSet,
     env,
-    json_types::{U128, U64},
     NearToken,
     test_utils::{accounts, VMContextBuilder},
     testing_env, AccountId,
@@ -119,10 +118,10 @@ fn test_remove_sale() {
     let token_id = String::from("0n3C0ntr4ctT0Rul3Th3m4ll");
     let sale = Sale {
         owner_id: accounts(0).clone(), //owner of the sale / token
-        approval_id: U64(1).0,         //approval ID for that token that was given to the market
+        approval_id: 1,         //approval ID for that token that was given to the market
         nft_contract_id: env::predecessor_account_id().to_string(), //NFT contract the token was minted on
         token_id: token_id.clone(),                                 //the actual token ID
-        sale_conditions: U128(100), //the sale conditions -- price in YOCTO NEAR
+        sale_conditions: NearToken::from_yoctonear(100), //the sale conditions -- price in YOCTO NEAR
     };
     let nft_contract_id = env::predecessor_account_id();
     let contract_and_token_id = format!("{}{}{}", nft_contract_id, ".", token_id);
@@ -167,10 +166,10 @@ fn test_update_price() {
 
     // add sale
     let token_id = String::from("0n3C0ntr4ctT0Rul3Th3m4ll");
-    let nft_bid_yocto = U128(100);
+    let nft_bid_yocto = NearToken::from_yoctonear(100);
     let sale = Sale {
         owner_id: accounts(0).clone(), //owner of the sale / token
-        approval_id: U64(1).0,         //approval ID for that token that was given to the market
+        approval_id: 1,         //approval ID for that token that was given to the market
         nft_contract_id: env::predecessor_account_id().to_string(), //NFT contract the token was minted on
         token_id: token_id.clone(),                                 //the actual token ID
         sale_conditions: nft_bid_yocto, //the sale conditions -- price in YOCTO NEAR
@@ -189,7 +188,7 @@ fn test_update_price() {
     assert_eq!(contract.sales.len(), 1, "Failed to insert sale to contract");
 
     // update price 
-    let new_price = U128(150);
+    let new_price = NearToken::from_yoctonear(150);
     testing_env!(context
         .storage_usage(env::storage_usage())
         .attached_deposit(ONE_YOCTONEAR)

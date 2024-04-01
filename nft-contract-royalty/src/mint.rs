@@ -68,13 +68,13 @@ impl Contract {
                 memo: None,
             }]),
         };
-
+    
         // Log the serialized json.
         env::log_str(&nft_mint_log.to_string());
-
+    
         //calculate the required storage which was the used - initial
         let required_storage_in_bytes = env::storage_usage() - initial_storage_usage;
-
+    
         //refund any excess storage if the user attached too much. Panic if they didn't attach enough to cover the required.
         refund_deposit(required_storage_in_bytes.into());
     }

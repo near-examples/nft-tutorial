@@ -1,7 +1,5 @@
 use crate::*;
-
 pub type TokenId = String;
-
 //defines the payout type we'll be returning as a part of the royalty standards.
 #[derive(Serialize, Deserialize, NearSchema)]
 #[serde(crate = "near_sdk::serde")]
