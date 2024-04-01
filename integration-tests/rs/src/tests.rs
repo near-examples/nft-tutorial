@@ -9,7 +9,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let worker = near_workspaces::sandbox().await?;
 
     // deploy contracts
-    let nft_wasm = near_workspaces::compile_project("../../nft-contract/.").await?;
+    let nft_wasm = near_workspaces::compile_project("../../nft-contract-royalty/.").await?;
     let nft_contract = worker.dev_deploy(&nft_wasm).await?;
 
     let market_wasm = near_workspaces::compile_project("../../market-contract/.").await?;
@@ -172,11 +172,13 @@ async fn test_sell_nft_listed_on_marketplace(
     buyer: &Account,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let token_id = "4";
-    let sale_price: NearToken = NearToken::from_millinear(300);
+    let approval_id = 0;
+    let sale_price: NearToken = NearToken::from_yoctonear(10000000000000000000000000);
+
     helpers::mint_nft(seller, nft_contract, token_id).await?;
-    helpers::pay_for_storage(seller, market_contract, NearToken::from_millinear(10)).await?;
+    helpers::pay_for_storage(seller, market_contract, NearToken::from_yoctonear(1000000000000000000000000)).await?;
     helpers::approve_nft(market_contract, seller, nft_contract, token_id).await?;
-    helpers::place_nft_for_sale(seller, market_contract, nft_contract, token_id, sale_price).await?;
+    helpers::place_nft_for_sale(seller, market_contract, nft_contract, token_id, approval_id, &sale_price).await?;
 
     let before_seller_balance: NearToken = helpers::get_user_balance(seller).await;
     let before_buyer_balance: NearToken = helpers::get_user_balance(buyer).await;
@@ -186,8 +188,9 @@ async fn test_sell_nft_listed_on_marketplace(
     let after_seller_balance: NearToken = helpers::get_user_balance(seller).await;
     let after_buyer_balance: NearToken = helpers::get_user_balance(buyer).await;
 
-    assert_eq!(after_seller_balance, before_seller_balance.saturating_add(sale_price), "seller did not receive the sale price");
-    assert_eq!(after_buyer_balance, before_buyer_balance.saturating_sub(sale_price), "buyer did not send the sale price");
+    let dp = 1;  // being exact requires keeping track of gas usage
+    assert_eq!(helpers::round_to_near_dp(after_seller_balance.as_yoctonear(), dp), helpers::round_to_near_dp(before_seller_balance.saturating_add(sale_price).as_yoctonear(), dp), "seller did not receive the sale price");
+    assert_eq!(helpers::round_to_near_dp(after_buyer_balance.as_yoctonear(), dp), helpers::round_to_near_dp(before_buyer_balance.saturating_sub(sale_price).as_yoctonear(), dp), "buyer did not send the sale price");
 
     println!("      Passed ✅ test_sell_nft_listed_on_marketplace");
     Ok(())
@@ -201,11 +204,13 @@ async fn test_transfer_nft_when_listed_on_marketplace(
     market_contract: &Contract,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let token_id = "5";
+    let approval_id = 0;
     let sale_price = NearToken::from_near(3);
+
     helpers::mint_nft(seller, nft_contract, token_id).await?;
     helpers::pay_for_storage(seller, market_contract, NearToken::from_millinear(10)).await?;
     helpers::approve_nft(market_contract, seller, nft_contract, token_id).await?;
-    helpers::place_nft_for_sale(seller, market_contract, nft_contract, token_id, sale_price).await?;
+    helpers::place_nft_for_sale(seller, market_contract, nft_contract, token_id, approval_id, &sale_price).await?;
 
     helpers::transfer_nft(seller, first_buyer, nft_contract, token_id).await?;
 
@@ -222,8 +227,9 @@ async fn test_transfer_nft_when_listed_on_marketplace(
     assert_eq!(owner_id, first_buyer.id().to_string(), "token owner is not first_buyer");
 
     // assert balances remain equal
-    assert_eq!(after_seller_balance, before_seller_balance, "seller balance changed");
-    assert_eq!(after_buyer_balance, before_buyer_balance, "buyer balance changed");
+    let dp = 1;  // being exact requires keeping track of gas usage
+    assert_eq!(helpers::round_to_near_dp(after_seller_balance.as_yoctonear(), dp), helpers::round_to_near_dp(before_seller_balance.as_yoctonear(), dp), "seller balance changed");
+    assert_eq!(helpers::round_to_near_dp(after_buyer_balance.as_yoctonear(), dp), helpers::round_to_near_dp(before_buyer_balance.as_yoctonear(), dp), "buyer balance changed");
 
     println!("      Passed ✅ test_transfer_nft_when_listed_on_marketplace");
 
@@ -237,10 +243,12 @@ async fn test_approval_revoke(
     market_contract: &Contract,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let token_id = "6";
+    let approval_id = 0;
     let sale_price = NearToken::from_near(3);
+
     helpers::mint_nft(first_user, nft_contract, token_id).await?;
     helpers::pay_for_storage(first_user, market_contract, NearToken::from_millinear(10)).await?;
-    helpers::place_nft_for_sale(first_user, market_contract, nft_contract, token_id, sale_price).await?;
+    helpers::place_nft_for_sale(first_user, market_contract, nft_contract, token_id, approval_id, &sale_price).await?;
 
     // nft_revoke market_contract call
     let revoke_payload = json!({
@@ -268,8 +276,9 @@ async fn test_approval_revoke(
     assert_eq!(owner_id, first_user.id().to_string(), "token owner is not first_user");
 
     // assert balances unchanged
-    assert_eq!(after_seller_balance, before_seller_balance, "seller balance changed");
-    assert_eq!(after_buyer_balance, before_buyer_balance, "buyer balance changed");
+    let dp = 1;  // being exact requires keeping track of gas usage
+    assert_eq!(helpers::round_to_near_dp(after_seller_balance.as_yoctonear(), dp), helpers::round_to_near_dp(before_seller_balance.as_yoctonear(), dp), "seller balance changed");
+    assert_eq!(helpers::round_to_near_dp(after_buyer_balance.as_yoctonear(), dp), helpers::round_to_near_dp(before_buyer_balance.as_yoctonear(), dp), "buyer balance changed");
 
     println!("      Passed ✅ test_approval_revoke");
     Ok(())
@@ -283,7 +292,8 @@ async fn test_reselling_and_royalties(
     market_contract: &Contract,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let token_id = "7";
-    let sale_price: NearToken = NearToken::from_near(3);  // 3 NEAR in yoctoNEAR
+    let approval_id = 0;
+    let sale_price: NearToken = NearToken::from_near(1);  // 1 NEAR in yoctoNEAR
 
     // mint with royalties
     let request_payload = json!({
@@ -306,7 +316,7 @@ async fn test_reselling_and_royalties(
 
     helpers::pay_for_storage(user, market_contract, NearToken::from_millinear(10)).await?;
     helpers::approve_nft(market_contract, user, nft_contract, token_id).await?;
-    helpers::place_nft_for_sale(user, market_contract, nft_contract, token_id, sale_price).await?;
+    helpers::place_nft_for_sale(user, market_contract, nft_contract, token_id, approval_id, &sale_price).await?;
 
     // first_buyer purchases NFT
     let mut before_seller_balance: NearToken = helpers::get_user_balance(user).await;
@@ -321,13 +331,15 @@ async fn test_reselling_and_royalties(
     assert_eq!(owner_id, first_buyer.id().to_string(), "token owner is not first_buyer");
 
     // assert balances changed
-    assert_eq!(after_seller_balance, before_seller_balance.saturating_add(sale_price), "seller balance unchanged");
-    assert_eq!(after_buyer_balance, before_buyer_balance.saturating_sub(sale_price), "buyer balance unchanged");
+    let dp = 1;  // being exact requires keeping track of gas usage
+    assert_eq!(helpers::round_to_near_dp(after_seller_balance.as_yoctonear(), dp), helpers::round_to_near_dp(before_seller_balance.saturating_add(sale_price).as_yoctonear(), dp), "seller balance unchanged");
+    assert_eq!(helpers::round_to_near_dp(after_buyer_balance.as_yoctonear(), dp), helpers::round_to_near_dp(before_buyer_balance.saturating_sub(sale_price).as_yoctonear(), dp), "buyer balance unchanged");
 
     // first buyer lists nft for sale
+    let approval_id = 1;
     helpers::pay_for_storage(first_buyer, market_contract, NearToken::from_millinear(10)).await?;
     helpers::approve_nft(market_contract, first_buyer, nft_contract, token_id).await?;
-    helpers::place_nft_for_sale(first_buyer, market_contract, nft_contract, token_id, sale_price).await?;
+    helpers::place_nft_for_sale(first_buyer, market_contract, nft_contract, token_id, approval_id, &sale_price).await?;
 
     // second_buyer purchases NFT
     let resale_price = sale_price.saturating_mul(5);  // 15 NEAR
@@ -346,9 +358,9 @@ async fn test_reselling_and_royalties(
 
     // assert balances changed
     let royalty_fee = resale_price.saturating_div(5);
-    assert_eq!(after_seller_balance, before_seller_balance.saturating_add(resale_price).saturating_sub(royalty_fee), "seller balance unchanged");
-    assert_eq!(after_buyer_balance, before_buyer_balance.saturating_sub(resale_price), "buyer balance unchanged");
-    assert_eq!(after_user_balance, before_user_balance.saturating_add(royalty_fee), "user balance unchanged");
+    assert_eq!(helpers::round_to_near_dp(after_seller_balance.as_yoctonear(), dp), helpers::round_to_near_dp(before_seller_balance.saturating_add(resale_price).saturating_sub(royalty_fee).as_yoctonear(), dp), "seller balance unchanged");
+    assert_eq!(helpers::round_to_near_dp(after_buyer_balance.as_yoctonear(), dp), helpers::round_to_near_dp(before_buyer_balance.saturating_sub(resale_price).as_yoctonear(), dp), "buyer balance unchanged");
+    assert_eq!(helpers::round_to_near_dp(after_user_balance.as_yoctonear(), dp), helpers::round_to_near_dp(before_user_balance.saturating_add(royalty_fee).as_yoctonear(), dp), "user balance unchanged");
 
     println!("      Passed ✅ test_reselling_and_royalties");
     Ok(())

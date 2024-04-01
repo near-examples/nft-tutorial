@@ -1,7 +1,7 @@
 use serde_json::json;
-use near_workspaces::{types::{NearToken, AccountDetails}, Account, Contract};
+use near_workspaces::{types::{NearToken, AccountDetails}, Account, Contract, result::ExecutionFinalResult};
 
-pub const DEFAULT_DEPOSIT: u128 = 6760000000000000000000 as u128;
+pub const DEFAULT_DEPOSIT: u128 = 10000000000000000000000 as u128;
 pub const ONE_YOCTO_NEAR: NearToken = NearToken::from_yoctonear(1);
 
 pub async fn mint_nft(
@@ -70,13 +70,14 @@ pub async fn place_nft_for_sale(
     market_contract: &Contract,
     nft_contract: &Contract,
     token_id: &str,
-    price: NearToken,
+    approval_id: u128,
+    price: &NearToken,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let request_payload = json!({
         "nft_contract_id": nft_contract.id(),
         "token_id": token_id,
-        "approval_id": 0,
-        "msg": format!(r#"{{ "sale_conditions" : "{}" }}"#, price.to_string()),
+        "approval_id": approval_id,
+        "msg": format!(r#"{{ "sale_conditions" : "{}" }}"#, NearToken::as_yoctonear(price)),
     });
     let _ = user.call(market_contract.id(), "list_nft_for_sale")
         .args_json(request_payload)
@@ -152,4 +153,12 @@ pub async fn get_nft_token_info(
         .unwrap();
 
     Ok(token_info)
+}
+
+pub fn round_to_near_dp(
+    amount: u128,
+    sf: u128,
+) -> String {
+    let near_amount = amount as f64 / 1_000_000_000_000_000_000_000_000.0;  // yocto in 1 NEAR
+    return format!("{:.1$}", near_amount, sf as usize);
 }

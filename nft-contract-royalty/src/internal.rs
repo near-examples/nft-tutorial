@@ -4,7 +4,7 @@ use std::mem::size_of;
 
 //convert the royalty percentage and amount to pay into a payout
 pub(crate) fn royalty_to_payout(royalty_percentage: u128, amount_to_pay: NearToken) -> NearToken {
-    amount_to_pay.saturating_mul(royalty_percentage)
+    amount_to_pay.saturating_mul(royalty_percentage).saturating_div(10000)
 }
 
 //calculate how many bytes the account ID is taking up
@@ -68,8 +68,8 @@ pub(crate) fn refund_deposit(storage_used: u128) {
 
     //make sure that the attached deposit is greater than or equal to the required cost
     assert!(
-        required_cost <= attached_deposit,
-        "Must attach {} yoctoNEAR to cover storage",
+        required_cost.le(&attached_deposit),
+        "Must attach {} to cover storage",
         required_cost,
     );
 

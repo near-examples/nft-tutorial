@@ -130,7 +130,7 @@ impl Contract {
         let price = sale.sale_conditions;
 
         //make sure the deposit is greater than the price
-        assert!(deposit.ge(&price), "Attached deposit must be greater than or equal to the current price: {:?}", price);
+        assert!(deposit.ge(&price), "Attached deposit must be greater than or equal to the current price: {:?}. Your deposit: {:?}", price, deposit);
 
         //process the purchase (which will remove the sale, transfer and get the payout from the nft contract, and then distribute royalties) 
         self.process_purchase(
@@ -204,6 +204,7 @@ impl Contract {
                 .ok()
                 //returns None if the none. Otherwise executes the following logic
                 .and_then(|payout_object| {
+                    env::log_str(&format!("payout_object: {:?}", payout_object).to_string());
                     //we'll check if length of the payout object is > 10 or it's empty. In either case, we return None
                     if payout_object.payout.len() > 10 || payout_object.payout.is_empty() {
                         env::log_str("Cannot have more than 10 royalties");
