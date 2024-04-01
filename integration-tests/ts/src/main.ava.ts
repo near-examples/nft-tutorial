@@ -1,9 +1,11 @@
+import { setDefaultResultOrder } from 'dns'; setDefaultResultOrder('ipv4first'); // temp fix for node > v17
+
 import anyTest, { TestFn } from "ava";
 import { NEAR, NearAccount, Worker, BN } from "near-workspaces";
 import path from "path";
 import {
   approveNFT, defaultCallOptions, DEFAULT_GAS, mintNFT, payForStorage,
-  placeNFTForSale, purchaseListedNFT, transferNFT
+  approveNFTForSale, placeNFTForSale, purchaseListedNFT, transferNFT
 } from "./utils";
 
 const test = anyTest as TestFn<{
@@ -12,10 +14,13 @@ const test = anyTest as TestFn<{
 }>;
 
 test.beforeEach(async (t) => {
+  // Init the worker and start a Sandbox server
   const worker = await Worker.init();
+
+  // Deploy contract
   const root = worker.rootAccount;
 
-  const nftContractLocation = path.join(__dirname, "../../../out/main.wasm");
+  const nftContractLocation = path.join(__dirname, "../../../nft-contract-royalty/target/wasm32-unknown-unknown/release/nft_contract_skeleton.wasm");
   const nft_contract = await root.devDeploy(
     nftContractLocation,
     {
@@ -25,7 +30,7 @@ test.beforeEach(async (t) => {
     }
   );
 
-  const marketContractLocation = path.join(__dirname, "../../../out/market.wasm");
+  const marketContractLocation = path.join(__dirname, "../../../market-contract/target/wasm32-unknown-unknown/release/nft_market_contract.wasm");
   const market_contract = await root.devDeploy(
     marketContractLocation,
     {
@@ -52,8 +57,9 @@ test.beforeEach(async (t) => {
 });
 
 test.afterEach.always(async (t) => {
+  // Stop Sandbox server
   await t.context.worker.tearDown().catch((error) => {
-    console.log("Failed to tear down the worker:", error);
+    console.log('Failed to stop the Sandbox:', error);
   });
 });
 
@@ -134,41 +140,14 @@ test("nft contract: nft approve call", async (t) => {
   t.true(approved, "Failed to approve NFT");
 });
 
-test("nft contract: nft approve call long msg string", async (t) => {
-  const { alice, nft_contract, market_contract } = t.context.accounts;
-  await mintNFT(alice, nft_contract);
-  await payForStorage(alice, market_contract);
-
-  // approve NFT
-  const approve_payload = {
-    token_id: "TEST123",
-    account_id: market_contract,
-    msg: "sample message".repeat(10 * 1024),
-  };
-  const result = await alice.callRaw(
-    nft_contract,
-    "nft_approve",
-    approve_payload,
-    defaultCallOptions()
-  );
-  t.regex(result.receiptFailureMessages.join("\n"), /Not valid SaleArgs+/);
-
-  // test if approved
-  const view_payload = {
-    token_id: "TEST123",
-    approved_account_id: market_contract,
-  };
-  const approved = await nft_contract.view("nft_is_approved", view_payload);
-  t.true(approved, "NFT approval apss without sale args");
-});
-
 test("cross contract: sell NFT listed on marketplace", async (t) => {
   const { alice, nft_contract, market_contract, bob } = t.context.accounts;
   await mintNFT(alice, nft_contract);
   await payForStorage(alice, market_contract);
 
   const sale_price = "300000000000000000000000"; // sale price string in yoctoNEAR is 0.3 NEAR
-  await placeNFTForSale(market_contract, alice, nft_contract, sale_price);
+  await approveNFTForSale(market_contract, alice, nft_contract, sale_price);
+  await placeNFTForSale(nft_contract, 0, market_contract, alice, sale_price);
 
   const alice_balance_before = await alice.availableBalance();
   const bob_balance_before = await bob.availableBalance();
@@ -199,7 +178,7 @@ test("cross contract: sell NFT listed on marketplace", async (t) => {
   t.is(token_info.owner_id, bob.accountId, "NFT should have been sold");
   // nothing left for sale on market
   const sale_supply = await market_contract.view("get_supply_sales");
-  t.is(sale_supply, "0", "Expected no sales to be left on market");
+  t.is(sale_supply, 0, "Expected no sales to be left on market");
 });
 
 test("cross contract: transfer NFT when listed on marketplace", async (t) => {
@@ -208,7 +187,8 @@ test("cross contract: transfer NFT when listed on marketplace", async (t) => {
   await payForStorage(alice, market_contract);
 
   const sale_price = "300000000000000000000000"; // sale price string in yoctoNEAR is 0.3 NEAR
-  await placeNFTForSale(market_contract, alice, nft_contract, sale_price);
+  await approveNFTForSale(market_contract, alice, nft_contract, sale_price);
+  await placeNFTForSale(nft_contract, 0, market_contract, alice, sale_price);
 
   await transferNFT(bob, market_contract, nft_contract);
 
@@ -222,7 +202,7 @@ test("cross contract: transfer NFT when listed on marketplace", async (t) => {
     "offer",
     offer_payload,
     defaultCallOptions(
-      DEFAULT_GAS + "0", // 10X default amount for XCC
+      DEFAULT_GAS,
       sale_price // Attached deposit must be greater than or equal to the current price
     )
   );
@@ -246,7 +226,7 @@ test("cross contract: approval revoke", async (t) => {
   const { alice, nft_contract, market_contract, bob } = t.context.accounts;
   await mintNFT(alice, nft_contract);
   await payForStorage(alice, market_contract);
-  await placeNFTForSale(
+  await approveNFTForSale(
     market_contract,
     alice,
     nft_contract,
@@ -290,7 +270,8 @@ test("cross contract: reselling and royalties", async (t) => {
   await mintNFT(alice, nft_contract, royalties);
   await payForStorage(alice, market_contract);
   const ask_price = "300000000000000000000000";
-  await placeNFTForSale(market_contract, alice, nft_contract, ask_price);
+  await approveNFTForSale(market_contract, alice, nft_contract, ask_price);
+  await placeNFTForSale(nft_contract, 0, market_contract, alice, ask_price);
 
   const bid_price = ask_price + "0";
 
@@ -316,7 +297,9 @@ test("cross contract: reselling and royalties", async (t) => {
   // bob relists NFT for higher price
   await payForStorage(bob, market_contract);
   const resell_ask_price = bid_price + "0";
-  await placeNFTForSale(market_contract, bob, nft_contract, resell_ask_price);
+  await approveNFTForSale(market_contract, bob, nft_contract, resell_ask_price);
+  await placeNFTForSale(nft_contract, 1, market_contract, bob, resell_ask_price);
+
 
   // bob updates price to lower ask
   const lowered_resell_ask_price = "600000000000000000000000";

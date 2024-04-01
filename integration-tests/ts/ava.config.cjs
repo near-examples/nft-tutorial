@@ -1,9 +1,9 @@
-require("util").inspect.defaultOptions.depth = 5; // Increase AVA's printing depth
+require('util').inspect.defaultOptions.depth = 5; // Increase AVA's printing depth
 
 module.exports = {
-  timeout: "300000",
+  timeout: '300000',
   files: ["./src/main.ava.ts"],
   failWithoutAssertions: false,
   extensions: ["ts"],
-  require: ["ts-node/register"],
+  require: ['ts-node/register', 'near-workspaces'],
 };

@@ -1,6 +1,6 @@
 import { BN, NearAccount } from "near-workspaces";
 
-export const DEFAULT_GAS: string = "30000000000000";
+export const DEFAULT_GAS: string = "300000000000000";
 export const DEFAULT_DEPOSIT: string = "9050000000000000000000";
 
 
@@ -18,11 +18,11 @@ export async function purchaseListedNFT(
     market_contract,
     "offer",
     offer_payload,
-    defaultCallOptions(DEFAULT_GAS + "0", bid_price)
+    defaultCallOptions(DEFAULT_GAS, bid_price)
   );
 }
 
-export async function placeNFTForSale(
+export async function approveNFTForSale(
   market_contract: NearAccount,
   owner: NearAccount,
   nft_contract: NearAccount,
@@ -36,13 +36,29 @@ export async function placeNFTForSale(
   );
 }
 
+export async function placeNFTForSale(
+  nft_contract_id: NearAccount,
+  approval_id: number,
+  market_contract: NearAccount,
+  owner: NearAccount,
+  price: string // sale price string in yoctoNEAR
+) {
+  const payload = {
+    nft_contract_id,
+    token_id: "TEST123",
+    approval_id,
+    msg: '{"sale_conditions": ' + `"${price}"` + " }" // msg string trigger XCC
+  };
+  await owner.call(market_contract, "list_nft_for_sale", payload, defaultCallOptions());
+}
+
 export function defaultCallOptions(
   gas: string = DEFAULT_GAS,
   deposit: string = DEFAULT_DEPOSIT
 ) {
   return {
-    gas: new BN(gas),
-    attachedDeposit: new BN(deposit),
+    gas: gas,
+    attachedDeposit: deposit,
   };
 }
 export async function approveNFT(

@@ -204,7 +204,6 @@ impl Contract {
                 .ok()
                 //returns None if the none. Otherwise executes the following logic
                 .and_then(|payout_object| {
-                    env::log_str(&format!("payout_object: {:?}", payout_object).to_string());
                     //we'll check if length of the payout object is > 10 or it's empty. In either case, we return None
                     if payout_object.payout.len() > 10 || payout_object.payout.is_empty() {
                         env::log_str("Cannot have more than 10 royalties");
