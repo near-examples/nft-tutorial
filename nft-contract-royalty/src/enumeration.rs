@@ -43,7 +43,6 @@ impl Contract {
     }
 
     //Query for all the tokens for an owner
-    //Query for all the tokens for an owner
     pub fn nft_tokens_for_owner(
         &self,
         account_id: AccountId,

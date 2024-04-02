@@ -94,7 +94,6 @@ impl Contract {
     }
 
     //transfers the NFT to the receiver_id (internal method and can't be called directly via CLI).
-    //transfers the NFT to the receiver_id (internal method and can't be called directly via CLI).
     pub(crate) fn internal_transfer(
         &mut self,
         sender_id: &AccountId,
