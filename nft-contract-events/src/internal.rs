@@ -100,6 +100,7 @@ impl Contract {
         sender_id: &AccountId,
         receiver_id: &AccountId,
         token_id: &TokenId,
+        memo: Option<String>,
     ) -> Token {
         //get the token object by passing in the token_id
         let token = self.tokens_by_id.get(token_id).expect("No token");
@@ -121,6 +122,38 @@ impl Contract {
         };
         //insert that new token into the tokens_by_id, replacing the old entry 
         self.tokens_by_id.insert(token_id, &new_token);
+
+        //if there was some memo attached, we log it. 
+        if let Some(memo) = memo.as_ref() {
+            env::log_str(&format!("Memo: {}", memo).to_string());
+        }
+
+        // Default the authorized ID to be None for the logs. // We will return here in the future when we study the approval functionality
+        let mut authorized_id = None;
+
+        // Construct the transfer log as per the events standard.
+        let nft_transfer_log: EventLog = EventLog {
+            // Standard name ("nep171").
+            standard: NFT_STANDARD_NAME.to_string(),
+            // Version of the standard ("nft-1.0.0").
+            version: NFT_METADATA_SPEC.to_string(),
+            // The data related with the event stored in a vector.
+            event: EventLogVariant::NftTransfer(vec![NftTransferLog {
+                // The optional authorized account ID to transfer the token on behalf of the old owner.
+                authorized_id,
+                // The old owner's account ID.
+                old_owner_id: token.owner_id.to_string(),
+                // The account ID of the new owner of the token.
+                new_owner_id: receiver_id.to_string(),
+                // A vector containing the token IDs as strings.
+                token_ids: vec![token_id.to_string()],
+                // An optional memo to include.
+                memo,
+            }]),
+        };
+
+        // Log the serialized json.
+        env::log_str(&nft_transfer_log.to_string());
         
         //return the previous token object that was transferred.
         token

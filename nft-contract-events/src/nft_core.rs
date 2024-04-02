@@ -49,9 +49,13 @@ trait NonFungibleTokenResolver {
     */
     fn nft_resolve_transfer(
       &mut self,
+      //we introduce an authorized ID for logging the transfer event
+      authorized_id: Option<String>,
       owner_id: AccountId,
       receiver_id: AccountId,
       token_id: TokenId,
+      //we introduce a memo for logging the transfer event
+      memo: Option<String>,
   ) -> bool;
 }
 
@@ -75,6 +79,7 @@ impl NonFungibleTokenCore for Contract {
             &sender_id,
             &receiver_id,
             &token_id,
+            memo,
         );
     }
 
@@ -98,7 +103,11 @@ impl NonFungibleTokenCore for Contract {
             &sender_id,
             &receiver_id,
             &token_id,
+            memo.clone(),
         );
+
+        //default the authorized_id to none
+        let mut authorized_id = None; 
 
         // Initiating receiver's call and the callback
         // Defaulting GAS weight to 1, no attached deposit, and static GAS equal to the GAS for nft on transfer.
@@ -116,9 +125,11 @@ impl NonFungibleTokenCore for Contract {
             Self::ext(env::current_account_id())
                 .with_static_gas(GAS_FOR_RESOLVE_TRANSFER)
                 .nft_resolve_transfer(
+                    authorized_id, // we introduce an authorized ID so that we can log the transfer
                     previous_token.owner_id,
                     receiver_id,
                     token_id,
+                    memo, // we introduce a memo for logging in the events standard
                 )
         ).into()
     }
@@ -148,9 +159,13 @@ impl NonFungibleTokenResolver for Contract {
     #[private]
     fn nft_resolve_transfer(
         &mut self,
+        //we introduce an authorized ID for logging the transfer event
+        authorized_id: Option<String>,
         owner_id: AccountId,
         receiver_id: AccountId,
         token_id: TokenId,
+        //we introduce a memo for logging the transfer event
+        memo: Option<String>,
     ) -> bool {
         // Whether receiver wants to return token back to the sender, based on `nft_on_transfer`
         // call result.
@@ -192,6 +207,34 @@ impl NonFungibleTokenResolver for Contract {
         token.owner_id = owner_id.clone();
         //we inset the token back into the tokens_by_id collection
         self.tokens_by_id.insert(&token_id, &token);
+
+        /*
+            We need to log that the NFT was reverted back to the original owner.
+            The old_owner_id will be the receiver and the new_owner_id will be the
+            original owner of the token since we're reverting the transfer.
+        */
+        let nft_transfer_log: EventLog = EventLog {
+            // Standard name ("nep171").
+            standard: NFT_STANDARD_NAME.to_string(),
+            // Version of the standard ("nft-1.0.0").
+            version: NFT_METADATA_SPEC.to_string(),
+            // The data related with the event stored in a vector.
+            event: EventLogVariant::NftTransfer(vec![NftTransferLog {
+                // The optional authorized account ID to transfer the token on behalf of the old owner.
+                authorized_id,
+                // The old owner's account ID.
+                old_owner_id: receiver_id.to_string(),
+                // The account ID of the new owner of the token.
+                new_owner_id: owner_id.to_string(),
+                // A vector containing the token IDs as strings.
+                token_ids: vec![token_id.to_string()],
+                // An optional memo to include.
+                memo,
+            }]),
+        };
+
+        //we perform the actual logging
+        env::log_str(&nft_transfer_log.to_string());
 
         //return false
         false
