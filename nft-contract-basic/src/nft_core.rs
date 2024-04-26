@@ -75,6 +75,7 @@ impl NonFungibleTokenCore for Contract {
             &sender_id,
             &receiver_id,
             &token_id,
+            memo
         );
     }
 
@@ -98,6 +99,7 @@ impl NonFungibleTokenCore for Contract {
             &sender_id,
             &receiver_id,
             &token_id,
+            memo.clone(),
         );
 
         // Initiating receiver's call and the callback

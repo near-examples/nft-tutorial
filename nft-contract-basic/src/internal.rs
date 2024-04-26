@@ -99,6 +99,7 @@ impl Contract {
         sender_id: &AccountId,
         receiver_id: &AccountId,
         token_id: &TokenId,
+        memo: Option<String>,
     ) -> Token {
         //get the token object by passing in the token_id
         let token = self.tokens_by_id.get(token_id).expect("No token");
@@ -121,6 +122,11 @@ impl Contract {
         //insert that new token into the tokens_by_id, replacing the old entry 
         self.tokens_by_id.insert(token_id, &new_token);
         
+        //if there was some memo attached, we log it. 
+        if let Some(memo) = memo.as_ref() {
+            env::log_str(&format!("Memo: {}", memo).to_string());
+        }
+
         //return the previous token object that was transferred.
         token
     }
