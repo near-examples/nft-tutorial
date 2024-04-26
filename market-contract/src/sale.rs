@@ -27,13 +27,6 @@ pub struct JsonToken {
     pub owner_id: AccountId,
 }
 
-//struct for keeping track of the sale conditions for a Sale
-#[derive(Serialize, Deserialize)]
-#[serde(crate = "near_sdk::serde")]
-pub struct SaleArgs {
-    pub sale_conditions: SalePriceInYoctoNear,
-}
-
 #[near_bindgen]
 impl Contract {
     // lists a nft for sale on the market
@@ -43,9 +36,25 @@ impl Contract {
       nft_contract_id: AccountId,
       token_id: TokenId,
       approval_id: u64,
-      msg: String,
+      sale_conditions: SalePriceInYoctoNear,
     ) {
         let owner_id = env::predecessor_account_id();
+
+        //we need to enforce that the user has enough storage for 1 EXTRA sale.
+
+        //get the storage for a sale
+        let storage_amount = self.storage_minimum_balance();
+        //get the total storage paid by the owner
+        let owner_paid_storage = self.storage_deposits.get(&owner_id).unwrap_or(ZERO_NEAR);
+        //get the storage required which is simply the storage for the number of sales they have + 1 
+        let signer_storage_required = storage_amount.saturating_mul((self.get_supply_by_owner_id(owner_id.clone()) + 1).into());
+        
+        //make sure that the total paid is >= the required storage
+        assert!(
+            owner_paid_storage.ge(&signer_storage_required),
+            "Insufficient storage paid: {}, for {} sales at {} rate of per sale",
+            owner_paid_storage, signer_storage_required.saturating_div(storage_per_sale().as_yoctonear()), storage_per_sale()
+        );
 
         let nft_token_promise = Promise::new(nft_contract_id.clone()).function_call(
           "nft_token".to_owned(),
@@ -61,7 +70,7 @@ impl Contract {
         );
         nft_token_promise
           .and(nft_is_approved_promise)
-          .then(Self::ext(env::current_account_id()).process_listing(owner_id.clone(), nft_contract_id, token_id, approval_id, msg));
+          .then(Self::ext(env::current_account_id()).process_listing(owner_id.clone(), nft_contract_id, token_id, approval_id, sale_conditions));
     }
 
     //removes a sale from the market. 
@@ -259,7 +268,7 @@ impl Contract {
         nft_contract_id: AccountId,
         token_id: TokenId,
         approval_id: u64,
-        msg: String,
+        sale_conditions: SalePriceInYoctoNear,
         #[callback_result] nft_token_result: Result<JsonToken, PromiseError>,
         #[callback_result] nft_is_approved_result: Result<bool, PromiseError>,
     ) {
@@ -282,28 +291,6 @@ impl Contract {
             log!("nft_is_approved call failed");
         } 
     
-        //we need to enforce that the user has enough storage for 1 EXTRA sale.
-
-        //get the storage for a sale
-        let storage_amount = self.storage_minimum_balance();
-        //get the total storage paid by the owner
-        let owner_paid_storage = self.storage_deposits.get(&owner_id).unwrap_or(ZERO_NEAR);
-        //get the storage required which is simply the storage for the number of sales they have + 1 
-        let signer_storage_required = storage_amount.saturating_mul((self.get_supply_by_owner_id(owner_id.clone()) + 1).into());
-        
-        //make sure that the total paid is >= the required storage
-        assert!(
-            owner_paid_storage.ge(&signer_storage_required),
-            "Insufficient storage paid: {}, for {} sales at {} rate of per sale",
-            owner_paid_storage, signer_storage_required.saturating_div(storage_per_sale().as_yoctonear()), storage_per_sale()
-        );
-
-        //if all these checks pass we can create the sale conditions object.
-        let SaleArgs { sale_conditions } =
-            //the sale conditions come from the msg field. The market assumes that the user passed
-            //in a proper msg. If they didn't, it panics. 
-            near_sdk::serde_json::from_str(&msg).expect("Not valid SaleArgs");
-
         //create the unique sale ID which is the contract + DELIMITER + token ID
         let contract_and_token_id = format!("{}{}{}", nft_contract_id, DELIMETER, token_id);
         

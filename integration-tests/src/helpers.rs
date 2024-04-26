@@ -1,5 +1,5 @@
 use serde_json::json;
-use near_workspaces::{types::{NearToken, AccountDetails}, Account, Contract, result::ExecutionFinalResult};
+use near_workspaces::{types::{NearToken, AccountDetails}, Account, Contract};
 
 pub const DEFAULT_DEPOSIT: u128 = 10000000000000000000000 as u128;
 pub const ONE_YOCTO_NEAR: NearToken = NearToken::from_yoctonear(1);
@@ -77,7 +77,7 @@ pub async fn place_nft_for_sale(
         "nft_contract_id": nft_contract.id(),
         "token_id": token_id,
         "approval_id": approval_id,
-        "msg": format!(r#"{{ "sale_conditions" : "{}" }}"#, NearToken::as_yoctonear(price)),
+        "sale_conditions": NearToken::as_yoctonear(price).to_string(),
     });
     let _ = user.call(market_contract.id(), "list_nft_for_sale")
         .args_json(request_payload)

@@ -9,10 +9,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let worker = near_workspaces::sandbox().await?;
 
     // deploy contracts
-    let nft_wasm = near_workspaces::compile_project("../../nft-contract-royalty/.").await?;
+    let nft_wasm = near_workspaces::compile_project("../nft-contract-royalty/.").await?;
     let nft_contract = worker.dev_deploy(&nft_wasm).await?;
 
-    let market_wasm = near_workspaces::compile_project("../../market-contract/.").await?;
+    let market_wasm = near_workspaces::compile_project("../market-contract/.").await?;
     let market_contract = worker.dev_deploy(&market_wasm).await?;
 
     // create accounts

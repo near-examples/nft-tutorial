@@ -15,38 +15,19 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v2
-      - name: Install Node
-        uses: actions/setup-node@v2
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           target: wasm32-unknown-unknown
-      - name: Build smart contract
-        run: npm run build
+      - name: Run integration test
+        run: cd integration-tests && cargo run --example integration-tests
       - name: Run unit tests
-        run: npm run test:unit
-  integration-tests:
-    name: Integration tests
-    strategy:
-      matrix:
-        platform: [ubuntu-latest]  # , windows-latest, macos-latest]
-    runs-on: ${{ matrix.platform }}
-    env:
-      RUST_BACKTRACE: 1
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v2
-      - name: Install Node
-        uses: actions/setup-node@v2
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: wasm32-unknown-unknown
-      - name: Build smart contract
-        run: npm run build
-      - name: Run Rust integration tests
-        run: npm run test:integration:rs
-      - name: Run TS integration tests
-        run: npm run test:integration:ts
+        run: cd market-contract && cargo test
+        run: cd ../nft-contract && cargo test
+        run: cd ../nft-contract-approval && cargo test
+        run: cd ../nft-contract-basic && cargo test
+        run: cd ../nft-contract-events && cargo test
+        run: cd ../nft-contract-royalty && cargo test
+        run: cd ../nft-contract-skeleton && cargo test
+        run: cd ../nft-series && cargo test
