@@ -7,24 +7,24 @@ impl Contract {
     //returns the number of sales the marketplace has up (as a string)
     pub fn get_supply_sales(
         &self,
-    ) -> u64 {
+    ) -> U64 {
         //returns the sales object length
-        self.sales.len()
+        U64(self.sales.len())
     }
     
     //returns the number of sales for a given account (result is a string)
     pub fn get_supply_by_owner_id(
         &self,
         account_id: AccountId,
-    ) -> u64 {
+    ) -> U64 {
         //get the set of sales for the given owner Id
         let by_owner_id = self.by_owner_id.get(&account_id);
         
         //if there as some set, we return the length but if there wasn't a set, we return 0
         if let Some(by_owner_id) = by_owner_id {
-            by_owner_id.len()
+            U64(by_owner_id.len())
         } else {
-            0
+            U64(0)
         }
     }
 
@@ -66,15 +66,15 @@ impl Contract {
     pub fn get_supply_by_nft_contract_id(
         &self,
         nft_contract_id: AccountId,
-    ) -> u64 {
+    ) -> U64 {
         //get the set of tokens for associated with the given nft contract
         let by_nft_contract_id = self.by_nft_contract_id.get(&nft_contract_id);
         
         //if there was some set, return it's length. Otherwise return 0
         if let Some(by_nft_contract_id) = by_nft_contract_id {
-            by_nft_contract_id.len()
+            U64(by_nft_contract_id.len())
         } else {
-            0
+            U64(0)
         }
     }
 

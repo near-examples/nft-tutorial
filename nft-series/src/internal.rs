@@ -23,7 +23,7 @@ pub(crate) fn refund_approved_account_ids_iter<'a, I>(
   approved_account_ids: I, //the approved account IDs must be passed in as an iterator
 ) -> Promise where I: Iterator<Item = &'a AccountId> {
   //get the storage total by going through and summing all the bytes for each approved account IDs
-  let storage_released: u128 = approved_account_ids.map(bytes_for_approved_account_id).sum();
+  let storage_released = approved_account_ids.map(bytes_for_approved_account_id).sum();
   //transfer the account the storage that is released
   Promise::new(account_id).transfer(env::storage_byte_cost().saturating_mul(storage_released))
 }

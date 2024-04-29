@@ -19,9 +19,9 @@ pub struct JsonSeries {
 #[near_bindgen]
 impl Contract {
     //Query for the total supply of NFTs on the contract
-    pub fn nft_total_supply(&self) -> u64 {
+    pub fn nft_total_supply(&self) -> U64 {
         //return the length of the tokens by id
-        self.tokens_by_id.len()
+        U64(self.tokens_by_id.len())
     }
 
     //Query for nft tokens on the contract regardless of the owner using pagination
@@ -43,16 +43,16 @@ impl Contract {
     }
 
     //get the total supply of NFTs for a given owner
-    pub fn nft_supply_for_owner(&self, account_id: AccountId) -> u64 {
+    pub fn nft_supply_for_owner(&self, account_id: AccountId) -> U64 {
         //get the set of tokens for the passed in owner
         let tokens_for_owner_set = self.tokens_per_owner.get(&account_id);
 
         //if there is some set of tokens, we'll return the length
         if let Some(tokens_for_owner_set) = tokens_for_owner_set {
-            tokens_for_owner_set.len()
+            U64(tokens_for_owner_set.len())
         } else {
             //if there isn't a set of tokens for the passed in account ID, we'll return 0
-            0
+            U64(0)
         }
     }
 
@@ -90,8 +90,8 @@ impl Contract {
     }
 
     // Get the total supply of series on the contract
-    pub fn get_series_total_supply(&self) -> u64 {
-        self.series_by_id.len()
+    pub fn get_series_total_supply(&self) -> U64 {
+        U64(self.series_by_id.len())
     }
 
     // Paginate through all the series on the contract and return the a vector of JsonSeries
@@ -131,15 +131,15 @@ impl Contract {
     }
 
     //get the total supply of NFTs on a current series
-    pub fn nft_supply_for_series(&self, id: u64) -> u64 {
+    pub fn nft_supply_for_series(&self, id: u64) -> U64 {
         //get the series
         let series = self.series_by_id.get(&id);
 
         //if there is some series, get the length of the tokens. Otherwise return -
         if let Some(series) = series {
-            series.tokens.len()
+            U64(series.tokens.len())
         } else {
-            0
+            U64(0)
         }
     }
 

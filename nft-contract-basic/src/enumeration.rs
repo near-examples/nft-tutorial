@@ -3,9 +3,9 @@ use crate::*;
 #[near_bindgen]
 impl Contract {
     //Query for the total supply of NFTs on the contract
-    pub fn nft_total_supply(&self) -> u64 {
+    pub fn nft_total_supply(&self) -> U64 {
         //return the length of the token metadata by ID
-        self.token_metadata_by_id.len()
+        U64(self.token_metadata_by_id.len())
     }
 
     //Query for nft tokens on the contract regardless of the owner using pagination
@@ -29,16 +29,16 @@ impl Contract {
     pub fn nft_supply_for_owner(
       &self,
       account_id: AccountId,
-    ) -> u64 {
+    ) -> U64 {
         //get the set of tokens for the passed in owner
         let tokens_for_owner_set = self.tokens_per_owner.get(&account_id);
 
         //if there is some set of tokens, we'll return the length
         if let Some(tokens_for_owner_set) = tokens_for_owner_set {
-            tokens_for_owner_set.len()
+            U64(tokens_for_owner_set.len())
         } else {
             //if there isn't a set of tokens for the passed in account ID, we'll return 0
-            0
+            U64(0)
         }
     }
 

@@ -3,7 +3,7 @@ use crate::*;
 #[near_bindgen]
 impl Contract {
     //Query for the total supply of NFTs on the contract
-    pub fn nft_total_supply(&self) -> u64 {
+    pub fn nft_total_supply(&self) -> U64 {
         /*
             FILL THIS IN
         */
@@ -22,7 +22,7 @@ impl Contract {
     pub fn nft_supply_for_owner(
         &self,
         account_id: AccountId,
-    ) -> u64 {
+    ) -> U64 {
         /*
             FILL THIS IN
         */

@@ -47,7 +47,7 @@ impl Contract {
         //get the total storage paid by the owner
         let owner_paid_storage = self.storage_deposits.get(&owner_id).unwrap_or(ZERO_NEAR);
         //get the storage required which is simply the storage for the number of sales they have + 1 
-        let signer_storage_required = storage_amount.saturating_mul((self.get_supply_by_owner_id(owner_id.clone()) + 1).into());
+        let signer_storage_required = storage_amount.saturating_mul((self.get_supply_by_owner_id(owner_id.clone()).0 + 1).into());
         
         //make sure that the total paid is >= the required storage
         assert!(
@@ -145,7 +145,7 @@ impl Contract {
         self.process_purchase(
             contract_id,
             token_id,
-            deposit,
+            U128(deposit.as_yoctonear()),
             buyer_id,
         );
     }
@@ -157,7 +157,7 @@ impl Contract {
         &mut self,
         nft_contract_id: AccountId,
         token_id: String,
-        price: NearToken,
+        price: U128,
         buyer_id: AccountId,
     ) -> Promise {
         //get the sale object by removing the sale
@@ -203,8 +203,8 @@ impl Contract {
     pub fn resolve_purchase(
         &mut self,
         buyer_id: AccountId,
-        price: NearToken,
-    ) -> NearToken {
+        price: U128,
+    ) -> U128 {
         // checking for payout information returned from the nft_transfer_payout method
         let payout_option = promise_result_as_success().and_then(|value| {
             //if we set the payout_option to None, that means something went wrong and we should refund the buyer
@@ -221,17 +221,17 @@ impl Contract {
                     //if the payout object is the correct length, we move forward
                     } else {
                         //we'll keep track of how much the nft contract wants us to payout. Starting at the full price payed by the buyer
-                        let mut remainder = price;
+                        let mut remainder = price.0;
                         
                         //loop through the payout and subtract the values from the remainder. 
                         for &value in payout_object.payout.values() {
                             //checked sub checks for overflow or any errors and returns None if there are problems
-                            remainder = remainder.checked_sub(value)?;
+                            remainder = remainder.checked_sub(value.as_yoctonear())?;
                         }
                         //Check to see if the NFT contract sent back a faulty payout that requires us to pay more or too little. 
                         //The remainder will be 0 if the payout summed to the total price. The remainder will be 1 if the royalties
                         //we something like 3333 + 3333 + 3333. 
-                        if remainder.is_zero() || remainder.eq(&ONE_YOCTONEAR) {
+                        if remainder == 0 || remainder == 1 {
                             //set the payout_option to be the payout because nothing went wrong
                             Some(payout_object.payout)
                         } else {
@@ -247,7 +247,7 @@ impl Contract {
             payout_option
         //if the payout option was None, we refund the buyer for the price they payed and return
         } else {
-            Promise::new(buyer_id).transfer(price);
+            Promise::new(buyer_id).transfer(NearToken::from_yoctonear(u128::from(price)));
             // leave function and return the price that was refunded
             return price;
         };

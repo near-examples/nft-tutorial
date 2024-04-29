@@ -1,5 +1,6 @@
 use near_sdk::borsh::{BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{LookupMap, UnorderedMap, UnorderedSet};
+use near_sdk::json_types::{U128, U64};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
     assert_one_yocto, env, ext_contract, near_bindgen, AccountId, BorshStorageKey, CryptoHash, Gas,
@@ -180,8 +181,8 @@ impl Contract {
     }
 
     //return how much storage an account has paid for
-    pub fn storage_balance_of(&self, account_id: AccountId) -> NearToken {
-        self.storage_deposits.get(&account_id).unwrap_or(ZERO_NEAR)
+    pub fn storage_balance_of(&self, account_id: AccountId) -> U128 {
+        U128(self.storage_deposits.get(&account_id).unwrap_or(ZERO_NEAR).as_yoctonear())
     }
 }
 

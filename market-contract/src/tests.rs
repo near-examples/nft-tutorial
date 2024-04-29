@@ -4,6 +4,7 @@ use crate::sale::Sale;
 use crate::Contract;
 use near_sdk::{
     collections::UnorderedSet,
+    json_types::U128,
     env,
     NearToken,
     test_utils::{accounts, VMContextBuilder},
@@ -71,7 +72,7 @@ fn test_storage_balance_of() {
         .build());
     contract.storage_deposit(Some(accounts(0)));
     let balance = contract.storage_balance_of(accounts(0));
-    assert!(balance.eq(&MIN_REQUIRED_STORAGE_YOCTO));
+    assert_eq!(balance, U128(MIN_REQUIRED_STORAGE_YOCTO.as_yoctonear()));
 }
 
 #[test]
@@ -97,7 +98,7 @@ fn test_storage_withdraw() {
     contract.storage_withdraw();
 
     let remaining_amount = contract.storage_balance_of(accounts(0));
-    assert!(remaining_amount.is_zero())
+    assert_eq!(remaining_amount, U128(0))
 }
 
 #[test]
