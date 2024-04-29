@@ -99,7 +99,7 @@ impl Contract {
         let keys = sales.as_vector();
 
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
-        let start = u128::from(from_index.unwrap_or(0));
+        let start = from_index.unwrap_or(0);
         
         //iterate through the keys vector
         keys.iter()
