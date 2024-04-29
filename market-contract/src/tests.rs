@@ -195,7 +195,7 @@ fn test_update_price() {
         .attached_deposit(ONE_YOCTONEAR)
         .predecessor_account_id(accounts(0))  // bob to buy NFT from alice
         .build());
-    contract.update_price(nft_contract_id, token_id, new_price);
+    contract.update_price(nft_contract_id, token_id, U128(new_price.as_yoctonear()));
 
     // test update price success
     let sale = contract.sales.get(&contract_and_token_id).expect("No sale");

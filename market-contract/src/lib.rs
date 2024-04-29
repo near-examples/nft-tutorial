@@ -39,7 +39,7 @@ pub type ContractAndTokenId = String;
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Payout {
-    pub payout: HashMap<AccountId, NearToken>,
+    pub payout: HashMap<AccountId, U128>,
 }
 
 //main contract struct to store all the information
@@ -176,8 +176,8 @@ impl Contract {
 
     /// views
     //return the minimum storage for 1 sale
-    pub fn storage_minimum_balance(&self) -> NearToken {
-        storage_per_sale()
+    pub fn storage_minimum_balance(&self) -> U128 {
+        U128(storage_per_sale().as_yoctonear())
     }
 
     //return how much storage an account has paid for

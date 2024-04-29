@@ -2,7 +2,7 @@ use crate::*;
 
 pub trait NonFungibleTokenCore {
     //calculates the payout for a token given the passed in balance. This is a view method
-    fn nft_payout(&self, token_id: TokenId, balance: NearToken, max_len_payout: u32) -> Payout;
+    fn nft_payout(&self, token_id: TokenId, balance: U128, max_len_payout: u32) -> Payout;
 
     //transfers the token to the receiver ID and returns the payout object that should be payed given the passed in balance.
     fn nft_transfer_payout(
@@ -11,7 +11,7 @@ pub trait NonFungibleTokenCore {
         token_id: TokenId,
         approval_id: u64,
         memo: Option<String>,
-        balance: NearToken,
+        balance: U128,
         max_len_payout: u32,
     ) -> Payout;
 }
@@ -19,7 +19,7 @@ pub trait NonFungibleTokenCore {
 #[near_bindgen]
 impl NonFungibleTokenCore for Contract {
     //calculates the payout for a token given the passed in balance. This is a view method
-    fn nft_payout(&self, token_id: TokenId, balance: NearToken, max_len_payout: u32) -> Payout {
+    fn nft_payout(&self, token_id: TokenId, balance: U128, max_len_payout: u32) -> Payout {
         //get the token object
         let token = self.tokens_by_id.get(&token_id).expect("No token");
 
@@ -27,6 +27,8 @@ impl NonFungibleTokenCore for Contract {
         let owner_id = token.owner_id;
         //keep track of the total perpetual royalties
         let mut total_perpetual = 0;
+        //get the u128 version of the passed in balance (which was U128 before)
+        let balance_u128 = u128::from(balance);
         //keep track of the payout object to send back
         let mut payout_object = Payout {
             payout: HashMap::new(),
@@ -49,7 +51,7 @@ impl NonFungibleTokenCore for Contract {
             if key != owner_id {
                 payout_object
                     .payout
-                    .insert(key, royalty_to_payout(*v as u128, balance));
+                    .insert(key, royalty_to_payout(*v as u128, balance_u128));
                 total_perpetual += *v;
             }
         }
@@ -57,7 +59,7 @@ impl NonFungibleTokenCore for Contract {
         // payout to previous owner who gets 100% - total perpetual royalties
         payout_object.payout.insert(
             owner_id,
-            royalty_to_payout((10000 - total_perpetual).into(), balance),
+            royalty_to_payout((10000 - total_perpetual).into(), balance_u128),
         );
 
         //return the payout object
@@ -72,7 +74,7 @@ impl NonFungibleTokenCore for Contract {
         token_id: TokenId,
         approval_id: u64,
         memo: Option<String>,
-        balance: NearToken,
+        balance: U128,
         max_len_payout: u32,
     ) -> Payout {
         //assert that the user attached 1 yocto NEAR for security reasons
@@ -93,6 +95,8 @@ impl NonFungibleTokenCore for Contract {
         let owner_id = previous_token.owner_id;
         //keep track of the total perpetual royalties
         let mut total_perpetual = 0;
+        //get the u128 version of the passed in balance (which was U128 before)
+        let balance_u128 = u128::from(balance);
         //keep track of the payout object to send back
         let mut payout_object = Payout {
             payout: HashMap::new(),
@@ -115,7 +119,7 @@ impl NonFungibleTokenCore for Contract {
             if key != owner_id {
                 payout_object
                     .payout
-                    .insert(key, royalty_to_payout(*v as u128, balance));
+                    .insert(key, royalty_to_payout(*v as u128, balance_u128));
                 total_perpetual += *v;
             }
         }
@@ -123,7 +127,7 @@ impl NonFungibleTokenCore for Contract {
         // payout to previous owner who gets 100% - total perpetual royalties
         payout_object.payout.insert(
             owner_id,
-            royalty_to_payout((10000 - total_perpetual).into(), balance),
+            royalty_to_payout((10000 - total_perpetual).into(), balance_u128),
         );
 
         //return the payout object

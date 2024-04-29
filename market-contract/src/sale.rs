@@ -43,7 +43,7 @@ impl Contract {
         //we need to enforce that the user has enough storage for 1 EXTRA sale.
 
         //get the storage for a sale
-        let storage_amount = self.storage_minimum_balance();
+        let storage_amount = self.storage_minimum_balance().0;
         //get the total storage paid by the owner
         let owner_paid_storage = self.storage_deposits.get(&owner_id).unwrap_or(ZERO_NEAR);
         //get the storage required which is simply the storage for the number of sales they have + 1 
@@ -51,7 +51,7 @@ impl Contract {
         
         //make sure that the total paid is >= the required storage
         assert!(
-            owner_paid_storage.ge(&signer_storage_required),
+            owner_paid_storage.ge(&NearToken::from_yoctonear(signer_storage_required)),
             "Insufficient storage paid: {}, for {} sales at {} rate of per sale",
             owner_paid_storage, signer_storage_required.saturating_div(storage_per_sale().as_yoctonear()), storage_per_sale()
         );
@@ -92,7 +92,7 @@ impl Contract {
         &mut self,
         nft_contract_id: AccountId,
         token_id: String,
-        price: NearToken,
+        price: U128,
     ) {
         //assert that the user has attached exactly 1 yoctoNEAR (for security reasons)
         assert_one_yocto();
@@ -112,7 +112,7 @@ impl Contract {
         );
         
         //set the sale conditions equal to the passed in price
-        sale.sale_conditions = price;
+        sale.sale_conditions = NearToken::from_yoctonear(price.0);
         //insert the sale back into the map for the unique sale ID
         self.sales.insert(&contract_and_token_id, &sale);
     }
@@ -226,7 +226,7 @@ impl Contract {
                         //loop through the payout and subtract the values from the remainder. 
                         for &value in payout_object.payout.values() {
                             //checked sub checks for overflow or any errors and returns None if there are problems
-                            remainder = remainder.checked_sub(value.as_yoctonear())?;
+                            remainder = remainder.checked_sub(value.0)?;
                         }
                         //Check to see if the NFT contract sent back a faulty payout that requires us to pay more or too little. 
                         //The remainder will be 0 if the payout summed to the total price. The remainder will be 1 if the royalties
@@ -254,7 +254,7 @@ impl Contract {
 
         // NEAR payouts
         for (receiver_id, amount) in payout {
-            Promise::new(receiver_id).transfer(amount);
+            Promise::new(receiver_id).transfer(NearToken::from_yoctonear(amount.0));
         }
 
         //return the price payout out
