@@ -22,13 +22,17 @@ jobs:
           target: wasm32-unknown-unknown
       - name: Run integration test
         run: cd integration-tests && cargo run --example integration-tests
-      - name: Run unit tests
-        run: >
-             cd market-contract && cargo test &&
-             cd ../nft-contract && cargo test &&
-             cd ../nft-contract-approval && cargo test &&
-             cd ../nft-contract-basic && cargo test &&
-             cd ../nft-contract-events && cargo test &&
-             cd ../nft-contract-royalty && cargo test &&
-             cd ../nft-contract-skeleton && cargo test &&
-             cd ../nft-series && cargo test
+      - name: Market tests
+        run: cd market-contract && cargo test
+      - name: NFT tests
+        run: cd nft-contract && cargo test
+      - name: Contract Basics tests        
+        run: cd nft-contract-basic && cargo test
+      - name: Events tests        
+        run: cd nft-contract-events && cargo test
+      - name: Royalty tests        
+        run: cd nft-contract-royalty && cargo test
+      - name: Skeleton tests        
+        run: cd nft-contract-skeleton && cargo test
+      - name: NFT series tests        
+        run: cd nft-series && cargo test        
