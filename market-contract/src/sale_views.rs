@@ -8,7 +8,7 @@ impl Contract {
     pub fn get_supply_sales(
         &self,
     ) -> U64 {
-        //returns the sales object length wrapped as a U64
+        //returns the sales object length
         U64(self.sales.len())
     }
     
@@ -32,7 +32,7 @@ impl Contract {
     pub fn get_sales_by_owner_id(
         &self,
         account_id: AccountId,
-        from_index: Option<U128>,
+        from_index: Option<u128>,
         limit: Option<u64>,
     ) -> Vec<Sale> {
         //get the set of token IDs for sale for the given account ID
@@ -48,7 +48,7 @@ impl Contract {
         let keys = sales.as_vector();
 
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
-        let start = u128::from(from_index.unwrap_or(U128(0)));
+        let start = from_index.unwrap_or(0);
         
         //iterate through the keys vector
         keys.iter()
@@ -82,7 +82,7 @@ impl Contract {
     pub fn get_sales_by_nft_contract_id(
         &self,
         nft_contract_id: AccountId,
-        from_index: Option<U128>,
+        from_index: Option<u128>,
         limit: Option<u64>,
     ) -> Vec<Sale> {
         //get the set of token IDs for sale for the given contract ID
@@ -99,7 +99,7 @@ impl Contract {
         let keys = sales.as_vector();
 
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
-        let start = u128::from(from_index.unwrap_or(U128(0)));
+        let start = from_index.unwrap_or(0);
         
         //iterate through the keys vector
         keys.iter()

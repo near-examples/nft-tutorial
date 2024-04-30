@@ -1,13 +1,14 @@
 use crate::*;
 pub type TokenId = String;
 //defines the payout type we'll be returning as a part of the royalty standards.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, NearSchema)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Payout {
     pub payout: HashMap<AccountId, U128>,
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone)]
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, NearSchema)]
+#[borsh(crate = "near_sdk::borsh")]
 #[serde(crate = "near_sdk::serde")]
 pub struct NFTContractMetadata {
     pub spec: String,              // required, essentially a version like "nft-1.0.0"
@@ -19,7 +20,8 @@ pub struct NFTContractMetadata {
     pub reference_hash: Option<Base64VecU8>, // Base64-encoded sha256 hash of JSON from reference field. Required if `reference` is included.
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, NearSchema)]
+#[borsh(crate = "near_sdk::borsh")]
 #[serde(crate = "near_sdk::serde")]
 pub struct TokenMetadata {
     pub title: Option<String>, // ex. "Arch Nemesis: Mail Carrier" or "Parcel #5055"
@@ -37,6 +39,7 @@ pub struct TokenMetadata {
 }
 
 #[derive(BorshDeserialize, BorshSerialize)]
+#[borsh(crate = "near_sdk::borsh")]
 pub struct Token {
     // Series that the token belongs to
     pub series_id: u64,
@@ -49,7 +52,7 @@ pub struct Token {
 }
 
 //The Json token is what will be returned from view calls.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, NearSchema)]
 #[serde(crate = "near_sdk::serde")]
 pub struct JsonToken {
     // Series that the token belongs to

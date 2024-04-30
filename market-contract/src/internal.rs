@@ -9,6 +9,10 @@ pub(crate) fn hash_account_id(account_id: &AccountId) -> CryptoHash {
     hash
 }
 
+pub(crate) fn storage_per_sale() -> NearToken {
+  env::storage_byte_cost().saturating_mul(1000)
+}
+
 impl Contract {
     //internal method for removing a sale from the market. This returns the previously removed sale object
     pub(crate) fn internal_remove_sale(

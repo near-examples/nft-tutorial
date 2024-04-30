@@ -66,7 +66,7 @@ impl NonFungibleTokenCore for Contract {
                 //
                 payout_object
                     .payout
-                    .insert(key, royalty_to_payout(*v, balance_u128));
+                    .insert(key, royalty_to_payout(*v as u128, balance_u128));
                 total_perpetual += *v;
             }
         }
@@ -74,7 +74,7 @@ impl NonFungibleTokenCore for Contract {
         // payout to previous owner who gets 100% - total perpetual royalties
         payout_object.payout.insert(
             owner_id,
-            royalty_to_payout(10000 - total_perpetual, balance_u128),
+            royalty_to_payout((10000 - total_perpetual).into(), balance_u128)
         );
 
         //return the payout object
@@ -150,7 +150,7 @@ impl NonFungibleTokenCore for Contract {
                 //
                 payout_object
                     .payout
-                    .insert(key, royalty_to_payout(*v, balance_u128));
+                    .insert(key, royalty_to_payout(*v as u128, balance_u128));
                 total_perpetual += *v;
             }
         }
@@ -158,7 +158,7 @@ impl NonFungibleTokenCore for Contract {
         // payout to previous owner who gets 100% - total perpetual royalties
         payout_object.payout.insert(
             owner_id,
-            royalty_to_payout(10000 - total_perpetual, balance_u128),
+            royalty_to_payout((10000 - total_perpetual).into(), balance_u128)
         );
 
         //return the payout object

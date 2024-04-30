@@ -1,5 +1,3 @@
-use near_sdk::json_types::U64;
-
 use crate::*;
 
 #[near_bindgen]
@@ -43,7 +41,7 @@ impl Contract {
                             )),
                         }),
                         owner_id: caller,
-                        price: price.map(|p| p.into()),
+                        price: price.map(|p| NearToken::from_yoctonear(p.0)),
                     }
                 )
                 .is_none(),
@@ -54,24 +52,24 @@ impl Contract {
         let required_storage_in_bytes = env::storage_usage() - initial_storage_usage;
 
         //refund any excess storage if the user attached too much. Panic if they didn't attach enough to cover the required.
-        refund_deposit(required_storage_in_bytes);
+        refund_deposit(required_storage_in_bytes.into());
     }
 
     /// Mint a new NFT that is part of a series. The caller must be an approved minter.
     /// The series ID must exist and if the metadata specifies a copy limit, you cannot exceed it.
     #[payable]
-    pub fn nft_mint(&mut self, id: U64, receiver_id: AccountId) {
+    pub fn nft_mint(&mut self, id: u64, receiver_id: AccountId) {
         // Measure the initial storage being used on the contract
         let initial_storage_usage = env::storage_usage();
 
         // Get the series and how many tokens currently exist (edition number = cur_len + 1)
-        let mut series = self.series_by_id.get(&id.0).expect("Not a series");
+        let mut series = self.series_by_id.get(&id).expect("Not a series");
         
         // Check if the series has a price per token. If it does, ensure the caller has attached at least that amount
-        let mut price_per_token = 0; 
+        let mut price_per_token = NearToken::from_yoctonear(0); 
         if let Some(price) = series.price {
             price_per_token = price;
-            require!(env::attached_deposit() > price_per_token, "Need to attach at least enough to cover price");
+            require!(env::attached_deposit().ge(&price_per_token), "Need to attach at least enough to cover price");
         // If the series doesn't have a price, ensure the caller is an approved minter.
         } else {
             // Ensure the caller is an approved minter
@@ -92,14 +90,14 @@ impl Contract {
         }
 
         // The token ID is stored internally as `${series_id}:${edition}`
-        let token_id = format!("{}:{}", id.0, cur_len + 1);
+        let token_id = format!("{}:{}", id, cur_len + 1);
         series.tokens.insert(&token_id);
-        self.series_by_id.insert(&id.0, &series);
+        self.series_by_id.insert(&id, &series);
 
         //specify the token struct that contains the owner ID
         let token = Token {
             // Series ID that the token belongs to
-            series_id: id.0,
+            series_id: id,
             //set the owner ID equal to the receiver ID passed into the function
             owner_id: receiver_id,
             //we set the approved account IDs to the default value (an empty map)
@@ -141,10 +139,10 @@ impl Contract {
         let required_storage_in_bytes = env::storage_usage() - initial_storage_usage;
 
         // If there's some price for the token, we'll payout the series owner. Otherwise, refund the excess deposit for storage to the caller
-        if price_per_token > 0 {
-            payout_series_owner(required_storage_in_bytes, price_per_token, series.owner_id);
+        if price_per_token.gt(&NearToken::from_yoctonear(0)) {
+            payout_series_owner(required_storage_in_bytes.into(), price_per_token, series.owner_id);
         } else {
-            refund_deposit(required_storage_in_bytes);
+            refund_deposit(required_storage_in_bytes.into());
         }
     }
 }

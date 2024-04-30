@@ -4,14 +4,17 @@ use crate::sale::Sale;
 use crate::Contract;
 use near_sdk::{
     collections::UnorderedSet,
+    json_types::U128,
     env,
-    json_types::{U128, U64},
+    NearToken,
     test_utils::{accounts, VMContextBuilder},
     testing_env, AccountId,
 };
 
-const MIN_REQUIRED_APPROVAL_YOCTO: u128 = 170000000000000000000;
-const MIN_REQUIRED_STORAGE_YOCTO: u128 = 10000000000000000000000;
+const MIN_REQUIRED_APPROVAL_YOCTO: NearToken = NearToken::from_yoctonear(170000000000000000000);
+const MIN_REQUIRED_STORAGE_YOCTO: NearToken =  NearToken::from_millinear(100);
+
+const ONE_YOCTONEAR: NearToken = NearToken::from_yoctonear(1);
 
 fn get_context(predecessor: AccountId) -> VMContextBuilder {
     let mut builder = VMContextBuilder::new();
@@ -28,7 +31,7 @@ fn test_default() {
 }
 
 #[test]
-#[should_panic(expected = "Requires minimum deposit of 10000000000000000000000")]
+#[should_panic(expected = "Requires minimum deposit of 0.010 NEAR")]
 fn test_storage_deposit_insufficient_deposit() {
     let mut context = get_context(accounts(0));
     testing_env!(context.build());
@@ -69,7 +72,7 @@ fn test_storage_balance_of() {
         .build());
     contract.storage_deposit(Some(accounts(0)));
     let balance = contract.storage_balance_of(accounts(0));
-    assert_eq!(balance, U128(MIN_REQUIRED_STORAGE_YOCTO));
+    assert_eq!(balance, U128(MIN_REQUIRED_STORAGE_YOCTO.as_yoctonear()));
 }
 
 #[test]
@@ -89,7 +92,7 @@ fn test_storage_withdraw() {
     // withdraw amount
     testing_env!(context
         .storage_usage(env::storage_usage())
-        .attached_deposit(U128(1).0) // below func requires a min of 1 yocto attached
+        .attached_deposit(ONE_YOCTONEAR) // below func requires a min of 1 yocto attached
         .predecessor_account_id(accounts(0))
         .build());
     contract.storage_withdraw();
@@ -116,10 +119,10 @@ fn test_remove_sale() {
     let token_id = String::from("0n3C0ntr4ctT0Rul3Th3m4ll");
     let sale = Sale {
         owner_id: accounts(0).clone(), //owner of the sale / token
-        approval_id: U64(1).0,         //approval ID for that token that was given to the market
+        approval_id: 1,         //approval ID for that token that was given to the market
         nft_contract_id: env::predecessor_account_id().to_string(), //NFT contract the token was minted on
         token_id: token_id.clone(),                                 //the actual token ID
-        sale_conditions: U128(100), //the sale conditions -- price in YOCTO NEAR
+        sale_conditions: NearToken::from_yoctonear(100), //the sale conditions -- price in YOCTO NEAR
     };
     let nft_contract_id = env::predecessor_account_id();
     let contract_and_token_id = format!("{}{}{}", nft_contract_id, ".", token_id);
@@ -137,7 +140,7 @@ fn test_remove_sale() {
     // remove sale
     testing_env!(context
         .storage_usage(env::storage_usage())
-        .attached_deposit(U128(1).0) // below func requires a min of 1 yocto attached
+        .attached_deposit(ONE_YOCTONEAR) // below func requires a min of 1 yocto attached
         .predecessor_account_id(accounts(0))
         .build());
     contract.remove_sale(nft_contract_id, token_id);
@@ -164,10 +167,10 @@ fn test_update_price() {
 
     // add sale
     let token_id = String::from("0n3C0ntr4ctT0Rul3Th3m4ll");
-    let nft_bid_yocto = U128(100);
+    let nft_bid_yocto = NearToken::from_yoctonear(100);
     let sale = Sale {
         owner_id: accounts(0).clone(), //owner of the sale / token
-        approval_id: U64(1).0,         //approval ID for that token that was given to the market
+        approval_id: 1,         //approval ID for that token that was given to the market
         nft_contract_id: env::predecessor_account_id().to_string(), //NFT contract the token was minted on
         token_id: token_id.clone(),                                 //the actual token ID
         sale_conditions: nft_bid_yocto, //the sale conditions -- price in YOCTO NEAR
@@ -186,13 +189,13 @@ fn test_update_price() {
     assert_eq!(contract.sales.len(), 1, "Failed to insert sale to contract");
 
     // update price 
-    let new_price = U128(150);
+    let new_price = NearToken::from_yoctonear(150);
     testing_env!(context
         .storage_usage(env::storage_usage())
-        .attached_deposit(U128(1).0)
+        .attached_deposit(ONE_YOCTONEAR)
         .predecessor_account_id(accounts(0))  // bob to buy NFT from alice
         .build());
-    contract.update_price(nft_contract_id, token_id, new_price);
+    contract.update_price(nft_contract_id, token_id, U128(new_price.as_yoctonear()));
 
     // test update price success
     let sale = contract.sales.get(&contract_and_token_id).expect("No sale");
