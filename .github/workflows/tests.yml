@@ -23,11 +23,12 @@ jobs:
       - name: Run integration test
         run: cd integration-tests && cargo run --example integration-tests
       - name: Run unit tests
-        run: cd market-contract && cargo test
-        run: cd ../nft-contract && cargo test
-        run: cd ../nft-contract-approval && cargo test
-        run: cd ../nft-contract-basic && cargo test
-        run: cd ../nft-contract-events && cargo test
-        run: cd ../nft-contract-royalty && cargo test
-        run: cd ../nft-contract-skeleton && cargo test
-        run: cd ../nft-series && cargo test
+        run: >
+             cd market-contract && cargo test
+             cd ../nft-contract && cargo test
+             cd ../nft-contract-approval && cargo test
+             cd ../nft-contract-basic && cargo test
+             cd ../nft-contract-events && cargo test
+             cd ../nft-contract-royalty && cargo test
+             cd ../nft-contract-skeleton && cargo test
+             cd ../nft-series && cargo test
