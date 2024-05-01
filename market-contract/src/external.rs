@@ -10,7 +10,7 @@ trait ExtContract {
         &mut self,
         receiver_id: AccountId, //purchaser (person to transfer the NFT to)
         token_id: TokenId, //token ID to transfer
-        approval_id: u64, //market contract's approval ID in order to transfer the token on behalf of the owner
+        approval_id: u32, //market contract's approval ID in order to transfer the token on behalf of the owner
         memo: String, //memo (to include some context)
         /*
             the price that the token was purchased for. This will be used in conjunction with the royalty percentages
@@ -25,6 +25,6 @@ trait ExtContract {
         &self,
         token_id: TokenId,
         approved_account_id: AccountId,
-        approval_id: u64,
+        approval_id: u32,
     );
 }

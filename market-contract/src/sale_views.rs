@@ -32,8 +32,8 @@ impl Contract {
     pub fn get_sales_by_owner_id(
         &self,
         account_id: AccountId,
-        from_index: Option<u128>,
-        limit: Option<u64>,
+        from_index: Option<U128>,
+        limit: Option<u32>,
     ) -> Vec<Sale> {
         //get the set of token IDs for sale for the given account ID
         let by_owner_id = self.by_owner_id.get(&account_id);
@@ -48,7 +48,7 @@ impl Contract {
         let keys = sales.as_vector();
 
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
-        let start = from_index.unwrap_or(0);
+        let start = u128::from(from_index.unwrap_or(U128(0)));
         
         //iterate through the keys vector
         keys.iter()
@@ -82,8 +82,8 @@ impl Contract {
     pub fn get_sales_by_nft_contract_id(
         &self,
         nft_contract_id: AccountId,
-        from_index: Option<u128>,
-        limit: Option<u64>,
+        from_index: Option<U128>,
+        limit: Option<u32>,
     ) -> Vec<Sale> {
         //get the set of token IDs for sale for the given contract ID
         let by_nft_contract_id = self.by_nft_contract_id.get(&nft_contract_id);
@@ -99,7 +99,7 @@ impl Contract {
         let keys = sales.as_vector();
 
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
-        let start = from_index.unwrap_or(0);
+        let start = u128::from(from_index.unwrap_or(U128(0)));
         
         //iterate through the keys vector
         keys.iter()

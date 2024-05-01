@@ -1,7 +1,7 @@
 use serde_json::json;
 use near_workspaces::{types::{NearToken, AccountDetails}, Account, Contract};
 
-pub const DEFAULT_DEPOSIT: u128 = 10000000000000000000000 as u128;
+pub const DEFAULT_DEPOSIT: u128 = 10000000000000000000000;
 pub const ONE_YOCTO_NEAR: NearToken = NearToken::from_yoctonear(1);
 
 pub async fn mint_nft(
@@ -70,7 +70,7 @@ pub async fn place_nft_for_sale(
     market_contract: &Contract,
     nft_contract: &Contract,
     token_id: &str,
-    approval_id: u128,
+    approval_id: u32,
     price: &NearToken,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let request_payload = json!({

@@ -10,7 +10,7 @@ pub trait NonFungibleTokenCore {
         &self,
         token_id: TokenId,
         approved_account_id: AccountId,
-        approval_id: Option<u64>,
+        approval_id: Option<u32>,
     ) -> bool;
 
     //revoke a specific account from transferring the token on your behalf
@@ -27,7 +27,7 @@ trait NonFungibleTokenApprovalsReceiver {
         &mut self,
         token_id: TokenId,
         owner_id: AccountId,
-        approval_id: u64,
+        approval_id: u32,
         msg: String,
     );
 }
@@ -47,7 +47,7 @@ impl NonFungibleTokenCore for Contract {
         &self,
         token_id: TokenId,
         approved_account_id: AccountId,
-        approval_id: Option<u64>,
+        approval_id: Option<u32>,
     ) -> bool {
         /*
             FILL THIS IN

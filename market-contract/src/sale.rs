@@ -10,7 +10,7 @@ pub struct Sale {
     //owner of the sale
     pub owner_id: AccountId,
     //market contract's approval ID to transfer the token on behalf of the owner
-    pub approval_id: u64,
+    pub approval_id: u32,
     //nft contract where the token was minted
     pub nft_contract_id: String,
     //actual token ID for sale
@@ -35,7 +35,7 @@ impl Contract {
       &mut self,
       nft_contract_id: AccountId,
       token_id: TokenId,
-      approval_id: u64,
+      approval_id: u32,
       sale_conditions: SalePriceInYoctoNear,
     ) {
         let owner_id = env::predecessor_account_id();
@@ -267,7 +267,7 @@ impl Contract {
         owner_id: AccountId,
         nft_contract_id: AccountId,
         token_id: TokenId,
-        approval_id: u64,
+        approval_id: u32,
         sale_conditions: SalePriceInYoctoNear,
         #[callback_result] nft_token_result: Result<JsonToken, PromiseError>,
         #[callback_result] nft_is_approved_result: Result<bool, PromiseError>,

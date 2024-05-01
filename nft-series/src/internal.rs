@@ -31,7 +31,7 @@ pub(crate) fn refund_approved_account_ids_iter<'a, I>(
 //refund a map of approved account IDs and send the funds to the passed in account ID
 pub(crate) fn refund_approved_account_ids(
     account_id: AccountId,
-    approved_account_ids: &HashMap<AccountId, u64>,
+    approved_account_ids: &HashMap<AccountId, u32>,
 ) -> Promise {
     //call the refund_approved_account_ids_iter with the approved account IDs as keys
     refund_approved_account_ids_iter(account_id, approved_account_ids.keys())
@@ -172,7 +172,7 @@ impl Contract {
         receiver_id: &AccountId,
         token_id: &TokenId,
         //we introduce an approval ID so that people with that approval ID can transfer the token
-        approval_id: Option<u64>,
+        approval_id: Option<u32>,
         memo: Option<String>,
     ) -> Token {
         //get the token object by passing in the token_id

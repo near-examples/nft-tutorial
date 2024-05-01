@@ -11,7 +11,7 @@ pub trait NonFungibleTokenCore {
         receiver_id: AccountId,
         token_id: TokenId,
         //we introduce an approval ID so that people with that approval ID can transfer the token
-        approval_id: Option<u64>,
+        approval_id: Option<u32>,
         memo: Option<String>,
     );
 
@@ -22,7 +22,7 @@ pub trait NonFungibleTokenCore {
         receiver_id: AccountId,
         token_id: TokenId,
         //we introduce an approval ID so that people with that approval ID can transfer the token
-        approval_id: Option<u64>,
+        approval_id: Option<u32>,
         memo: Option<String>,
         msg: String,
     ) -> PromiseOrValue<bool>;
@@ -59,7 +59,7 @@ trait NonFungibleTokenResolver {
         receiver_id: AccountId,
         token_id: TokenId,
         //we introduce the approval map so we can keep track of what the approvals were before the transfer
-        approved_account_ids: HashMap<AccountId, u64>,
+        approved_account_ids: HashMap<AccountId, u32>,
         //we introduce a memo for logging the transfer event
         memo: Option<String>,
     ) -> bool;
@@ -74,7 +74,7 @@ impl NonFungibleTokenCore for Contract {
         receiver_id: AccountId,
         token_id: TokenId,
         //we introduce an approval ID so that people with that approval ID can transfer the token
-        approval_id: Option<u64>,
+        approval_id: Option<u32>,
         memo: Option<String>,
     ) {
         //assert that the user attached exactly 1 yoctoNEAR. This is for security and so that the user will be redirected to the NEAR wallet. 
@@ -105,7 +105,7 @@ impl NonFungibleTokenCore for Contract {
         receiver_id: AccountId,
         token_id: TokenId,
         //we introduce an approval ID so that people with that approval ID can transfer the token
-        approval_id: Option<u64>,
+        approval_id: Option<u32>,
         memo: Option<String>,
         msg: String,
     ) -> PromiseOrValue<bool> {
@@ -189,7 +189,7 @@ impl NonFungibleTokenResolver for Contract {
         receiver_id: AccountId,
         token_id: TokenId,
         //we introduce the approval map so we can keep track of what the approvals were before the transfer
-        approved_account_ids: HashMap<AccountId, u64>,
+        approved_account_ids: HashMap<AccountId, u32>,
         //we introduce a memo for logging the transfer event
         memo: Option<String>,
     ) -> bool {

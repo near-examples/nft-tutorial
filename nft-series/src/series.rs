@@ -10,7 +10,7 @@ impl Contract {
     #[payable]
     pub fn create_series(
         &mut self,
-        id: u64,
+        id: U64,
         metadata: TokenMetadata,
         royalty: Option<HashMap<AccountId, u32>>,
         price: Option<U128>
@@ -29,7 +29,7 @@ impl Contract {
         require!(
             self.series_by_id
                 .insert(
-                    &id,
+                    &id.0,
                     &Series {
                         metadata,
                         royalty,
@@ -37,7 +37,7 @@ impl Contract {
                             // We get a new unique prefix for the collection
                             account_id_hash: hash_account_id(&format!(
                                 "{}{}",
-                                id, caller
+                                id.0, caller
                             )),
                         }),
                         owner_id: caller,
@@ -58,12 +58,12 @@ impl Contract {
     /// Mint a new NFT that is part of a series. The caller must be an approved minter.
     /// The series ID must exist and if the metadata specifies a copy limit, you cannot exceed it.
     #[payable]
-    pub fn nft_mint(&mut self, id: u64, receiver_id: AccountId) {
+    pub fn nft_mint(&mut self, id: U64, receiver_id: AccountId) {
         // Measure the initial storage being used on the contract
         let initial_storage_usage = env::storage_usage();
 
         // Get the series and how many tokens currently exist (edition number = cur_len + 1)
-        let mut series = self.series_by_id.get(&id).expect("Not a series");
+        let mut series = self.series_by_id.get(&id.0).expect("Not a series");
         
         // Check if the series has a price per token. If it does, ensure the caller has attached at least that amount
         let mut price_per_token = NearToken::from_yoctonear(0); 
@@ -90,14 +90,14 @@ impl Contract {
         }
 
         // The token ID is stored internally as `${series_id}:${edition}`
-        let token_id = format!("{}:{}", id, cur_len + 1);
+        let token_id = format!("{}:{}", id.0, cur_len + 1);
         series.tokens.insert(&token_id);
-        self.series_by_id.insert(&id, &series);
+        self.series_by_id.insert(&id.0, &series);
 
         //specify the token struct that contains the owner ID
         let token = Token {
             // Series ID that the token belongs to
-            series_id: id,
+            series_id: id.0,
             //set the owner ID equal to the receiver ID passed into the function
             owner_id: receiver_id,
             //we set the approved account IDs to the default value (an empty map)

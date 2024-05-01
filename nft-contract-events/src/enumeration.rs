@@ -9,9 +9,9 @@ impl Contract {
     }
 
     //Query for nft tokens on the contract regardless of the owner using pagination
-    pub fn nft_tokens(&self, from_index: Option<u128>, limit: Option<u64>) -> Vec<JsonToken> {
+    pub fn nft_tokens(&self, from_index: Option<U128>, limit: Option<u32>) -> Vec<JsonToken> {
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
-        let start = from_index.unwrap_or(0);
+        let start = u128::from(from_index.unwrap_or(U128(0)));
 
         //iterate through each token using an iterator
         self.token_metadata_by_id.keys()
@@ -46,8 +46,8 @@ impl Contract {
     pub fn nft_tokens_for_owner(
         &self,
         account_id: AccountId,
-        from_index: Option<u128>,
-        limit: Option<u64>,
+        from_index: Option<U128>,
+        limit: Option<u32>,
     ) -> Vec<JsonToken> {
         //get the set of tokens for the passed in owner
         let tokens_for_owner_set = self.tokens_per_owner.get(&account_id);
@@ -60,7 +60,7 @@ impl Contract {
         };
 
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
-        let start = from_index.unwrap_or(0);
+        let start = u128::from(from_index.unwrap_or(U128(0)));
 
         //iterate through the keys vector
         tokens.iter()
