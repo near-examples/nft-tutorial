@@ -11,7 +11,7 @@ impl Contract {
     }
 
     //Query for nft tokens on the contract regardless of the owner using pagination
-    pub fn nft_tokens(&self, from_index: Option<u128>, limit: Option<u64>) -> Vec<JsonToken> {
+    pub fn nft_tokens(&self, from_index: Option<U128>, limit: Option<u32>) -> Vec<JsonToken> {
         /*
             FILL THIS IN
         */
@@ -33,8 +33,8 @@ impl Contract {
     pub fn nft_tokens_for_owner(
         &self,
         account_id: AccountId,
-        from_index: Option<u128>,
-        limit: Option<u64>,
+        from_index: Option<U128>,
+        limit: Option<u32>,
     ) -> Vec<JsonToken> {
         /*
             FILL THIS IN

@@ -10,7 +10,7 @@ pub trait NonFungibleTokenCore {
         &self,
         token_id: TokenId,
         approved_account_id: AccountId,
-        approval_id: Option<u64>,
+        approval_id: Option<u32>,
     ) -> bool;
 
     //revoke a specific account from transferring the token on your behalf
@@ -27,7 +27,7 @@ trait NonFungibleTokenApprovalsReceiver {
         &mut self,
         token_id: TokenId,
         owner_id: AccountId,
-        approval_id: u64,
+        approval_id: u32,
         msg: String,
     );
 }
@@ -54,7 +54,7 @@ impl NonFungibleTokenCore for Contract {
         );
 
         //get the next approval ID if we need a new approval
-        let approval_id: u64 = token.next_approval_id;
+        let approval_id: u32 = token.next_approval_id;
 
         //check if the account has been approved already for this token
         let is_new_approval = token
@@ -99,7 +99,7 @@ impl NonFungibleTokenCore for Contract {
         &self,
         token_id: TokenId,
         approved_account_id: AccountId,
-        approval_id: Option<u64>,
+        approval_id: Option<u32>,
     ) -> bool {
         //get the token object from the token_id
         let token = self.tokens_by_id.get(&token_id).expect("No token");
