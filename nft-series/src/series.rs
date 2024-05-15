@@ -13,7 +13,7 @@ impl Contract {
         id: U64,
         metadata: TokenMetadata,
         royalty: Option<HashMap<AccountId, u32>>,
-        price: Option<U128>
+        price: Option<NearToken>
     ) {
         // Measure the initial storage being used on the contract
         let initial_storage_usage = env::storage_usage();
@@ -41,7 +41,7 @@ impl Contract {
                             )),
                         }),
                         owner_id: caller,
-                        price: price.map(|p| NearToken::from_yoctonear(p.0)),
+                        price: price.map(|p| p),
                     }
                 )
                 .is_none(),

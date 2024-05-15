@@ -43,7 +43,7 @@ impl Contract {
         //we need to enforce that the user has enough storage for 1 EXTRA sale.
 
         //get the storage for a sale
-        let storage_amount = self.storage_minimum_balance().0;
+        let storage_amount = self.storage_minimum_balance();
         //get the total storage paid by the owner
         let owner_paid_storage = self.storage_deposits.get(&owner_id).unwrap_or(ZERO_NEAR);
         //get the storage required which is simply the storage for the number of sales they have + 1 
@@ -51,7 +51,7 @@ impl Contract {
         
         //make sure that the total paid is >= the required storage
         assert!(
-            owner_paid_storage.ge(&NearToken::from_yoctonear(signer_storage_required)),
+            owner_paid_storage.ge(&signer_storage_required),
             "Insufficient storage paid: {}, for {} sales at {} rate of per sale",
             owner_paid_storage, signer_storage_required.saturating_div(storage_per_sale().as_yoctonear()), storage_per_sale()
         );
@@ -92,7 +92,7 @@ impl Contract {
         &mut self,
         nft_contract_id: AccountId,
         token_id: String,
-        price: U128,
+        price: NearToken,
     ) {
         //assert that the user has attached exactly 1 yoctoNEAR (for security reasons)
         assert_one_yocto();
@@ -112,7 +112,7 @@ impl Contract {
         );
         
         //set the sale conditions equal to the passed in price
-        sale.sale_conditions = NearToken::from_yoctonear(price.0);
+        sale.sale_conditions = price;
         //insert the sale back into the map for the unique sale ID
         self.sales.insert(&contract_and_token_id, &sale);
     }
@@ -145,7 +145,7 @@ impl Contract {
         self.process_purchase(
             contract_id,
             token_id,
-            U128(deposit.as_yoctonear()),
+            deposit,
             buyer_id,
         );
     }
@@ -157,7 +157,7 @@ impl Contract {
         &mut self,
         nft_contract_id: AccountId,
         token_id: String,
-        price: U128,
+        price: NearToken,
         buyer_id: AccountId,
     ) -> Promise {
         //get the sale object by removing the sale
@@ -203,8 +203,8 @@ impl Contract {
     pub fn resolve_purchase(
         &mut self,
         buyer_id: AccountId,
-        price: U128,
-    ) -> U128 {
+        price: NearToken,
+    ) -> NearToken {
         // checking for payout information returned from the nft_transfer_payout method
         let payout_option = promise_result_as_success().and_then(|value| {
             //if we set the payout_option to None, that means something went wrong and we should refund the buyer
@@ -221,17 +221,17 @@ impl Contract {
                     //if the payout object is the correct length, we move forward
                     } else {
                         //we'll keep track of how much the nft contract wants us to payout. Starting at the full price payed by the buyer
-                        let mut remainder = price.0;
+                        let mut remainder = price;
                         
                         //loop through the payout and subtract the values from the remainder. 
                         for &value in payout_object.payout.values() {
                             //checked sub checks for overflow or any errors and returns None if there are problems
-                            remainder = remainder.checked_sub(value.0)?;
+                            remainder = remainder.checked_sub(value)?;
                         }
                         //Check to see if the NFT contract sent back a faulty payout that requires us to pay more or too little. 
                         //The remainder will be 0 if the payout summed to the total price. The remainder will be 1 if the royalties
                         //we something like 3333 + 3333 + 3333. 
-                        if remainder == 0 || remainder == 1 {
+                        if remainder.eq(&ZERO_NEAR) || remainder.eq(&NearToken::from_yoctonear(1)) {
                             //set the payout_option to be the payout because nothing went wrong
                             Some(payout_object.payout)
                         } else {
@@ -247,14 +247,14 @@ impl Contract {
             payout_option
         //if the payout option was None, we refund the buyer for the price they payed and return
         } else {
-            Promise::new(buyer_id).transfer(NearToken::from_yoctonear(u128::from(price)));
+            Promise::new(buyer_id).transfer(price);
             // leave function and return the price that was refunded
             return price;
         };
 
         // NEAR payouts
         for (receiver_id, amount) in payout {
-            Promise::new(receiver_id).transfer(NearToken::from_yoctonear(amount.0));
+            Promise::new(receiver_id).transfer(amount);
         }
 
         //return the price payout out
