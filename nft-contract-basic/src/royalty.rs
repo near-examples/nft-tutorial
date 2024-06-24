@@ -2,7 +2,7 @@ use crate::*;
 
 pub trait NonFungibleTokenCore {
     //calculates the payout for a token given the passed in balance. This is a view method
-  	fn nft_payout(&self, token_id: TokenId, balance: U128, max_len_payout: u32) -> Payout;
+  	fn nft_payout(&self, token_id: TokenId, balance: NearToken, max_len_payout: u32) -> Payout;
     
     //transfers the token to the receiver ID and returns the payout object that should be payed given the passed in balance. 
     fn nft_transfer_payout(
@@ -11,7 +11,7 @@ pub trait NonFungibleTokenCore {
         token_id: TokenId,
         approval_id: u32,
         memo: Option<String>,
-        balance: U128,
+        balance: NearToken,
         max_len_payout: u32,
     ) -> Payout;
 }
@@ -20,7 +20,7 @@ pub trait NonFungibleTokenCore {
 impl NonFungibleTokenCore for Contract {
 
     //calculates the payout for a token given the passed in balance. This is a view method
-    fn nft_payout(&self, token_id: TokenId, balance: U128, max_len_payout: u32) -> Payout {
+    fn nft_payout(&self, token_id: TokenId, balance: NearToken, max_len_payout: u32) -> Payout {
 		/*
             FILL THIS IN
         */
@@ -35,7 +35,7 @@ impl NonFungibleTokenCore for Contract {
         token_id: TokenId,
         approval_id: u32,
         memo: Option<String>,
-        balance: U128,
+        balance: NearToken,
         max_len_payout: u32,
     ) -> Payout {
         /*

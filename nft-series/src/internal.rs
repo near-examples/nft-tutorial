@@ -7,8 +7,8 @@ const ZERO_NEAR: NearToken = NearToken::from_yoctonear(0);
 const ONE_YOCTONEAR: NearToken = NearToken::from_yoctonear(1);
 
 //convert the royalty percentage and amount to pay into a payout
-pub(crate) fn royalty_to_payout(royalty_percentage: u128, amount_to_pay: u128) -> U128 {
-    U128(amount_to_pay.saturating_mul(royalty_percentage))
+pub(crate) fn royalty_to_payout(royalty_percentage: u128, amount_to_pay: NearToken) -> NearToken {
+    amount_to_pay.saturating_mul(royalty_percentage)
 }
 
 //calculate how many bytes the account ID is taking up

@@ -16,7 +16,7 @@ trait ExtContract {
             the price that the token was purchased for. This will be used in conjunction with the royalty percentages
             for the token in order to determine how much money should go to which account. 
         */
-        balance: U128,
+        balance: NearToken,
         //the maximum amount of accounts the market can payout at once (this is limited by GAS)
 		    max_len_payout: u32,
     );

@@ -72,7 +72,7 @@ fn test_storage_balance_of() {
         .build());
     contract.storage_deposit(Some(accounts(0)));
     let balance = contract.storage_balance_of(accounts(0));
-    assert_eq!(balance, U128(MIN_REQUIRED_STORAGE_YOCTO.as_yoctonear()));
+    assert_eq!(balance, MIN_REQUIRED_STORAGE_YOCTO);
 }
 
 #[test]
@@ -98,7 +98,7 @@ fn test_storage_withdraw() {
     contract.storage_withdraw();
 
     let remaining_amount = contract.storage_balance_of(accounts(0));
-    assert_eq!(remaining_amount, U128(0))
+    assert_eq!(remaining_amount, NearToken::from_yoctonear(0))
 }
 
 #[test]
@@ -195,7 +195,7 @@ fn test_update_price() {
         .attached_deposit(ONE_YOCTONEAR)
         .predecessor_account_id(accounts(0))  // bob to buy NFT from alice
         .build());
-    contract.update_price(nft_contract_id, token_id, U128(new_price.as_yoctonear()));
+    contract.update_price(nft_contract_id, token_id, new_price);
 
     // test update price success
     let sale = contract.sales.get(&contract_and_token_id).expect("No sale");
