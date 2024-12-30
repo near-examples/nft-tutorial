@@ -18,7 +18,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: 1.81.0
           target: wasm32-unknown-unknown
       - name: Run integration test
         run: cd integration-tests && cargo run --example integration-tests
