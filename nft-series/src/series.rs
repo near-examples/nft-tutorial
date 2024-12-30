@@ -25,6 +25,16 @@ impl Contract {
             "only approved creators can add a type"
         );
 
+        // Check that the total royalty amount does not exceed 100%
+        if !royalty.is_none() {
+            let mut total_royalty = 0;
+
+            for (_, v) in royalty.clone().unwrap().iter() {
+                total_royalty += *v;
+            }
+            require!(total_royalty <= 100, "total royalty can't exceed 100%");
+        }
+
         // Insert the series and ensure it doesn't already exist
         require!(
             self.series_by_id
