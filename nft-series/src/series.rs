@@ -13,7 +13,7 @@ impl Contract {
         id: U64,
         metadata: TokenMetadata,
         royalty: Option<HashMap<AccountId, u32>>,
-        price: Option<NearToken>
+        price: Option<NearToken>,
     ) {
         // Measure the initial storage being used on the contract
         let initial_storage_usage = env::storage_usage();
@@ -25,6 +25,16 @@ impl Contract {
             "only approved creators can add a type"
         );
 
+        // Check that the total royalty amount does not exceed 100%
+        if !royalty.is_none() {
+            let mut total_royalty = 0;
+
+            for (_, v) in royalty.clone().unwrap().iter() {
+                total_royalty += *v;
+            }
+            require!(total_royalty <= 100, "total royalty can't exceed 100%");
+        }
+
         // Insert the series and ensure it doesn't already exist
         require!(
             self.series_by_id
@@ -35,10 +45,7 @@ impl Contract {
                         royalty,
                         tokens: UnorderedSet::new(StorageKey::SeriesByIdInner {
                             // We get a new unique prefix for the collection
-                            account_id_hash: hash_account_id(&format!(
-                                "{}{}",
-                                id.0, caller
-                            )),
+                            account_id_hash: hash_account_id(&format!("{}.{}", id.0, caller)),
                         }),
                         owner_id: caller,
                         price: price.map(|p| p),
@@ -64,12 +71,15 @@ impl Contract {
 
         // Get the series and how many tokens currently exist (edition number = cur_len + 1)
         let mut series = self.series_by_id.get(&id.0).expect("Not a series");
-        
+
         // Check if the series has a price per token. If it does, ensure the caller has attached at least that amount
-        let mut price_per_token = NearToken::from_yoctonear(0); 
+        let mut price_per_token = NearToken::from_yoctonear(0);
         if let Some(price) = series.price {
             price_per_token = price;
-            require!(env::attached_deposit().ge(&price_per_token), "Need to attach at least enough to cover price");
+            require!(
+                env::attached_deposit().ge(&price_per_token),
+                "Need to attach at least enough to cover price"
+            );
         // If the series doesn't have a price, ensure the caller is an approved minter.
         } else {
             // Ensure the caller is an approved minter
@@ -140,7 +150,11 @@ impl Contract {
 
         // If there's some price for the token, we'll payout the series owner. Otherwise, refund the excess deposit for storage to the caller
         if price_per_token.gt(&NearToken::from_yoctonear(0)) {
-            payout_series_owner(required_storage_in_bytes.into(), price_per_token, series.owner_id);
+            payout_series_owner(
+                required_storage_in_bytes.into(),
+                price_per_token,
+                series.owner_id,
+            );
         } else {
             refund_deposit(required_storage_in_bytes.into());
         }
