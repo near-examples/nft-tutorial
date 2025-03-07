@@ -99,8 +99,8 @@ async fn test_nft_mint_call(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let request_payload = json!({
         "token_id": "1",
-        "receiver_id": user.id(),
-        "metadata": {
+        "token_owner_id": user.id(),
+        "token_metadata": {
             "title": "LEEROYYYMMMJENKINSSS",
             "description": "Alright time's up, let's do this.",
             "media": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.Fhp4lHufCdTzTeGCAblOdgHaF7%26pid%3DApi&f=1"
@@ -392,8 +392,8 @@ async fn test_reselling_and_royalties(
     // mint with royalties
     let request_payload = json!({
         "token_id": token_id,
-        "receiver_id": user.id(),
-        "metadata": {
+        "token_owner_id": user.id(),
+        "token_metadata": {
             "title": "Grumpy Cat",
             "description": "Not amused.",
             "media": "https://www.adamsdrafting.com/wp-content/uploads/2018/06/More-Grumpy-Cat.jpg"
@@ -555,8 +555,8 @@ async fn test_royalties_exceeding_100_percents(
     // mint with royalties
     let request_payload = json!({
         "token_id": token_id,
-        "receiver_id": user.id(),
-        "metadata": {
+        "token_owner_id": user.id(),
+        "token_metadata": {
             "title": "Grumpy Cat",
             "description": "Not amused.",
             "media": "https://www.adamsdrafting.com/wp-content/uploads/2018/06/More-Grumpy-Cat.jpg"

@@ -65,7 +65,7 @@ impl Contract {
     /// Mint a new NFT that is part of a series. The caller must be an approved minter.
     /// The series ID must exist and if the metadata specifies a copy limit, you cannot exceed it.
     #[payable]
-    pub fn nft_mint(&mut self, id: U64, receiver_id: AccountId) {
+    pub fn nft_mint(&mut self, id: U64, token_owner_id: AccountId) {
         // Measure the initial storage being used on the contract
         let initial_storage_usage = env::storage_usage();
 
@@ -109,7 +109,7 @@ impl Contract {
             // Series ID that the token belongs to
             series_id: id.0,
             //set the owner ID equal to the receiver ID passed into the function
-            owner_id: receiver_id,
+            owner_id: token_owner_id,
             //we set the approved account IDs to the default value (an empty map)
             approved_account_ids: Default::default(),
             //the next approval ID is set to 0
