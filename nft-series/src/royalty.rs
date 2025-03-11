@@ -9,7 +9,7 @@ pub trait NonFungibleTokenCore {
         &mut self,
         receiver_id: AccountId,
         token_id: TokenId,
-        approval_id: u32,
+        approval_id: u64,
         memo: Option<String>,
         balance: NearToken,
         max_len_payout: u32,
@@ -42,9 +42,7 @@ impl NonFungibleTokenCore for Contract {
         if royalty_option.is_none() {
             let mut payout = HashMap::new();
             payout.insert(owner_id, balance);
-            return Payout {
-                payout: payout
-            };
+            return Payout { payout: payout };
         }
         // Otherwise, we will get the royalty object from the series
         let royalty = royalty_option.unwrap();
@@ -72,7 +70,7 @@ impl NonFungibleTokenCore for Contract {
         // payout to previous owner who gets 100% - total perpetual royalties
         payout_object.payout.insert(
             owner_id,
-            royalty_to_payout((10000 - total_perpetual).into(), balance)
+            royalty_to_payout((10000 - total_perpetual).into(), balance),
         );
 
         //return the payout object
@@ -85,7 +83,7 @@ impl NonFungibleTokenCore for Contract {
         &mut self,
         receiver_id: AccountId,
         token_id: TokenId,
-        approval_id: u32,
+        approval_id: u64,
         memo: Option<String>,
         balance: NearToken,
         max_len_payout: u32,
@@ -124,9 +122,7 @@ impl NonFungibleTokenCore for Contract {
         if royalty_option.is_none() {
             let mut payout = HashMap::new();
             payout.insert(owner_id, balance);
-            return Payout {
-                payout: payout
-            };
+            return Payout { payout: payout };
         }
         // Otherwise, we will get the royalty object from the series
         let royalty = royalty_option.unwrap();
@@ -154,7 +150,7 @@ impl NonFungibleTokenCore for Contract {
         // payout to previous owner who gets 100% - total perpetual royalties
         payout_object.payout.insert(
             owner_id,
-            royalty_to_payout((10000 - total_perpetual).into(), balance)
+            royalty_to_payout((10000 - total_perpetual).into(), balance),
         );
 
         //return the payout object

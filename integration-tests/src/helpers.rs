@@ -76,7 +76,7 @@ pub async fn place_nft_for_sale(
     market_contract: &Contract,
     nft_contract: &Contract,
     token_id: &str,
-    approval_id: u32,
+    approval_id: u64,
     price: &NearToken,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let request_payload = json!({

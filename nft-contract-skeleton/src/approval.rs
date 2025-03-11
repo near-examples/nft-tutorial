@@ -1,5 +1,5 @@
 use crate::*;
-use near_sdk::{ext_contract};
+use near_sdk::ext_contract;
 
 pub trait NonFungibleTokenCore {
     //approve an account ID to transfer a token on your behalf
@@ -10,7 +10,7 @@ pub trait NonFungibleTokenCore {
         &self,
         token_id: TokenId,
         approved_account_id: AccountId,
-        approval_id: Option<u32>,
+        approval_id: Option<u64>,
     ) -> bool;
 
     //revoke a specific account from transferring the token on your behalf
@@ -27,7 +27,7 @@ trait NonFungibleTokenApprovalsReceiver {
         &mut self,
         token_id: TokenId,
         owner_id: AccountId,
-        approval_id: u32,
+        approval_id: u64,
         msg: String,
     );
 }
@@ -43,11 +43,11 @@ impl NonFungibleTokenCore for Contract {
     }
 
     //check if the passed in account has access to approve the token ID
-	  fn nft_is_approved(
+    fn nft_is_approved(
         &self,
         token_id: TokenId,
         approved_account_id: AccountId,
-        approval_id: Option<u32>,
+        approval_id: Option<u64>,
     ) -> bool {
         /*
             FILL THIS IN
@@ -55,7 +55,7 @@ impl NonFungibleTokenCore for Contract {
         todo!(); //remove once code is filled in.
     }
 
-    //revoke a specific account from transferring the token on your behalf 
+    //revoke a specific account from transferring the token on your behalf
     #[payable]
     fn nft_revoke(&mut self, token_id: TokenId, account_id: AccountId) {
         /*

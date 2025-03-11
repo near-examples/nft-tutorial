@@ -17,21 +17,26 @@ pub(crate) fn bytes_for_approved_account_id(account_id: &AccountId) -> u128 {
     account_id.as_str().len() as u128 + 4 + size_of::<u128>() as u128
 }
 
-//refund the storage taken up by passed in approved account IDs and send the funds to the passed in account ID. 
+//refund the storage taken up by passed in approved account IDs and send the funds to the passed in account ID.
 pub(crate) fn refund_approved_account_ids_iter<'a, I>(
-  account_id: AccountId,
-  approved_account_ids: I, //the approved account IDs must be passed in as an iterator
-) -> Promise where I: Iterator<Item = &'a AccountId> {
-  //get the storage total by going through and summing all the bytes for each approved account IDs
-  let storage_released = approved_account_ids.map(bytes_for_approved_account_id).sum();
-  //transfer the account the storage that is released
-  Promise::new(account_id).transfer(env::storage_byte_cost().saturating_mul(storage_released))
+    account_id: AccountId,
+    approved_account_ids: I, //the approved account IDs must be passed in as an iterator
+) -> Promise
+where
+    I: Iterator<Item = &'a AccountId>,
+{
+    //get the storage total by going through and summing all the bytes for each approved account IDs
+    let storage_released = approved_account_ids
+        .map(bytes_for_approved_account_id)
+        .sum();
+    //transfer the account the storage that is released
+    Promise::new(account_id).transfer(env::storage_byte_cost().saturating_mul(storage_released))
 }
 
 //refund a map of approved account IDs and send the funds to the passed in account ID
 pub(crate) fn refund_approved_account_ids(
     account_id: AccountId,
-    approved_account_ids: &HashMap<AccountId, u32>,
+    approved_account_ids: &HashMap<AccountId, u64>,
 ) -> Promise {
     //call the refund_approved_account_ids_iter with the approved account IDs as keys
     refund_approved_account_ids_iter(account_id, approved_account_ids.keys())
@@ -48,23 +53,27 @@ pub(crate) fn hash_account_id(account_id: &String) -> CryptoHash {
 
 //used to make sure the user attached exactly 1 yoctoNEAR
 pub(crate) fn assert_one_yocto() {
-  assert_eq!(
-      env::attached_deposit(),
-      ONE_YOCTONEAR,
-      "Requires attached deposit of exactly 1 yoctoNEAR",
-  )
+    assert_eq!(
+        env::attached_deposit(),
+        ONE_YOCTONEAR,
+        "Requires attached deposit of exactly 1 yoctoNEAR",
+    )
 }
 
 //Assert that the user has attached at least 1 yoctoNEAR (for security reasons and to pay for storage)
 pub(crate) fn assert_at_least_one_yocto() {
-  assert!(
-      env::attached_deposit() >= ONE_YOCTONEAR,
-      "Requires attached deposit of at least 1 yoctoNEAR",
-  )
+    assert!(
+        env::attached_deposit() >= ONE_YOCTONEAR,
+        "Requires attached deposit of at least 1 yoctoNEAR",
+    )
 }
 
 // Send all the non storage funds to the series owner
-pub(crate) fn payout_series_owner(storage_used: u128, price_per_token: NearToken, owner_id: AccountId) {
+pub(crate) fn payout_series_owner(
+    storage_used: u128,
+    price_per_token: NearToken,
+    owner_id: AccountId,
+) {
     //get how much it would cost to store the information
     let required_cost = env::storage_byte_cost().saturating_mul(storage_used);
     //get the attached deposit
@@ -86,25 +95,25 @@ pub(crate) fn payout_series_owner(storage_used: u128, price_per_token: NearToken
 
 //refund the initial deposit based on the amount of storage that was used up
 pub(crate) fn refund_deposit(storage_used: u128) {
-  //get how much it would cost to store the information
-  let required_cost = env::storage_byte_cost().saturating_mul(storage_used);
-  //get the attached deposit
-  let attached_deposit = env::attached_deposit();
+    //get how much it would cost to store the information
+    let required_cost = env::storage_byte_cost().saturating_mul(storage_used);
+    //get the attached deposit
+    let attached_deposit = env::attached_deposit();
 
-  //make sure that the attached deposit is greater than or equal to the required cost
-  assert!(
-      required_cost <= attached_deposit,
-      "Must attach {} yoctoNEAR to cover storage",
-      required_cost,
-  );
+    //make sure that the attached deposit is greater than or equal to the required cost
+    assert!(
+        required_cost <= attached_deposit,
+        "Must attach {} yoctoNEAR to cover storage",
+        required_cost,
+    );
 
-  //get the refund amount from the attached deposit - required cost
-  let refund = attached_deposit.saturating_sub(required_cost);
+    //get the refund amount from the attached deposit - required cost
+    let refund = attached_deposit.saturating_sub(required_cost);
 
-  //if the refund is greater than 1 yocto NEAR, we refund the predecessor that amount
-  if refund.gt(&ONE_YOCTONEAR) {
-      Promise::new(env::predecessor_account_id()).transfer(refund);
-  }
+    //if the refund is greater than 1 yocto NEAR, we refund the predecessor that amount
+    if refund.gt(&ONE_YOCTONEAR) {
+        Promise::new(env::predecessor_account_id()).transfer(refund);
+    }
 }
 
 impl Contract {
@@ -125,12 +134,10 @@ impl Contract {
         //get the set of tokens for the given account
         let mut tokens_set = self.tokens_per_owner.get(account_id).unwrap_or_else(|| {
             //if the account doesn't have any tokens, we create a new unordered set
-            UnorderedSet::new(
-                StorageKey::TokenPerOwnerInner {
-                    //we get a new unique prefix for the collection
-                    account_id_hash: hash_account_id(&account_id.to_string()),
-                }
-            )
+            UnorderedSet::new(StorageKey::TokenPerOwnerInner {
+                //we get a new unique prefix for the collection
+                account_id_hash: hash_account_id(&account_id.to_string()),
+            })
         });
 
         //we insert the token ID into the set
@@ -172,7 +179,7 @@ impl Contract {
         receiver_id: &AccountId,
         token_id: &TokenId,
         //we introduce an approval ID so that people with that approval ID can transfer the token
-        approval_id: Option<u32>,
+        approval_id: Option<u64>,
         memo: Option<String>,
     ) -> Token {
         //get the token object by passing in the token_id

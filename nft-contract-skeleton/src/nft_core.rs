@@ -1,17 +1,12 @@
 use crate::*;
-use near_sdk::{ext_contract, Gas, log, PromiseResult};
+use near_sdk::{ext_contract, log, Gas, PromiseResult};
 
 const GAS_FOR_RESOLVE_TRANSFER: Gas = Gas::from_tgas(10);
 const GAS_FOR_NFT_ON_TRANSFER: Gas = Gas::from_tgas(25);
 
 pub trait NonFungibleTokenCore {
     //transfers an NFT to a receiver ID
-    fn nft_transfer(
-        &mut self,
-        receiver_id: AccountId,
-        token_id: TokenId,
-        memo: Option<String>,
-    );
+    fn nft_transfer(&mut self, receiver_id: AccountId, token_id: TokenId, memo: Option<String>);
 
     //transfers an NFT to a receiver and calls a function on the receiver ID's contract
     /// Returns `true` if the token was transferred from the sender's account.
@@ -49,7 +44,7 @@ trait NonFungibleTokenResolver {
     */
     fn nft_resolve_transfer(
         &mut self,
-        owner_id: AccountId,
+        previous_owner_id: AccountId,
         receiver_id: AccountId,
         token_id: TokenId,
     ) -> bool;
@@ -57,14 +52,9 @@ trait NonFungibleTokenResolver {
 
 #[near_bindgen]
 impl NonFungibleTokenCore for Contract {
-    //implementation of the nft_transfer method. This transfers the NFT from the current owner to the receiver. 
+    //implementation of the nft_transfer method. This transfers the NFT from the current owner to the receiver.
     #[payable]
-    fn nft_transfer(
-        &mut self,
-        receiver_id: AccountId,
-        token_id: TokenId,
-        memo: Option<String>,
-    ) {
+    fn nft_transfer(&mut self, receiver_id: AccountId, token_id: TokenId, memo: Option<String>) {
         /*
             FILL THIS IN
         */
@@ -101,7 +91,7 @@ impl NonFungibleTokenResolver for Contract {
     #[private]
     fn nft_resolve_transfer(
         &mut self,
-        owner_id: AccountId,
+        previous_owner_id: AccountId,
         receiver_id: AccountId,
         token_id: TokenId,
     ) -> bool {
