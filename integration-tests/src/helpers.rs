@@ -1,3 +1,4 @@
+use near_sdk::Gas;
 use near_workspaces::{
     types::{AccountDetails, NearToken},
     Account, Contract,
@@ -88,8 +89,7 @@ pub async fn place_nft_for_sale(
     let _ = user
         .call(market_contract.id(), "list_nft_for_sale")
         .args_json(request_payload)
-        .max_gas()
-        .deposit(NearToken::from_yoctonear(DEFAULT_DEPOSIT))
+        .gas(Gas::from_tgas(100))
         .transact()
         .await;
 

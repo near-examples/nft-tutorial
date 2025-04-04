@@ -28,7 +28,8 @@ where
         .map(bytes_for_approved_account_id)
         .sum();
     //transfer the account the storage that is released
-    Promise::new(account_id).transfer(env::storage_byte_cost().saturating_mul(storage_released))
+    let amount_to_be_released = env::storage_byte_cost().saturating_mul(storage_released);
+    Promise::new(account_id).transfer(amount_to_be_released)
 }
 
 //refund a map of approved account IDs and send the funds to the passed in account ID

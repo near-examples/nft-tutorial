@@ -182,15 +182,10 @@ async fn test_sell_nft_listed_on_marketplace(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let token_id = "4";
     let approval_id = 0;
-    let sale_price: NearToken = NearToken::from_yoctonear(10000000000000000000000000);
+    let sale_price: NearToken = NearToken::from_near(1);
 
     helpers::mint_nft(seller, nft_contract, token_id).await?;
-    helpers::pay_for_storage(
-        seller,
-        market_contract,
-        NearToken::from_yoctonear(1000000000000000000000000),
-    )
-    .await?;
+    helpers::pay_for_storage(seller, market_contract, NearToken::from_millinear(10)).await?;
     helpers::approve_nft(market_contract, seller, nft_contract, token_id).await?;
     helpers::place_nft_for_sale(
         seller,
