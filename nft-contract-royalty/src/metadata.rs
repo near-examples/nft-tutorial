@@ -5,7 +5,7 @@ pub type TokenId = String;
 #[serde(crate = "near_sdk::serde")]
 pub struct Payout {
     pub payout: HashMap<AccountId, NearToken>,
-} 
+}
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, NearSchema)]
 #[borsh(crate = "near_sdk::borsh")]
@@ -44,14 +44,14 @@ pub struct Token {
     //owner of the token
     pub owner_id: AccountId,
     //list of approved account IDs that have access to transfer the token. This maps an account ID to an approval ID
-    pub approved_account_ids: HashMap<AccountId, u32>,
-    //the next approval ID to give out. 
-    pub next_approval_id: u32,
+    pub approved_account_ids: HashMap<AccountId, u64>,
+    //the next approval ID to give out.
+    pub next_approval_id: u64,
     //keep track of the royalty percentages for the token in a hash map
     pub royalty: HashMap<AccountId, u32>,
 }
 
-//The Json token is what will be returned from view calls. 
+//The Json token is what will be returned from view calls.
 #[derive(Serialize, Deserialize, NearSchema)]
 #[serde(crate = "near_sdk::serde")]
 pub struct JsonToken {
@@ -62,7 +62,7 @@ pub struct JsonToken {
     //token metadata
     pub metadata: TokenMetadata,
     //list of approved account IDs that have access to transfer the token. This maps an account ID to an approval ID
-    pub approved_account_ids: HashMap<AccountId, u32>,
+    pub approved_account_ids: HashMap<AccountId, u64>,
     //keep track of the royalty percentages for the token in a hash map
     pub royalty: HashMap<AccountId, u32>,
 }

@@ -6,8 +6,8 @@ impl Contract {
     pub fn nft_mint(
         &mut self,
         token_id: Option<TokenId>,
-        metadata: TokenMetadata,
-        receiver_id: Option<AccountId>,
+        token_owner_id: AccountId,
+        token_metadata: TokenMetadata,
     ) {
         /*
             FILL THIS IN

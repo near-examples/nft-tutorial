@@ -99,8 +99,8 @@ async fn test_nft_mint_call(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let request_payload = json!({
         "token_id": "1",
-        "receiver_id": user.id(),
-        "metadata": {
+        "token_owner_id": user.id(),
+        "token_metadata": {
             "title": "LEEROYYYMMMJENKINSSS",
             "description": "Alright time's up, let's do this.",
             "media": "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.Fhp4lHufCdTzTeGCAblOdgHaF7%26pid%3DApi&f=1"
@@ -182,15 +182,10 @@ async fn test_sell_nft_listed_on_marketplace(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let token_id = "4";
     let approval_id = 0;
-    let sale_price: NearToken = NearToken::from_yoctonear(10000000000000000000000000);
+    let sale_price: NearToken = NearToken::from_near(1);
 
     helpers::mint_nft(seller, nft_contract, token_id).await?;
-    helpers::pay_for_storage(
-        seller,
-        market_contract,
-        NearToken::from_yoctonear(1000000000000000000000000),
-    )
-    .await?;
+    helpers::pay_for_storage(seller, market_contract, NearToken::from_millinear(10)).await?;
     helpers::approve_nft(market_contract, seller, nft_contract, token_id).await?;
     helpers::place_nft_for_sale(
         seller,
@@ -392,8 +387,8 @@ async fn test_reselling_and_royalties(
     // mint with royalties
     let request_payload = json!({
         "token_id": token_id,
-        "receiver_id": user.id(),
-        "metadata": {
+        "token_owner_id": user.id(),
+        "token_metadata": {
             "title": "Grumpy Cat",
             "description": "Not amused.",
             "media": "https://www.adamsdrafting.com/wp-content/uploads/2018/06/More-Grumpy-Cat.jpg"
@@ -555,8 +550,8 @@ async fn test_royalties_exceeding_100_percents(
     // mint with royalties
     let request_payload = json!({
         "token_id": token_id,
-        "receiver_id": user.id(),
-        "metadata": {
+        "token_owner_id": user.id(),
+        "token_metadata": {
             "title": "Grumpy Cat",
             "description": "Not amused.",
             "media": "https://www.adamsdrafting.com/wp-content/uploads/2018/06/More-Grumpy-Cat.jpg"

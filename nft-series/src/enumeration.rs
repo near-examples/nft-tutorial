@@ -1,6 +1,5 @@
-use crate::*;
 use crate::nft_core::NonFungibleTokenCore;
-
+use crate::*;
 
 /// Struct to return in views to query for specific data related to a series
 #[derive(BorshDeserialize, BorshSerialize, Serialize, NearSchema)]
@@ -19,13 +18,13 @@ pub struct JsonSeries {
 #[near_bindgen]
 impl Contract {
     //Query for the total supply of NFTs on the contract
-    pub fn nft_total_supply(&self) -> U64 {
+    pub fn nft_total_supply(&self) -> U128 {
         //return the length of the tokens by id
-        U64(self.tokens_by_id.len())
+        U128(self.tokens_by_id.len().into())
     }
 
     //Query for nft tokens on the contract regardless of the owner using pagination
-    pub fn nft_tokens(&self, from_index: Option<U128>, limit: Option<u32>) -> Vec<JsonToken> {
+    pub fn nft_tokens(&self, from_index: Option<U128>, limit: Option<u64>) -> Vec<JsonToken> {
         //where to start pagination - if we have a from_index, we'll use that - otherwise start from 0 index
         let start = u128::from(from_index.unwrap_or(U128(0)));
 
@@ -43,16 +42,16 @@ impl Contract {
     }
 
     //get the total supply of NFTs for a given owner
-    pub fn nft_supply_for_owner(&self, account_id: AccountId) -> U64 {
+    pub fn nft_supply_for_owner(&self, account_id: AccountId) -> U128 {
         //get the set of tokens for the passed in owner
         let tokens_for_owner_set = self.tokens_per_owner.get(&account_id);
 
         //if there is some set of tokens, we'll return the length
         if let Some(tokens_for_owner_set) = tokens_for_owner_set {
-            U64(tokens_for_owner_set.len())
+            U128(tokens_for_owner_set.len().into())
         } else {
             //if there isn't a set of tokens for the passed in account ID, we'll return 0
-            U64(0)
+            U128(0)
         }
     }
 
@@ -61,7 +60,7 @@ impl Contract {
         &self,
         account_id: AccountId,
         from_index: Option<U128>,
-        limit: Option<u32>,
+        limit: Option<u64>,
     ) -> Vec<JsonToken> {
         //get the set of tokens for the passed in owner
         let tokens_for_owner_set = self.tokens_per_owner.get(&account_id);
@@ -143,7 +142,7 @@ impl Contract {
         }
     }
 
-    /// Paginate through NFTs within a given series 
+    /// Paginate through NFTs within a given series
     pub fn nft_tokens_for_series(
         &self,
         id: U64,
