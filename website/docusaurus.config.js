@@ -51,7 +51,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/near-examples/nft-tutorial/tree/main/website/docs/',
+            'https://github.com/near-examples/nft-tutorial/tree/main/website/',
         },
         theme: {
           customCss: './src/css/custom.css',
@@ -68,7 +68,7 @@ const config = {
         respectPrefersColorScheme: true,
       },
       navbar: {
-        title: 'FT Tutorial',
+        title: 'NFT Tutorial',
         logo: {
           alt: 'NEAR Protocol',
           src: "img/near_logo.svg",
