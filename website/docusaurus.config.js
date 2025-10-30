@@ -51,7 +51,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/near-examples/ft-tutorial/tree/main/website/docs/',
+            'https://github.com/near-examples/nft-tutorial/tree/main/website/docs/',
         },
         theme: {
           customCss: './src/css/custom.css',
