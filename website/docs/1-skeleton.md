@@ -15,7 +15,7 @@ You can find the skeleton contract in our [GitHub repository](https://github.com
 :::
 
 :::info New to Rust?
-If you are new to Rust and want to dive into smart contract development, our [Quick-start guide](../../smart-contracts/quickstart.md) is a great place to start.
+If you are new to Rust and want to dive into smart contract development, our [Quick-start guide](https://docs.near.org/smart-contracts/quickstart) is a great place to start.
 :::
 
 ---
@@ -90,7 +90,7 @@ This file contains the logic that complies with the standard's [approvals manage
 
 <Github language="rust" start="4" end="33" url="https://github.com/near-examples/nft-tutorial/blob/main/nft-contract-basic/src/approval.rs" />
 
-You'll learn more about these functions in the [approvals section](/tutorials/nfts/approvals) of the Zero to Hero series.
+You'll learn more about these functions in the [approvals section](5-approvals.md) of the Zero to Hero series.
 
 ---
 
@@ -107,7 +107,7 @@ You'll learn more about these functions in the [approvals section](/tutorials/nf
 
 <Github language="rust" start="4" end="44" url="https://github.com/near-examples/nft-tutorial/blob/main/nft-contract-skeleton/src/enumeration.rs" />
 
-You'll learn more about these functions in the [enumeration section](/tutorials/nfts/enumeration) of the tutorial series.
+You'll learn more about these functions in the [enumeration section](3-enumeration.md) of the tutorial series.
 
 ---
 
@@ -126,7 +126,7 @@ The initialization functions (`new`, `new_default_meta`) can only be called once
 
 <Github language="rust" start="47" end="73" url="https://github.com/near-examples/nft-tutorial/blob/main/nft-contract-skeleton/src/lib.rs" />
 
-You'll learn more about these functions in the [minting section](/tutorials/nfts/minting) of the tutorial series.
+You'll learn more about these functions in the [minting section](2-minting.md) of the tutorial series.
 
 ---
 
@@ -144,7 +144,7 @@ You'll learn more about these functions in the [minting section](/tutorials/nfts
 
 <Github language="rust" start="12" end="60" url="https://github.com/near-examples/nft-tutorial/blob/main/nft-contract-skeleton/src/metadata.rs" />
 
-You'll learn more about these functions in the [minting section](/tutorials/nfts/minting) of the tutorial series.
+You'll learn more about these functions in the [minting section](2-minting.md) of the tutorial series.
 
 ---
 
@@ -174,7 +174,7 @@ You'll learn more about these functions in the [minting section](/tutorials/nfts
 
 <Github language="rust" start="7" end="56" url="https://github.com/near-examples/nft-tutorial/blob/main/nft-contract-skeleton/src/nft_core.rs" />
 
-You'll learn more about these functions in the [core section](/tutorials/nfts/core) of the tutorial series.
+You'll learn more about these functions in the [core section](4-core.md) of the tutorial series.
 
 ---
 
@@ -189,7 +189,7 @@ You'll learn more about these functions in the [core section](/tutorials/nfts/co
 
 <Github language="rust" start="3" end="17" url="https://github.com/near-examples/nft-tutorial/blob/main/nft-contract-skeleton/src/royalty.rs" />
 
-You'll learn more about these functions in the [royalty section](/tutorials/nfts/royalty) of the tutorial series.
+You'll learn more about these functions in the [royalty section](6-royalty.md) of the tutorial series.
 
 ---
 
@@ -206,7 +206,7 @@ You'll learn more about these functions in the [royalty section](/tutorials/nfts
 
 <Github language="rust" start="5" end="79" url="https://github.com/near-examples/nft-tutorial/blob/main/nft-contract-events/src/events.rs" />
 
-You'll learn more about these functions in the [events section](/tutorials/nfts/events) of the tutorial series.
+You'll learn more about these functions in the [events section](7-events.md) of the tutorial series.
 
 ---
 

@@ -14,7 +14,7 @@ Create your first non-fungible token by using a pre-deployed NFT smart contract 
 
 ## Prerequisites
 
-To complete this tutorial successfully, you'll need [a NEAR Wallet](https://testnet.mynearwallet.com/create) and [NEAR CLI](/tools/near-cli#installation)
+To complete this tutorial successfully, you'll need [a NEAR Wallet](https://testnet.mynearwallet.com/create) and [NEAR CLI](https://docs.near.org/tools/near-cli#installation)
 
 ---
 
@@ -146,7 +146,7 @@ Now try going to your [NEAR Wallet](https://testnet.mynearwallet.com) and view y
 
 This basic example illustrates all the required steps to call an NFT smart contract on NEAR and start minting your own non-fungible tokens.
 
-Now that you're familiar with the process, you can jump to [Contract Architecture](/tutorials/nfts/skeleton) and learn more about the smart contract structure and how you can build your own NFT contract from the ground up.
+Now that you're familiar with the process, you can jump to [Contract Architecture](1-skeleton.md) and learn more about the smart contract structure and how you can build your own NFT contract from the ground up.
 
 ***Happy minting!*** 🪙
 

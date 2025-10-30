@@ -337,7 +337,7 @@ If you now query for the metadata of the contract, it should return our default 
 
 ## Creating The Series
 
-The next step is to create two different series. One will have a price for lazy minting and the other will simply be a basic series with no price. The first step is to create an owner [sub-account](/tools/near-cli#create) that you can use to create both series
+The next step is to create two different series. One will have a price for lazy minting and the other will simply be a basic series with no price. The first step is to create an owner [sub-account](https://docs.near.org/tools/near-cli#create) that you can use to create both series
 
 <Tabs groupId="cli-tabs">
   <TabItem value="short" label="Short">
@@ -547,7 +547,7 @@ Which has
 
 ## Minting NFTs
 
-Now that you have both series created, it's time to now mint some NFTs. You can either login with an existing NEAR wallet using [`near login`](/tools/near-cli#import) or you can create a sub-account of the NFT contract. In our case, we'll use a sub-account.
+Now that you have both series created, it's time to now mint some NFTs. You can either login with an existing NEAR wallet using [`near login`](https://docs.near.org/tools/near-cli#import) or you can create a sub-account of the NFT contract. In our case, we'll use a sub-account.
 
 <Tabs groupId="cli-tabs">
   <TabItem value="short" label="Short">
