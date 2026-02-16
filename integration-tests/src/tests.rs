@@ -1,76 +1,84 @@
-use near_workspaces::{types::NearToken, Account, Contract};
+use std::sync::Arc;
+
+use near_api::{types::NearToken, Account, Contract, NetworkConfig, Signer};
 use serde_json::json;
 
 mod helpers;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // initiate environemnt
-    let worker = near_workspaces::sandbox().await?;
-
-    // deploy contracts
-    let nft_wasm = near_workspaces::compile_project("../nft-contract-royalty/.").await?;
-    let nft_contract = worker.dev_deploy(&nft_wasm).await?;
-
-    let market_wasm = near_workspaces::compile_project("../market-contract/.").await?;
-    let market_contract = worker.dev_deploy(&market_wasm).await?;
-
-    // create accounts
-    let owner = worker.root_account().unwrap();
-    let alice = owner
-        .create_subaccount("alice")
-        .initial_balance(NearToken::from_near(30))
-        .transact()
-        .await?
-        .into_result()?;
-    let bob = owner
-        .create_subaccount("bob")
-        .initial_balance(NearToken::from_near(30))
-        .transact()
-        .await?
-        .into_result()?;
-    let charlie = owner
-        .create_subaccount("charlie")
-        .initial_balance(NearToken::from_near(30))
-        .transact()
-        .await?
-        .into_result()?;
-
-    // Initialize contracts
-    let _ = nft_contract
-        .call("new_default_meta")
-        .args_json(serde_json::json!({"owner_id": owner.id()}))
-        .transact()
-        .await?;
-    let _ = market_contract
-        .call("new")
-        .args_json(serde_json::json!({"owner_id": owner.id()}))
-        .transact()
-        .await?;
+    // Initialize the sandbox
+    let (sandbox, sandbox_network) = helpers::init_sandbox().await?;
+    // Initialize the accounts
+    let (alice, bob, charlie) = helpers::init_accounts(&sandbox).await?;
+    // Initialize the contracts
+    let (nft_contract, market_contract, signer) =
+        helpers::init_contracts(&sandbox, &sandbox_network).await?;
 
     // begin tests
-    test_nft_metadata_view(&owner, &nft_contract).await?;
-    test_nft_mint_call(&owner, &alice, &nft_contract).await?;
-    test_nft_approve_call(&bob, &nft_contract, &market_contract).await?;
-    test_sell_nft_listed_on_marketplace(&alice, &nft_contract, &market_contract, &bob).await?;
+    test_nft_metadata_view(&nft_contract, &sandbox_network).await?;
+    test_nft_mint_call(&alice, &nft_contract, &signer, &sandbox_network).await?;
+    test_nft_approve_call(
+        &bob,
+        &nft_contract,
+        &market_contract,
+        &signer,
+        &sandbox_network,
+    )
+    .await?;
+    test_sell_nft_listed_on_marketplace(
+        &alice,
+        &nft_contract,
+        &market_contract,
+        &bob,
+        &signer,
+        &sandbox_network,
+    )
+    .await?;
     test_transfer_nft_when_listed_on_marketplace(
         &alice,
         &bob,
         &charlie,
         &nft_contract,
         &market_contract,
+        &signer,
+        &sandbox_network,
     )
     .await?;
-    test_approval_revoke(&alice, &bob, &nft_contract, &market_contract).await?;
-    test_reselling_and_royalties(&alice, &bob, &charlie, &nft_contract, &market_contract).await?;
-    test_royalties_exceeding_100_percents(&alice, &nft_contract, &market_contract).await?;
+    test_approval_revoke(
+        &alice,
+        &bob,
+        &nft_contract,
+        &market_contract,
+        &signer,
+        &sandbox_network,
+    )
+    .await?;
+    test_reselling_and_royalties(
+        &alice,
+        &bob,
+        &charlie,
+        &nft_contract,
+        &market_contract,
+        &signer,
+        &sandbox_network,
+    )
+    .await?;
+    test_royalties_exceeding_100_percents(
+        &alice,
+        &nft_contract,
+        &market_contract,
+        &signer,
+        &sandbox_network,
+    )
+    .await?;
 
     Ok(())
 }
 
 async fn test_nft_metadata_view(
-    owner: &Account,
-    contract: &Contract,
+    nft_contract: &Contract,
+    sandbox_network: &NetworkConfig,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let expected = json!({
         "base_uri": serde_json::Value::Null,
@@ -81,25 +89,29 @@ async fn test_nft_metadata_view(
         "spec": "nft-1.0.0",
         "symbol": "GOTEAM",
     });
-    let res: serde_json::Value = owner
-        .call(contract.id(), "nft_metadata")
-        .args_json(json!({ "account_id": owner.id() }))
-        .transact()
+    let res: serde_json::Value = nft_contract
+        .call_function(
+            "nft_metadata",
+            json!({ "account_id": nft_contract.account_id() }),
+        )
+        .read_only()
+        .fetch_from(&sandbox_network)
         .await?
-        .json()?;
+        .data;
     assert_eq!(res, expected);
     println!("      Passed ✅ test_nft_metadata_view");
     Ok(())
 }
 
 async fn test_nft_mint_call(
-    owner: &Account,
     user: &Account,
-    contract: &Contract,
+    nft_contract: &Contract,
+    signer: &Arc<Signer>,
+    sandbox_network: &NetworkConfig,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let request_payload = json!({
         "token_id": "1",
-        "token_owner_id": user.id(),
+        "token_owner_id": user.account_id(),
         "token_metadata": {
             "title": "LEEROYYYMMMJENKINSSS",
             "description": "Alright time's up, let's do this.",
@@ -107,26 +119,28 @@ async fn test_nft_mint_call(
         },
     });
 
-    let _ = user
-        .call(contract.id(), "nft_mint")
-        .args_json(request_payload)
+    let _ = nft_contract
+        .call_function("nft_mint", json!(request_payload))
+        .transaction()
         .deposit(NearToken::from_millinear(80))
-        .transact()
-        .await;
-
-    let tokens: serde_json::Value = owner
-        .call(contract.id(), "nft_tokens")
-        .args_json(serde_json::json!({}))
-        .transact()
+        .with_signer(user.account_id().clone(), signer.clone())
+        .send_to(&sandbox_network)
         .await?
-        .json()?;
+        .assert_success();
+
+    let tokens: serde_json::Value = nft_contract
+        .call_function("nft_tokens", json!({}))
+        .read_only()
+        .fetch_from(&sandbox_network)
+        .await?
+        .data;
 
     let expected = json!([
         {
             "approved_account_ids": {},
             "royalty": {},
             "token_id": "1",
-            "owner_id": user.id(),
+            "owner_id": user.account_id(),
             "metadata": {
                 "expires_at": serde_json::Value::Null,
                 "extra": serde_json::Value::Null,
@@ -153,21 +167,31 @@ async fn test_nft_approve_call(
     user: &Account,
     nft_contract: &Contract,
     market_contract: &Contract,
+    signer: &Arc<Signer>,
+    sandbox_network: &NetworkConfig,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let token_id = "2";
-    helpers::mint_nft(user, nft_contract, token_id).await?;
-    helpers::approve_nft(market_contract, user, nft_contract, token_id).await?;
+    helpers::mint_nft(user, nft_contract, token_id, signer, sandbox_network).await?;
+    helpers::approve_nft(
+        market_contract,
+        user,
+        nft_contract,
+        token_id,
+        signer,
+        sandbox_network,
+    )
+    .await?;
 
     let view_payload = json!({
         "token_id": token_id,
-        "approved_account_id": market_contract.id(),
+        "approved_account_id": market_contract.account_id(),
     });
-    let result: bool = user
-        .call(nft_contract.id(), "nft_is_approved")
-        .args_json(view_payload)
-        .transact()
+    let result: bool = nft_contract
+        .call_function("nft_is_approved", json!(view_payload))
+        .read_only()
+        .fetch_from(&sandbox_network)
         .await?
-        .json()?;
+        .data;
 
     assert_eq!(result, true);
     println!("      Passed ✅ test_nft_approve_call");
@@ -179,14 +203,31 @@ async fn test_sell_nft_listed_on_marketplace(
     nft_contract: &Contract,
     market_contract: &Contract,
     buyer: &Account,
+    signer: &Arc<Signer>,
+    sandbox_network: &NetworkConfig,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let token_id = "4";
     let approval_id = 0;
     let sale_price: NearToken = NearToken::from_near(1);
 
-    helpers::mint_nft(seller, nft_contract, token_id).await?;
-    helpers::pay_for_storage(seller, market_contract, NearToken::from_millinear(10)).await?;
-    helpers::approve_nft(market_contract, seller, nft_contract, token_id).await?;
+    helpers::mint_nft(seller, nft_contract, token_id, &signer, &sandbox_network).await?;
+    helpers::pay_for_storage(
+        seller,
+        market_contract,
+        NearToken::from_millinear(10),
+        &signer,
+        &sandbox_network,
+    )
+    .await?;
+    helpers::approve_nft(
+        market_contract,
+        seller,
+        nft_contract,
+        token_id,
+        &signer,
+        &sandbox_network,
+    )
+    .await?;
     helpers::place_nft_for_sale(
         seller,
         market_contract,
@@ -194,17 +235,29 @@ async fn test_sell_nft_listed_on_marketplace(
         token_id,
         approval_id,
         &sale_price,
+        &signer,
+        &sandbox_network,
     )
     .await?;
 
-    let before_seller_balance: NearToken = helpers::get_user_balance(seller).await;
-    let before_buyer_balance: NearToken = helpers::get_user_balance(buyer).await;
+    let before_seller_balance: NearToken =
+        helpers::get_user_balance(seller, &sandbox_network).await;
+    let before_buyer_balance: NearToken = helpers::get_user_balance(buyer, &sandbox_network).await;
 
-    helpers::purchase_listed_nft(buyer, market_contract, nft_contract, token_id, sale_price)
-        .await?;
+    helpers::purchase_listed_nft(
+        buyer,
+        market_contract,
+        nft_contract,
+        token_id,
+        sale_price,
+        &signer,
+        &sandbox_network,
+    )
+    .await?
+    .assert_success();
 
-    let after_seller_balance: NearToken = helpers::get_user_balance(seller).await;
-    let after_buyer_balance: NearToken = helpers::get_user_balance(buyer).await;
+    let after_seller_balance: NearToken = helpers::get_user_balance(seller, &sandbox_network).await;
+    let after_buyer_balance: NearToken = helpers::get_user_balance(buyer, &sandbox_network).await;
 
     let dp = 1; // being exact requires keeping track of gas usage
     assert_eq!(
@@ -238,14 +291,31 @@ async fn test_transfer_nft_when_listed_on_marketplace(
     second_buyer: &Account,
     nft_contract: &Contract,
     market_contract: &Contract,
+    signer: &Arc<Signer>,
+    sandbox_network: &NetworkConfig,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let token_id = "5";
     let approval_id = 0;
     let sale_price = NearToken::from_near(3);
 
-    helpers::mint_nft(seller, nft_contract, token_id).await?;
-    helpers::pay_for_storage(seller, market_contract, NearToken::from_millinear(10)).await?;
-    helpers::approve_nft(market_contract, seller, nft_contract, token_id).await?;
+    helpers::mint_nft(seller, nft_contract, token_id, signer, sandbox_network).await?;
+    helpers::pay_for_storage(
+        seller,
+        market_contract,
+        NearToken::from_millinear(10),
+        signer,
+        sandbox_network,
+    )
+    .await?;
+    helpers::approve_nft(
+        market_contract,
+        seller,
+        nft_contract,
+        token_id,
+        signer,
+        sandbox_network,
+    )
+    .await?;
     helpers::place_nft_for_sale(
         seller,
         market_contract,
@@ -253,31 +323,48 @@ async fn test_transfer_nft_when_listed_on_marketplace(
         token_id,
         approval_id,
         &sale_price,
+        &signer,
+        &sandbox_network,
     )
     .await?;
 
-    helpers::transfer_nft(seller, first_buyer, nft_contract, token_id).await?;
+    helpers::transfer_nft(
+        seller,
+        first_buyer,
+        nft_contract,
+        token_id,
+        signer,
+        sandbox_network,
+    )
+    .await?;
 
     // attempt purchase NFT
-    let before_seller_balance: NearToken = helpers::get_user_balance(seller).await;
-    let before_buyer_balance: NearToken = helpers::get_user_balance(second_buyer).await;
+    let before_seller_balance: NearToken =
+        helpers::get_user_balance(seller, &sandbox_network).await;
+    let before_buyer_balance: NearToken =
+        helpers::get_user_balance(second_buyer, &sandbox_network).await;
     helpers::purchase_listed_nft(
         second_buyer,
         market_contract,
         nft_contract,
         token_id,
         sale_price,
+        &signer,
+        &sandbox_network,
     )
-    .await?;
-    let after_seller_balance: NearToken = helpers::get_user_balance(seller).await;
-    let after_buyer_balance: NearToken = helpers::get_user_balance(second_buyer).await;
+    .await?
+    .assert_success();
+    let after_seller_balance: NearToken = helpers::get_user_balance(seller, &sandbox_network).await;
+    let after_buyer_balance: NearToken =
+        helpers::get_user_balance(second_buyer, &sandbox_network).await;
 
     // assert owner remains first_buyer
-    let token_info: serde_json::Value = helpers::get_nft_token_info(nft_contract, token_id).await?;
+    let token_info: serde_json::Value =
+        helpers::get_nft_token_info(nft_contract, token_id, &sandbox_network).await?;
     let owner_id: String = token_info["owner_id"].as_str().unwrap().to_string();
     assert_eq!(
         owner_id,
-        first_buyer.id().to_string(),
+        first_buyer.account_id().to_string(),
         "token owner is not first_buyer"
     );
 
@@ -304,13 +391,22 @@ async fn test_approval_revoke(
     second_user: &Account,
     nft_contract: &Contract,
     market_contract: &Contract,
+    signer: &Arc<Signer>,
+    sandbox_network: &NetworkConfig,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let token_id = "6";
     let approval_id = 0;
     let sale_price = NearToken::from_near(3);
 
-    helpers::mint_nft(first_user, nft_contract, token_id).await?;
-    helpers::pay_for_storage(first_user, market_contract, NearToken::from_millinear(10)).await?;
+    helpers::mint_nft(first_user, nft_contract, token_id, signer, sandbox_network).await?;
+    helpers::pay_for_storage(
+        first_user,
+        market_contract,
+        NearToken::from_millinear(10),
+        signer,
+        sandbox_network,
+    )
+    .await?;
     helpers::place_nft_for_sale(
         first_user,
         market_contract,
@@ -318,41 +414,53 @@ async fn test_approval_revoke(
         token_id,
         approval_id,
         &sale_price,
+        &signer,
+        &sandbox_network,
     )
     .await?;
 
     // nft_revoke market_contract call
     let revoke_payload = json!({
-        "account_id": market_contract.id(),
+        "account_id": market_contract.account_id(),
         "token_id": token_id,
     });
-    let _ = first_user
-        .call(nft_contract.id(), "nft_revoke")
-        .args_json(revoke_payload)
+    let _ = nft_contract
+        .call_function("nft_revoke", json!(revoke_payload))
+        .transaction()
         .deposit(helpers::ONE_YOCTO_NEAR)
-        .transact()
-        .await?;
+        .with_signer(first_user.account_id().clone(), signer.clone())
+        .send_to(&sandbox_network)
+        .await?
+        .assert_success();
 
     // market_contract attempts to nft_transfer, when second_user tries to purchase NFT on market
-    let before_seller_balance: NearToken = helpers::get_user_balance(first_user).await;
-    let before_buyer_balance: NearToken = helpers::get_user_balance(second_user).await;
+    let before_seller_balance: NearToken =
+        helpers::get_user_balance(first_user, &sandbox_network).await;
+    let before_buyer_balance: NearToken =
+        helpers::get_user_balance(second_user, &sandbox_network).await;
     helpers::purchase_listed_nft(
         second_user,
         market_contract,
         nft_contract,
         token_id,
         sale_price,
+        &signer,
+        &sandbox_network,
     )
-    .await?;
-    let after_seller_balance: NearToken = helpers::get_user_balance(first_user).await;
-    let after_buyer_balance: NearToken = helpers::get_user_balance(second_user).await;
+    .await?
+    .assert_failure();
+    let after_seller_balance: NearToken =
+        helpers::get_user_balance(first_user, &sandbox_network).await;
+    let after_buyer_balance: NearToken =
+        helpers::get_user_balance(second_user, &sandbox_network).await;
 
     // assert owner remains first_user
-    let token_info: serde_json::Value = helpers::get_nft_token_info(nft_contract, token_id).await?;
+    let token_info: serde_json::Value =
+        helpers::get_nft_token_info(nft_contract, token_id, &sandbox_network).await?;
     let owner_id: String = token_info["owner_id"].as_str().unwrap().to_string();
     assert_eq!(
         owner_id,
-        first_user.id().to_string(),
+        first_user.account_id().to_string(),
         "token owner is not first_user"
     );
 
@@ -379,6 +487,8 @@ async fn test_reselling_and_royalties(
     second_buyer: &Account,
     nft_contract: &Contract,
     market_contract: &Contract,
+    signer: &Arc<Signer>,
+    sandbox_network: &NetworkConfig,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let token_id = "7";
     let approval_id = 0;
@@ -387,25 +497,42 @@ async fn test_reselling_and_royalties(
     // mint with royalties
     let request_payload = json!({
         "token_id": token_id,
-        "token_owner_id": user.id(),
+        "token_owner_id": user.account_id(),
         "token_metadata": {
             "title": "Grumpy Cat",
             "description": "Not amused.",
             "media": "https://www.adamsdrafting.com/wp-content/uploads/2018/06/More-Grumpy-Cat.jpg"
         },
         "perpetual_royalties": {
-            user.id().to_string(): 2000 as u128
+            user.account_id().to_string(): 2000 as u128
         }
     });
-    let _ = user
-        .call(nft_contract.id(), "nft_mint")
-        .args_json(request_payload)
+    let _ = nft_contract
+        .call_function("nft_mint", json!(request_payload))
+        .transaction()
         .deposit(NearToken::from_yoctonear(helpers::DEFAULT_DEPOSIT))
-        .transact()
-        .await;
+        .with_signer(user.account_id().clone(), signer.clone())
+        .send_to(&sandbox_network)
+        .await?
+        .assert_success();
 
-    helpers::pay_for_storage(user, market_contract, NearToken::from_millinear(10)).await?;
-    helpers::approve_nft(market_contract, user, nft_contract, token_id).await?;
+    helpers::pay_for_storage(
+        user,
+        market_contract,
+        NearToken::from_millinear(10),
+        signer,
+        sandbox_network,
+    )
+    .await?;
+    helpers::approve_nft(
+        market_contract,
+        user,
+        nft_contract,
+        token_id,
+        signer,
+        sandbox_network,
+    )
+    .await?;
     helpers::place_nft_for_sale(
         user,
         market_contract,
@@ -413,29 +540,39 @@ async fn test_reselling_and_royalties(
         token_id,
         approval_id,
         &sale_price,
+        &signer,
+        &sandbox_network,
     )
     .await?;
 
     // first_buyer purchases NFT
-    let mut before_seller_balance: NearToken = helpers::get_user_balance(user).await;
-    let mut before_buyer_balance: NearToken = helpers::get_user_balance(first_buyer).await;
+    let mut before_seller_balance: NearToken =
+        helpers::get_user_balance(user, &sandbox_network).await;
+    let mut before_buyer_balance: NearToken =
+        helpers::get_user_balance(first_buyer, &sandbox_network).await;
     helpers::purchase_listed_nft(
         first_buyer,
         market_contract,
         nft_contract,
         token_id,
         sale_price,
+        &signer,
+        &sandbox_network,
     )
-    .await?;
-    let mut after_seller_balance: NearToken = helpers::get_user_balance(user).await;
-    let mut after_buyer_balance: NearToken = helpers::get_user_balance(first_buyer).await;
+    .await?
+    .assert_success();
+    let mut after_seller_balance: NearToken =
+        helpers::get_user_balance(user, &sandbox_network).await;
+    let mut after_buyer_balance: NearToken =
+        helpers::get_user_balance(first_buyer, &sandbox_network).await;
 
     // assert owner becomes first_buyer
-    let token_info: serde_json::Value = helpers::get_nft_token_info(nft_contract, token_id).await?;
+    let token_info: serde_json::Value =
+        helpers::get_nft_token_info(nft_contract, token_id, &sandbox_network).await?;
     let owner_id: String = token_info["owner_id"].as_str().unwrap().to_string();
     assert_eq!(
         owner_id,
-        first_buyer.id().to_string(),
+        first_buyer.account_id().to_string(),
         "token owner is not first_buyer"
     );
 
@@ -464,8 +601,23 @@ async fn test_reselling_and_royalties(
 
     // first buyer lists nft for sale
     let approval_id = 1;
-    helpers::pay_for_storage(first_buyer, market_contract, NearToken::from_millinear(10)).await?;
-    helpers::approve_nft(market_contract, first_buyer, nft_contract, token_id).await?;
+    helpers::pay_for_storage(
+        first_buyer,
+        market_contract,
+        NearToken::from_millinear(10),
+        signer,
+        sandbox_network,
+    )
+    .await?;
+    helpers::approve_nft(
+        market_contract,
+        first_buyer,
+        nft_contract,
+        token_id,
+        signer,
+        sandbox_network,
+    )
+    .await?;
     helpers::place_nft_for_sale(
         first_buyer,
         market_contract,
@@ -473,32 +625,38 @@ async fn test_reselling_and_royalties(
         token_id,
         approval_id,
         &sale_price,
+        &signer,
+        &sandbox_network,
     )
     .await?;
 
     // second_buyer purchases NFT
     let resale_price = sale_price.saturating_mul(5); // 15 NEAR
-    before_seller_balance = helpers::get_user_balance(first_buyer).await;
-    before_buyer_balance = helpers::get_user_balance(second_buyer).await;
-    let before_user_balance: NearToken = helpers::get_user_balance(user).await;
+    before_seller_balance = helpers::get_user_balance(first_buyer, &sandbox_network).await;
+    before_buyer_balance = helpers::get_user_balance(second_buyer, &sandbox_network).await;
+    let before_user_balance: NearToken = helpers::get_user_balance(user, &sandbox_network).await;
     helpers::purchase_listed_nft(
         second_buyer,
         market_contract,
         nft_contract,
         token_id,
         resale_price,
+        &signer,
+        &sandbox_network,
     )
-    .await?;
-    let after_user_balance: NearToken = helpers::get_user_balance(user).await;
-    after_seller_balance = helpers::get_user_balance(first_buyer).await;
-    after_buyer_balance = helpers::get_user_balance(second_buyer).await;
+    .await?
+    .assert_success();
+    let after_user_balance: NearToken = helpers::get_user_balance(user, &sandbox_network).await;
+    after_seller_balance = helpers::get_user_balance(first_buyer, &sandbox_network).await;
+    after_buyer_balance = helpers::get_user_balance(second_buyer, &sandbox_network).await;
 
     // assert owner changes to second_buyer
-    let token_info: serde_json::Value = helpers::get_nft_token_info(nft_contract, token_id).await?;
+    let token_info: serde_json::Value =
+        helpers::get_nft_token_info(nft_contract, token_id, &sandbox_network).await?;
     let owner_id: String = token_info["owner_id"].as_str().unwrap().to_string();
     assert_eq!(
         owner_id,
-        second_buyer.id().to_string(),
+        second_buyer.account_id().to_string(),
         "token owner is not second_buyer"
     );
 
@@ -544,30 +702,33 @@ async fn test_royalties_exceeding_100_percents(
     user: &Account,
     nft_contract: &Contract,
     market_contract: &Contract,
+    signer: &Arc<Signer>,
+    sandbox_network: &NetworkConfig,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let token_id = "7";
 
     // mint with royalties
     let request_payload = json!({
         "token_id": token_id,
-        "token_owner_id": user.id(),
+        "token_owner_id": user.account_id(),
         "token_metadata": {
             "title": "Grumpy Cat",
             "description": "Not amused.",
             "media": "https://www.adamsdrafting.com/wp-content/uploads/2018/06/More-Grumpy-Cat.jpg"
         },
         "perpetual_royalties": {
-            user.id().to_string(): 5000 as u128,
-            market_contract.id().to_string(): 6000 as u128
+            user.account_id().to_string(): 5000 as u128,
+            market_contract.account_id().to_string(): 6000 as u128
         }
     });
-    let minting_result = user
-        .call(nft_contract.id(), "nft_mint")
-        .args_json(request_payload)
+    let _ = nft_contract
+        .call_function("nft_mint", json!(request_payload))
+        .transaction()
         .deposit(NearToken::from_yoctonear(helpers::DEFAULT_DEPOSIT))
-        .transact()
-        .await?;
-    assert!(minting_result.is_failure());
+        .with_signer(user.account_id().clone(), signer.clone())
+        .send_to(&sandbox_network)
+        .await?
+        .assert_failure();
 
     println!("      Passed ✅ test_royalties_exceeding_100_percents");
     Ok(())
