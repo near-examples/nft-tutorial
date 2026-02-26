@@ -5,7 +5,7 @@
 /neardev
 /.pnp
 .pnp.js
-**/*.lock
+# **/*.lock
 **/package-lock.json
 
 #cache
