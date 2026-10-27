@@ -263,7 +263,7 @@ Using `yarn`, you've been able to compile the contract, and you'll start fleshin
 At the time of this writing, this example works with the following versions:
 
 - rustc: `1.76.0`
-- near-sdk-rs: `5.1.0`
+- near-sdk-rs: `5.29.1`
 - cargo-near: `0.13.2`
 - NFT standard: [NEP171](https://github.com/near/NEPs/tree/master/neps/nep-0171.md), version `1.0.0`
 

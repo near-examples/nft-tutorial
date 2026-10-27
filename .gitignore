@@ -33,3 +33,6 @@ notes
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Keep contract dependency resolutions reproducible.
+!**/Cargo.lock

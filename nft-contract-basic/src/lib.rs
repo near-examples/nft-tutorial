@@ -30,9 +30,8 @@ pub const NFT_STANDARD_NAME: &str = "nep171";
 //Basic NEAR amounts as constants
 const ONE_YOCTONEAR: NearToken = NearToken::from_yoctonear(1);
 
-#[near_bindgen]
-#[derive(BorshSerialize, BorshDeserialize, PanicOnDefault)]
-#[borsh(crate = "near_sdk::borsh")]
+#[near_sdk::near(contract_state)]
+#[derive(PanicOnDefault)]
 pub struct Contract {
     //contract owner
     pub owner_id: AccountId,

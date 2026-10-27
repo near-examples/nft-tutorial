@@ -120,9 +120,11 @@ Now that you know how payouts are calculated, it's time to create the function t
 
 ### Perpetual royalties
 
+Royalties use basis points, where 10,000 equals 100% of the sale price. At minting, the contract checks that their total is at most 10,000 so the owner's remaining payout cannot become negative.
+
 To add support for perpetual royalties, let's edit the `src/mint.rs` file. First, add an optional parameter for perpetual royalties. This is what will determine what percentage goes to which accounts when the NFT is purchased. You will also need to create and insert the royalty to be put in the `Token` object:
 
-<Github language="rust" start="6" end="80" url="https://github.com/near-examples/nft-tutorial/blob/main/nft-contract-royalty/src/mint.rs" />
+<Github language="rust" start="5" end="94" url="https://github.com/near-examples/nft-tutorial/blob/main/nft-contract-royalty/src/mint.rs" />
 
 Next, you can use the CLI to query the new `nft_payout` function and validate that it works correctly.
 

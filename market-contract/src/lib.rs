@@ -43,9 +43,8 @@ pub struct Payout {
 }
 
 //main contract struct to store all the information
-#[near_bindgen]
-#[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
-#[borsh(crate = "near_sdk::borsh")]
+#[near_sdk::near(contract_state)]
+#[derive(PanicOnDefault)]
 pub struct Contract {
     //keep track of the owner of the contract
     pub owner_id: AccountId,

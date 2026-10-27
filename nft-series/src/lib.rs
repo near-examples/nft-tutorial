@@ -51,9 +51,8 @@ pub struct Series {
 
 pub type SeriesId = u64;
 
-#[near_bindgen]
-#[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
-#[borsh(crate = "near_sdk::borsh")]
+#[near_sdk::near(contract_state)]
+#[derive(PanicOnDefault)]
 pub struct Contract {
     //contract owner
     pub owner_id: AccountId,

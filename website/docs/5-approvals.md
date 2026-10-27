@@ -139,7 +139,7 @@ Now that you understand the proposed solution to the original problem of allowin
 
 You'll then need to initialize both the `approved_account_ids` and `next_approval_id` to their default values when a token is minted. Switch to the `nft-contract-basic/src/mint.rs` file and when creating the `Token` struct to store in the contract, let's set the next approval ID to be 0 and the approved account IDs to be an empty map:
 
-<Github language="rust" start="31" end="38" url="https://github.com/near-examples/nft-tutorial/blob/main/nft-contract-approval/src/mint.rs" />
+<Github language="rust" start="45" end="52" url="https://github.com/near-examples/nft-tutorial/blob/main/nft-contract-approval/src/mint.rs" />
 
 <hr className="subsection" />
 

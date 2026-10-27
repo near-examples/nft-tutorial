@@ -20,9 +20,8 @@ mod nft_core;
 mod approval; 
 mod royalty; 
 
-#[near_bindgen]
-#[derive(BorshSerialize, BorshDeserialize, BorshStorageKey, PanicOnDefault)]
-#[borsh(crate = "near_sdk::borsh")]
+#[near_sdk::near(contract_state)]
+#[derive(BorshStorageKey, PanicOnDefault)]
 pub struct Contract {
     /*
         FILL THIS IN

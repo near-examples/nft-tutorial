@@ -28,7 +28,8 @@ pub async fn mint_nft(
         .args_json(request_payload)
         .deposit(NearToken::from_yoctonear(DEFAULT_DEPOSIT))
         .transact()
-        .await;
+        .await?
+        .into_result()?;
 
     Ok(())
 }
@@ -50,7 +51,8 @@ pub async fn approve_nft(
         .args_json(request_payload)
         .deposit(NearToken::from_yoctonear(DEFAULT_DEPOSIT))
         .transact()
-        .await;
+        .await?
+        .into_result()?;
 
     Ok(())
 }
@@ -67,7 +69,8 @@ pub async fn pay_for_storage(
         .args_json(request_payload)
         .deposit(amount)
         .transact()
-        .await;
+        .await?
+        .into_result()?;
 
     Ok(())
 }
@@ -91,14 +94,54 @@ pub async fn place_nft_for_sale(
         .args_json(request_payload)
         .gas(Gas::from_tgas(100))
         .transact()
-        .await;
+        .await?
+        .into_result()?;
 
+    let sale: serde_json::Value = market_contract
+        .view("get_sale")
+        .args_json(json!({ "nft_contract_token": format!("{}.{}", nft_contract.id(), token_id) }))
+        .await?
+        .json()?;
+    assert_eq!(
+        sale["owner_id"],
+        user.id().as_str(),
+        "Listing owner must match seller"
+    );
+    assert_eq!(
+        sale["approval_id"], approval_id,
+        "Listing approval must match token approval"
+    );
+    assert_eq!(
+        sale["sale_conditions"],
+        serde_json::to_value(price)?,
+        "Listing price must match request"
+    );
     Ok(())
 }
 
-pub async fn get_user_balance(user: &Account) -> NearToken {
+pub async fn get_user_balance(
+    user: &Account,
+    worker: &near_workspaces::Worker<near_workspaces::network::Sandbox>,
+) -> NearToken {
+    // Execution can complete before gas-refund receipts reach account state.
+    // Wait for later blocks, then query a known post-transaction block rather
+    // than the lagging `final` head or a transient reserved balance.
+    let target_height = worker.view_block().await.expect("Latest block").height() + 3;
+    let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(10);
+    loop {
+        let latest = worker.view_block().await.expect("Latest block").height();
+        if latest >= target_height {
+            break;
+        }
+        assert!(
+            tokio::time::Instant::now() < deadline,
+            "Refund blocks did not arrive"
+        );
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    }
     let details: AccountDetails = user
         .view_account()
+        .block_height(target_height)
         .await
         .expect("Account has to have some balance");
     details.balance
@@ -122,7 +165,8 @@ pub async fn purchase_listed_nft(
         .max_gas()
         .deposit(offer_price)
         .transact()
-        .await;
+        .await?
+        .into_result()?;
 
     Ok(())
 }
@@ -145,7 +189,8 @@ pub async fn transfer_nft(
         .max_gas()
         .deposit(ONE_YOCTO_NEAR)
         .transact()
-        .await;
+        .await?
+        .into_result()?;
 
     Ok(())
 }
@@ -154,15 +199,11 @@ pub async fn get_nft_token_info(
     nft_contract: &Contract,
     token_id: &str,
 ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
-    let token_info: serde_json::Value = nft_contract
-        .call("nft_token")
-        .args_json(json!({"token_id": token_id}))
-        .transact()
+    Ok(nft_contract
+        .view("nft_token")
+        .args_json(json!({ "token_id": token_id }))
         .await?
-        .json()
-        .unwrap();
-
-    Ok(token_info)
+        .json()?)
 }
 
 pub fn round_to_near_dp(amount: u128, sf: u128) -> String {

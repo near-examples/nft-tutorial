@@ -25,6 +25,17 @@ impl Contract {
                 "Cannot add more than 6 perpetual royalty amounts"
             );
 
+            // Royalties are basis points: 10,000 is the full sale price.
+            // Sum in u64 so large individual u32 values cannot overflow.
+            let total_royalties: u64 = perpetual_royalties
+                .values()
+                .map(|amount| u64::from(*amount))
+                .sum();
+            assert!(
+                total_royalties <= 10_000,
+                "Perpetual royalties cannot exceed 100%"
+            );
+
             //iterate through the perpetual royalties and insert the account and amount in the royalty map
             for (account, amount) in perpetual_royalties {
                 royalty.insert(account, amount);

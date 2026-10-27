@@ -1,5 +1,16 @@
 # NEAR NFT-Tutorial
 
+## Rust toolchain
+
+The contracts use NEAR SDK 5.29.1 and the pinned Rust 1.97.1 toolchain. Install [rustup](https://rustup.rs/) and `cargo-near` before building or running the local sandbox integration tests:
+
+```bash
+cargo install cargo-near --version 0.21.1 --locked --no-default-features
+```
+
+Contract builds and integration-test fixtures compile from source; no live network account is required for tests.
+
+
 [![](https://img.shields.io/github/workflow/status/near-examples/nft-tutorial/Tests/main?label=Tests)](https://github.com/near-examples/nft-tutorial/actions/workflows/tests.yml)
 
 Welcome to NEAR's NFT tutorial, where we will help you parse the details around NEAR's [NEP-171 standard](https://nomicon.io/Standards/NonFungibleToken/Core.html) (Non-Fungible Token Standard), and show you how to build your own NFT smart contract from the ground up, improving your understanding about the NFT standard along the way. 
