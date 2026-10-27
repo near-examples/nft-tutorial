@@ -36,3 +36,6 @@ yarn-error.log*
 
 # Keep contract dependency resolutions reproducible.
 !**/Cargo.lock
+
+# Keep the website dependency tree reproducible.
+!website/yarn.lock

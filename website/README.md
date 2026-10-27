@@ -4,8 +4,10 @@ This website is built using [Docusaurus](https://docusaurus.io/), a modern stati
 
 ## Installation
 
+Use Node.js 22.22.2 or newer and Yarn Classic. CI uses Node.js 24.
+
 ```bash
-yarn
+yarn install --frozen-lockfile
 ```
 
 ## Local Development
